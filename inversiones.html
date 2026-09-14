@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inversiones Financieras — El Surtidor SA / La Estación SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#211F2B; --ink-dim:#6B667A; --ink-faint:#9691A3;
+    --paper:#F7F5FA; --card:#FFFFFF; --border:rgba(33,31,43,0.10);
+    --accent:#C8721A; --accent-soft:#FBE7D3; --accent-deep:#8F4F0E;
+    --up:#1E8A5F; --dn:#C1443C;
+    --sur:#453876; --est:#1D6FA5; --infl:#C8721A;
+    --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:16px 28px; }
+  h1.page-title{ font-size:20px; font-weight:700; margin:0 0 4px; }
+  .page-sub{ font-size:12.5px; color:var(--ink-dim); margin:0 0 12px; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:8px; }
+
+  .seg{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button{ border:0; background:transparent; padding:8px 15px; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+  .seg button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:18px 26px; align-items:flex-end; margin-top:14px; }
+  .ctl-label{ display:block; font-size:11px; color:var(--ink-dim); margin-bottom:5px; }
+  input[type=date]{ font:inherit; font-size:12.5px; padding:7px 9px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--ink); }
+  input[type=date]:focus-visible{ outline:2px solid var(--accent); outline-offset:0; }
+  .presets{ display:flex; gap:6px; }
+  .presets button{ font:inherit; font-size:11.5px; font-weight:600; padding:6px 11px; border:1px solid var(--border); border-radius:20px; background:var(--card); color:var(--ink-dim); cursor:pointer; }
+  .presets button:hover{ border-color:var(--accent); color:var(--accent-deep); }
+
+  main{ max-width:1320px; margin:0 auto; padding:22px 28px 60px; }
+
+  .hero{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-l); padding:22px 26px; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:34px; align-items:flex-start; }
+  .hero-main .hero-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .hero-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:42px; line-height:1; letter-spacing:-0.02em; }
+  .hero-note{ font-size:12px; color:var(--ink-faint); margin-top:9px; max-width:46ch; line-height:1.5; }
+  .hero-split{ display:flex; gap:26px; border-left:1px solid var(--border); padding-left:28px; }
+  .hero-split div .l{ font-size:11px; color:var(--ink-dim); margin-bottom:5px; }
+  .hero-split div .v{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px; }
+  .pos{ color:var(--up); } .neg{ color:var(--dn); }
+
+  .kpi-group-label{ font-size:12px; font-weight:700; color:var(--ink-dim); margin:0 0 8px; display:flex; align-items:center; gap:7px; }
+  .kpi-group-label .dot{ width:8px; height:8px; border-radius:50%; }
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .kpi-row.idx{ grid-template-columns:repeat(5,1fr); }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:14px 16px; }
+  .kpi-label{ font-size:11px; color:var(--ink-dim); margin-bottom:6px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; line-height:1.15; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-l); padding:18px 20px; }
+  .span-12{ grid-column:span 12; } .span-6{ grid-column:span 6; } .span-7{ grid-column:span 7; } .span-5{ grid-column:span 5; }
+  .panel-title{ font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; margin-bottom:3px; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-dim); margin-bottom:14px; }
+  .chart-box{ position:relative; height:270px; }
+  .panel-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .mini-seg{ display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; background:var(--paper); flex:none; }
+  .mini-seg button{ border:0; background:transparent; padding:4px 10px; font:inherit; font-size:11px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .mini-seg button + button{ border-left:1px solid var(--border); }
+  .mini-seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+  .mini-seg button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
+
+  table.data{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.data th{ text-align:right; font-weight:600; color:var(--ink-dim); padding:7px 9px; border-bottom:1px solid var(--border); white-space:nowrap; font-size:11px; position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data th:first-child, table.data td:first-child{ text-align:left; position:sticky; left:0; z-index:1; background:var(--card); }
+  table.data th:first-child{ z-index:3; }
+  table.data th:nth-child(2), table.data td:nth-child(2){ text-align:left; }
+  table.data td{ text-align:right; padding:7px 9px; border-bottom:1px solid rgba(33,31,43,0.05); white-space:nowrap; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  table.data tbody tr:hover td:first-child{ background:var(--paper); }
+  .table-wrap{ overflow:auto; max-height:420px; position:relative; border:1px solid var(--border); border-radius:8px; }
+  .tag{ display:inline-block; font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:20px; }
+  .tag-s{ background:#E6F3EC; color:var(--up); }
+  .tag-r{ background:#FBE8E7; color:var(--dn); }
+  .tag-i{ background:var(--accent-soft); color:var(--accent-deep); }
+
+  .note{ font-size:11.5px; color:var(--ink-dim); line-height:1.65; margin-top:20px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:14px 16px; }
+  .warn{ background:var(--accent-soft); border-color:#EBC9A2; color:var(--accent-deep); }
+  .empty{ font-size:12.5px; color:var(--ink-faint); padding:26px 0; text-align:center; }
+
+  @media (max-width:1080px){ .span-6,.span-7,.span-5{ grid-column:span 12; } .kpi-row{ grid-template-columns:repeat(2,1fr); } .kpi-row.idx{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:620px){ .kpi-row{ grid-template-columns:1fr; } .hero-split{ border-left:0; padding-left:0; } .hero-value{ font-size:32px; } }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-link" href="inicio.html">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    Volver a Inicio
+  </a>
+  <h1 class="page-title">Inversiones financieras</h1>
+  <p class="page-sub">Fondos comunes de inversión FIMA — Banco Galicia. Stock por lote PEPS y resultados a valores nominales o reexpresados por RT 6.</p>
+  <div class="seg" role="group" aria-label="Empresa">
+    <button aria-pressed="true" data-company="surtidor">El Surtidor S.A.</button>
+    <button aria-pressed="false" data-company="both">Comparar empresas</button>
+    <button aria-pressed="false" data-company="estacion">La Estación S.A.</button>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label class="ctl-label" for="desde">Desde</label>
+      <input type="date" id="desde" value="2025-08-01">
+    </div>
+    <div>
+      <label class="ctl-label" for="hasta">Hasta</label>
+      <input type="date" id="hasta" value="2026-07-31">
+    </div>
+    <div>
+      <span class="ctl-label">Períodos frecuentes</span>
+      <div class="presets">
+        <button data-preset="ejercicio">Ejercicio ago·25 – jul·26</button>
+        <button data-preset="semestre">Últimos 6 meses</button>
+        <button data-preset="todo">Todo el historial</button>
+      </div>
+    </div>
+    <div>
+      <span class="ctl-label">Medición</span>
+      <div class="seg" role="group" aria-label="Medición">
+        <button aria-pressed="false" data-modo="nominal">Valores nominales</button>
+        <button aria-pressed="true" data-modo="real">Ajustado al 31/07/2026</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="hero" class="hero"></div>
+  <div id="kpis"></div>
+  <div class="panel-title" style="margin:18px 0 2px;">Índices de la inversión</div>
+  <div class="panel-sub" style="margin-bottom:10px;">Indicadores básicos para evaluar el rendimiento del período seleccionado</div>
+  <div id="indices"></div>
+  <div class="grid" id="panels"></div>
+  <div id="notes"></div>
+</main>
+
+<script>
+const DATA = {"surtidor": {"mov": [{"fecha": "2025-08-29", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SALDO INICIAL", "q": 1295558.75, "v": 77.699289, "imp": 100663993.73}, {"fecha": "2025-10-24", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 708643.23, "v": 84.66884, "imp": 60000000}, {"fecha": "2025-11-28", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 1148073.9, "v": 87.102407, "imp": 100000000}, {"fecha": "2025-12-17", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 454785.38, "v": 87.953574, "imp": 40000000}, {"fecha": "2026-01-16", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 557612.61, "v": 89.667987, "imp": 50000000}, {"fecha": "2026-01-29", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 386819.46, "v": 90.481487, "imp": 35000000}, {"fecha": "2026-02-12", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 437911.75, "v": 91.342603, "imp": 40000000}, {"fecha": "2026-03-19", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 641579.36, "v": 93.519218, "imp": 60000000}, {"fecha": "2026-04-07", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 740415.62, "v": 94.541496, "imp": 70000000}, {"fecha": "2026-04-09", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 422622.35, "v": 94.647147, "imp": 40000000}, {"fecha": "2026-04-22", "fondo": "FIMA AHORRO PLUS CLASE B", "tipo": "SUSCRIPCION", "q": 1901219.46, "v": 157.793462, "imp": 300000000}, {"fecha": "2026-04-22", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 3147993.86, "v": 95.298788, "imp": 300000000}, {"fecha": "2026-04-29", "fondo": "FIMA AHORRO PLUS CLASE B", "tipo": "RESCATE", "q": 1900014.75, "v": 157.760688, "imp": 299747634.65}, {"fecha": "2026-04-30", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 3135552.41, "v": 95.676921, "imp": 300000000}, {"fecha": "2026-05-21", "fondo": "FIMA AHORRO PLUS CLASE B", "tipo": "SUSCRIPCION", "q": 1244525.82, "v": 160.703778, "imp": 200000000}, {"fecha": "2026-05-21", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 2068953.28, "v": 96.667238, "imp": 200000000}, {"fecha": "2026-07-30", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 800521.57, "v": 99.934847, "imp": 80000000}, {"fecha": "2026-07-30", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 800521.57, "v": 99.934847, "imp": 80000000}, {"fecha": "2026-08-11", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 348134.17, "v": 100.535949, "imp": 35000000}], "pos": [{"fecha": "2025-08-29", "fondo": "FIMA PREMIUM CLASE B", "q": 1295558.75, "v": 80.02257, "saldo": 103673940.76}, {"fecha": "2025-09-30", "fondo": "FIMA PREMIUM CLASE B", "q": 1295558.75, "v": 82.580454, "saldo": 106987829.76}, {"fecha": "2025-10-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2004201.98, "v": 85.371897, "saldo": 171102525}, {"fecha": "2025-11-28", "fondo": "FIMA PREMIUM CLASE B", "q": 3152275.88, "v": 87.102407, "saldo": 274570816.68}, {"fecha": "2025-12-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2697490.5, "v": 88.566548, "saldo": 238907421.85}, {"fecha": "2026-01-30", "fondo": "FIMA PREMIUM CLASE B", "q": 2868283.65, "v": 90.538557, "saldo": 259690262.74}, {"fecha": "2026-02-27", "fondo": "FIMA PREMIUM CLASE B", "q": 2430371.9, "v": 92.392347, "saldo": 224547763.92}, {"fecha": "2026-03-31", "fondo": "FIMA PREMIUM CLASE B", "q": 3071951.26, "v": 94.165983, "saldo": 289273310.13}, {"fecha": "2026-04-30", "fondo": "FIMA AHORRO PLUS CLASE B", "q": 1204.71, "v": 158.093949, "saldo": 190457.36}, {"fecha": "2026-04-30", "fondo": "FIMA PREMIUM CLASE B", "q": 3377303.08, "v": 95.676921, "saldo": 323129959.98}, {"fecha": "2026-05-29", "fondo": "FIMA AHORRO PLUS CLASE B", "q": 1245730.53, "v": 161.744516, "saldo": 201490081.64}, {"fecha": "2026-05-29", "fondo": "FIMA PREMIUM CLASE B", "q": 1308349.8, "v": 97.040084, "saldo": 126962374.49}, {"fecha": "2026-06-30", "fondo": "FIMA AHORRO PLUS CLASE B", "q": 1245730.53, "v": 164.386724, "saldo": 204781560.81}, {"fecha": "2026-06-30", "fondo": "FIMA PREMIUM CLASE B", "q": 1308349.8, "v": 98.530338, "saldo": 128912148.02}, {"fecha": "2026-07-31", "fondo": "FIMA AHORRO PLUS CLASE B", "q": 1245730.53, "v": 167.1297, "saldo": 208198569.76}, {"fecha": "2026-07-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2909392.94, "v": 99.984466, "saldo": 290894099.49}, {"fecha": "2026-08-31", "fondo": "FIMA AHORRO PLUS CLASE B", "q": 1245730.53, "v": 169.951143, "saldo": 211713327.44}, {"fecha": "2026-08-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2561258.77, "v": 101.577172, "saldo": 260165422.62}]}, "estacion": {"mov": [{"fecha": "2025-07-31", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SALDO INICIAL", "q": 1702920.89, "v": 77.699289, "imp": 132315742.38}, {"fecha": "2025-08-27", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 626216.53, "v": 79.844587, "imp": 50000000}, {"fecha": "2025-08-29", "fondo": "FIMA AHORRO PESOS CLASE A", "tipo": "SALDO INICIAL", "q": 0.07, "v": 487.59826, "imp": 34.13}, {"fecha": "2025-09-09", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 246978.29, "v": 80.978777, "imp": 20000000}, {"fecha": "2025-10-21", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 118417.95, "v": 84.446654, "imp": 10000000}, {"fecha": "2025-10-22", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 165644.92, "v": 84.518134, "imp": 14000000}, {"fecha": "2025-10-24", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 2007822.48, "v": 84.66884, "imp": 170000000}, {"fecha": "2025-11-10", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 348648.84, "v": 86.046462, "imp": 30000000}, {"fecha": "2025-11-12", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 313309.29, "v": 86.176824, "imp": 27000000}, {"fecha": "2025-12-04", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 274645.86, "v": 87.38526, "imp": 24000000}, {"fecha": "2025-12-09", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 456594.61, "v": 87.605063, "imp": 40000000}, {"fecha": "2025-12-17", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 227392.69, "v": 87.953574, "imp": 20000000}, {"fecha": "2026-01-06", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 561502.83, "v": 89.046746, "imp": 50000000}, {"fecha": "2026-01-09", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 224129.22, "v": 89.234237, "imp": 20000000}, {"fecha": "2026-01-20", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 200163.5, "v": 89.926485, "imp": 18000000}, {"fecha": "2026-01-29", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 176831.75, "v": 90.481487, "imp": 16000000}, {"fecha": "2026-02-11", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 438198.35, "v": 91.282863, "imp": 40000000}, {"fecha": "2026-02-12", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 109477.93, "v": 91.342603, "imp": 10000000}, {"fecha": "2026-02-19", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 54448.59, "v": 91.829734, "imp": 5000000}, {"fecha": "2026-03-19", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 855439.15, "v": 93.519218, "imp": 80000000}, {"fecha": "2026-03-26", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 159745.41, "v": 93.899406, "imp": 15000000}, {"fecha": "2026-04-06", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 476250.46, "v": 94.488097, "imp": 45000000}, {"fecha": "2026-05-08", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 728691.92, "v": 96.062545, "imp": 70000000}, {"fecha": "2026-07-07", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 252906.9, "v": 98.850603, "imp": 25000000}, {"fecha": "2026-07-17", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 60410.04, "v": 99.321237, "imp": 6000000}, {"fecha": "2026-07-21", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 502468.13, "v": 99.508798, "imp": 50000000}, {"fecha": "2026-07-30", "fondo": "FIMA PREMIUM CLASE B", "tipo": "SUSCRIPCION", "q": 1500977.94, "v": 99.934847, "imp": 150000000}, {"fecha": "2026-08-07", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 99667.47, "v": 100.333634, "imp": 10000000}, {"fecha": "2026-08-11", "fondo": "FIMA PREMIUM CLASE B", "tipo": "RESCATE", "q": 497334.54, "v": 100.535949, "imp": 50000000}], "pos": [{"fecha": "2025-08-29", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 487.59826, "saldo": 34.13}, {"fecha": "2025-08-29", "fondo": "FIMA PREMIUM CLASE B", "q": 2329137.42, "v": 80.02257, "saldo": 186383562.23}, {"fecha": "2025-09-30", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 508.187367, "saldo": 35.57}, {"fecha": "2025-09-30", "fondo": "FIMA PREMIUM CLASE B", "q": 2082159.13, "v": 82.580454, "saldo": 171945646.26}, {"fecha": "2025-10-31", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 528.409843, "saldo": 36.99}, {"fecha": "2025-10-31", "fondo": "FIMA PREMIUM CLASE B", "q": 3805918.74, "v": 85.371897, "saldo": 324918502.66}, {"fecha": "2025-11-28", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 542.642947, "saldo": 37.99}, {"fecha": "2025-11-28", "fondo": "FIMA PREMIUM CLASE B", "q": 3143960.61, "v": 87.102407, "saldo": 273846536.64}, {"fecha": "2025-12-31", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 553.042063, "saldo": 38.71}, {"fecha": "2025-12-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2185327.45, "v": 88.566548, "saldo": 193546908.5}, {"fecha": "2026-01-30", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 567.997218, "saldo": 39.76}, {"fecha": "2026-01-30", "fondo": "FIMA PREMIUM CLASE B", "q": 1022700.15, "v": 90.538557, "saldo": 92593795.82}, {"fecha": "2026-02-27", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 583.599515, "saldo": 40.85}, {"fecha": "2026-02-27", "fondo": "FIMA PREMIUM CLASE B", "q": 420575.28, "v": 92.392347, "saldo": 38857937.21}, {"fecha": "2026-03-31", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 599.368162, "saldo": 41.96}, {"fecha": "2026-03-31", "fondo": "FIMA PREMIUM CLASE B", "q": 1116269.02, "v": 94.165983, "saldo": 105114569.56}, {"fecha": "2026-04-30", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 610.800458, "saldo": 42.76}, {"fecha": "2026-04-30", "fondo": "FIMA PREMIUM CLASE B", "q": 640018.56, "v": 95.676921, "saldo": 61235005.2}, {"fecha": "2026-05-29", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 622.266825, "saldo": 43.56}, {"fecha": "2026-05-29", "fondo": "FIMA PREMIUM CLASE B", "q": 1368710.48, "v": 97.040084, "saldo": 132819779.95}, {"fecha": "2026-06-30", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 632.634369, "saldo": 44.28}, {"fecha": "2026-06-30", "fondo": "FIMA PREMIUM CLASE B", "q": 1368710.48, "v": 98.530338, "saldo": 134859506.22}, {"fecha": "2026-07-31", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 642.870054, "saldo": 45}, {"fecha": "2026-07-31", "fondo": "FIMA PREMIUM CLASE B", "q": 2053903.35, "v": 99.984466, "saldo": 205358429.67}, {"fecha": "2026-08-31", "fondo": "FIMA AHORRO PESOS CLASE A", "q": 0.07, "v": 654.086348, "saldo": 45.79}, {"fecha": "2026-08-31", "fondo": "FIMA PREMIUM CLASE B", "q": 1456901.34, "v": 101.577172, "saldo": 147987918}]}, "indices": {"2025-01": 7864.1257, "2025-02": 8052.9927, "2025-03": 8353.3158, "2025-04": 8585.6078, "2025-05": 8714.4871, "2025-06": 8855.5681, "2025-07": 9023.973, "2025-08": 9193.2441, "2025-09": 9384.0922, "2025-10": 9603.8623, "2025-11": 9841.3581, "2025-12": 10121.3715, "2026-01": 10413.0309, "2026-02": 10714.6255, "2026-03": 11077.0608, "2026-04": 11363.0904, "2026-05": 11607.3937, "2026-06": 11826.4103, "2026-07": 12076.3937, "2026-08": 12276.766}};
+
+const NOMBRE = { surtidor:'El Surtidor S.A.', estacion:'La Estación S.A.' };
+const COLOR  = { surtidor:'#453876', estacion:'#1D6FA5' };
+const FONDO_COLOR = ['#453876','#1D6FA5','#C8721A','#1E8A5F'];
+const MESES = {'01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun','07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'};
+
+const FONT='Inter, sans-serif';
+Chart.defaults.font.family=FONT; Chart.defaults.font.size=11.5;
+Chart.defaults.color='#6B667A'; Chart.defaults.borderColor='rgba(33,31,43,0.06)';
+const gridColor='rgba(33,31,43,0.06)', tickColor='#8A8698';
+const tip=()=>({backgroundColor:'#211F2B',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#fff',bodyColor:'#D8D5E2',padding:10,titleFont:{family:FONT,weight:'600',size:12},bodyFont:{family:FONT,size:11.5},boxPadding:4});
+
+/* ---------- helpers ---------- */
+function mk(iso){ return iso.slice(0,7); }
+function fmtMes(k){ const [y,m]=k.split('-'); return MESES[m]+'·'+y.slice(2); }
+function money(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  const a=Math.abs(n), s=n<0?'-':'';
+  if(a>=1e9) return s+'$'+(a/1e9).toFixed(2)+' mil M';
+  if(a>=1e6) return s+'$'+(a/1e6).toFixed(1)+'M';
+  if(a>=1e3) return s+'$'+(a/1e3).toFixed(0)+'k';
+  return s+'$'+a.toFixed(0);
+}
+function money0(n){ return (n<0?'-':'')+'$'+Math.abs(n).toLocaleString('es-AR',{maximumFractionDigits:2,minimumFractionDigits:2}); }
+function num(n,d){ return n.toLocaleString('es-AR',{maximumFractionDigits:d===undefined?2:d,minimumFractionDigits:d===undefined?2:d}); }
+function pct(n){ return (n>=0?'+':'')+(n*100).toFixed(1)+'%'; }
+function cls(n){ return n>0?'pos':(n<0?'neg':''); }
+
+const IDX = DATA.indices;
+const IDX_KEYS = Object.keys(IDX).sort();
+function indice(k){
+  if(IDX[k]!==undefined) return IDX[k];
+  const prev = IDX_KEYS.filter(x=>x<=k);
+  return prev.length? IDX[prev[prev.length-1]] : IDX[IDX_KEYS[0]];
+}
+
+/* ---------- motor FIFO ---------- */
+const STATE = {};
+for(const emp of ['surtidor','estacion']){
+  STATE[emp]={};
+  const fondos=[...new Set(DATA[emp].mov.map(m=>m.fondo))];
+  for(const fondo of fondos){
+    const movs=DATA[emp].mov.filter(m=>m.fondo===fondo)
+      .sort((a,b)=> a.fecha<b.fecha?-1: a.fecha>b.fecha?1:0);
+    const lots=[], allocs=[], cola=[];
+    let nl=0, nr=0;
+    for(const m of movs){
+      if(m.tipo==='SUSCRIPCION'||m.tipo==='SALDO INICIAL'){
+        nl++;
+        lots.push({id:'L'+String(nl).padStart(2,'0'), fecha:m.fecha, tipo:m.tipo, q:m.q, v:m.v, imp:m.imp, cu:m.imp/m.q});
+        cola.push({i:lots.length-1, rem:m.q});
+      } else {
+        nr++; let pend=m.q; const rid='R'+String(nr).padStart(2,'0');
+        while(pend>1e-6 && cola.length){
+          const c=cola[0], toma=Math.min(c.rem,pend);
+          allocs.push({rid, fecha:m.fecha, lote:lots[c.i].id, li:c.i, q:toma,
+                       costo:toma*lots[c.i].cu, importe:m.imp*toma/m.q, v:m.v});
+          c.rem=+(c.rem-toma).toFixed(6); pend=+(pend-toma).toFixed(6);
+          if(c.rem<=1e-6) cola.shift();
+        }
+      }
+    }
+    STATE[emp][fondo]={lots, allocs};
+  }
+}
+function remanente(st, lotIdx, hasta){
+  const usado = st.allocs.filter(a=>a.li===lotIdx && a.fecha<=hasta).reduce((s,a)=>s+a.q,0);
+  return st.lots[lotIdx].q - usado;
+}
+
+/* ---------- posiciones ---------- */
+function posiciones(emp, fondo){
+  return DATA[emp].pos.filter(p=>p.fondo===fondo).sort((a,b)=>a.fecha<b.fecha?-1:1);
+}
+function valorCuota(emp, fondo, hasta){
+  const todas=posiciones(emp,fondo);
+  if(!todas.length) return null;
+  const ps=todas.filter(p=>p.fecha<=hasta);
+  // si el rango arranca antes del primer extracto, se valua con la cotizacion mas cercana
+  return ps.length? ps[ps.length-1].v : todas[0].v;
+}
+
+/* ---------- cálculo del período ---------- */
+function calcular(emp, desde, hasta, modo){
+  const mesCierre = mk(hasta);
+  const iCierre = indice(mesCierre);
+  const coef = f => modo==='real' ? Math.round(iCierre/indice(mk(f))*1e4)/1e4 : 1;
+  const fondos = Object.keys(STATE[emp]);
+  const det = { fondos:[], opes:[], lotes:[] };
+  let ini=0, sus=0, res=0, fin=0, realizado=0, tenencia=0, qIni=0, qFin=0, susQ=0, resQ=0;
+
+  for(const fondo of fondos){
+    const st=STATE[emp][fondo];
+    const vIni=valorCuota(emp,fondo,desde), vFin=valorCuota(emp,fondo,hasta);
+    let fIni=0,fFin=0,fSus=0,fRes=0,fReal=0,fTen=0,fqIni=0,fqFin=0;
+
+    st.lots.forEach((L,i)=>{
+      const rDesde=remanente(st,i,desde), rHasta=remanente(st,i,hasta);
+      if((L.fecha<=desde || L.tipo==='SALDO INICIAL') && rDesde>1e-6){ fqIni+=rDesde; }
+      if(L.fecha<=hasta && rHasta>1e-6){
+        fqFin+=rHasta;
+        const costo=rHasta*L.cu*coef(L.fecha);
+        const val=vFin!==null? rHasta*vFin : 0;
+        fTen += val-costo;
+        det.lotes.push({fondo, lote:L.id, fecha:L.fecha, q:rHasta, cu:L.cu,
+                        costo, coef:coef(L.fecha), val, res:val-costo});
+      }
+      if(L.tipo==='SUSCRIPCION' && L.fecha>=desde && L.fecha<=hasta){
+        fSus += L.imp*coef(L.fecha); susQ += L.q;
+        det.opes.push({fondo, tipo:'SUSCRIPCION', fecha:L.fecha, q:L.q, v:L.v,
+                       imp:L.imp, coefv:coef(L.fecha), ajust:L.imp*coef(L.fecha)});
+      }
+    });
+
+    const rs={};
+    st.allocs.filter(a=>a.fecha>=desde && a.fecha<=hasta).forEach(a=>{
+      const c1=coef(a.fecha), c2=coef(st.lots[a.li].fecha);
+      fRes += a.importe*c1;
+      fReal += a.importe*c1 - a.costo*c2;
+      if(!rs[a.rid]) rs[a.rid]={fondo, tipo:'RESCATE', fecha:a.fecha, q:0, v:a.v, imp:0, ajust:0, costo:0, res:0};
+      rs[a.rid].q+=a.q; rs[a.rid].imp+=a.importe; rs[a.rid].ajust+=a.importe*c1;
+      rs[a.rid].costo+=a.costo*c2; rs[a.rid].res+=a.importe*c1-a.costo*c2;
+      resQ+=a.q;
+    });
+    Object.values(rs).forEach(r=>{ r.coefv=coef(r.fecha); det.opes.push(r); });
+
+    fIni = vIni!==null? fqIni*vIni*(modo==='real'? Math.round(iCierre/indice(mk(desde))*1e4)/1e4 : 1) : 0;
+    fFin = vFin!==null? fqFin*vFin : 0;
+
+    det.fondos.push({fondo, qIni:fqIni, qFin:fqFin, ini:fIni, fin:fFin, sus:fSus, res:fRes,
+                     realizado:fReal, tenencia:fTen, vIni, vFin});
+    ini+=fIni; fin+=fFin; sus+=fSus; res+=fRes; realizado+=fReal; tenencia+=fTen;
+    qIni+=fqIni; qFin+=fqFin;
+  }
+  det.opes.sort((a,b)=> a.fecha<b.fecha?-1: a.fecha>b.fecha?1:0);
+  return {ini, fin, sus, res, realizado, tenencia, total:realizado+tenencia,
+          qIni, qFin, susQ, resQ, mesCierre, iCierre, ...det};
+}
+
+/* ---------- series mensuales ---------- */
+function meses(desde, hasta){
+  const out=[]; let [y,m]=[+desde.slice(0,4), +desde.slice(5,7)];
+  const fin=mk(hasta);
+  while(true){ const k=y+'-'+String(m).padStart(2,'0'); if(k>fin) break; out.push(k); m++; if(m>12){m=1;y++;} }
+  return out;
+}
+function serieSaldo(emp, ks, modo, iCierre){
+  const fondos=Object.keys(STATE[emp]);
+  return fondos.map((fondo,i)=>({
+    fondo, color:FONDO_COLOR[i%FONDO_COLOR.length],
+    data: ks.map(k=>{
+      const ps=posiciones(emp,fondo).filter(p=>mk(p.fecha)===k);
+      if(!ps.length) return null;
+      const c = modo==='real'? Math.round(iCierre/indice(k)*1e4)/1e4 : 1;
+      return ps[ps.length-1].saldo*c;
+    })
+  }));
+}
+function serieCuota(emp, fondo, ks){
+  return ks.map(k=>{ const ps=posiciones(emp,fondo).filter(p=>mk(p.fecha)===k); return ps.length? ps[ps.length-1].v : null; });
+}
+
+/* ---------- índices básicos de inversión ---------- */
+function diasEntre(desde, hasta){ return Math.round((new Date(hasta+'T00:00:00') - new Date(desde+'T00:00:00'))/86400000) + 1; }
+
+function indicesBasicos(c, infl, desde, hasta, modo){
+  const dias = diasEntre(desde, hasta);
+  const rendTotal = c.ini>0 ? c.total/c.ini : null;
+  const factorAnual = 365/dias;
+  const tna = rendTotal!==null ? rendTotal*factorAnual : null;
+  const tea = rendTotal!==null ? Math.pow(1+rendTotal, factorAnual)-1 : null;
+  const rendReal = rendTotal===null ? null : (modo==='real' ? rendTotal : (1+rendTotal)/(1+infl)-1);
+  return {rendTotal, tna, tea, rendReal, dias};
+}
+
+function fondoPrincipal(emp){
+  const fondos=Object.keys(STATE[emp]);
+  let best=fondos[0], bestSaldo=-1;
+  fondos.forEach(f=>{
+    const ps=posiciones(emp,f);
+    if(ps.length){ const last=ps[ps.length-1].saldo; if(last>bestSaldo){ bestSaldo=last; best=f; } }
+  });
+  return best;
+}
+
+function volatilidadMensual(emp, ks){
+  const fondo=fondoPrincipal(emp);
+  const serie=serieCuota(emp,fondo,ks).filter(v=>v!==null);
+  if(serie.length<3) return {std:null, fondo, n:0};
+  const rets=[];
+  for(let i=1;i<serie.length;i++) rets.push(serie[i]/serie[i-1]-1);
+  const mean=rets.reduce((s,x)=>s+x,0)/rets.length;
+  const variance=rets.reduce((s,x)=>s+(x-mean)**2,0)/(rets.length-1||1);
+  return {std:Math.sqrt(variance), fondo, n:rets.length};
+}
+
+function indicesCards(idx, vol){
+  const cards=[
+    {l:'Rendimiento del período', v: idx.rendTotal===null?'s/d':pct(idx.rendTotal), p:idx.dias+' días'},
+    {l:'TNA (rendimiento anual simple)', v: idx.tna===null?'s/d':pct(idx.tna), p:'anualizado, sin capitalizar'},
+    {l:'TEA (rendimiento anual compuesto)', v: idx.tea===null?'s/d':pct(idx.tea), p:'anualizado, capitalizando'},
+    {l:'Rendimiento real del período', v: idx.rendReal===null?'s/d':pct(idx.rendReal), p:'descontada la inflación'},
+    {l:'Volatilidad mensual', v: vol.std===null?'s/d':pct(vol.std), p: vol.n?`desvío estándar, ${vol.n} meses · ${vol.fondo.replace('FIMA ','')}`:'datos insuficientes'},
+  ];
+  return cards.map(k=>`<div class="kpi-card"><div class="kpi-label">${k.l}</div><div class="kpi-value tabular">${k.v}</div><div class="kpi-pct tabular">${k.p}</div></div>`).join('');
+}
+
+function base100(arr){
+  const first=arr.find(x=>x!==null); if(!first) return arr;
+  return arr.map(x=> x===null? null : x/first*100);
+}
+function serieFlujos(emp, ks, desde, hasta, modo, iCierre){
+  const s=ks.map(()=>0), r=ks.map(()=>0);
+  for(const m of DATA[emp].mov){
+    if(m.fecha<desde||m.fecha>hasta) continue;
+    const k=mk(m.fecha), i=ks.indexOf(k); if(i<0) continue;
+    const c = modo==='real'? Math.round(iCierre/indice(k)*1e4)/1e4 : 1;
+    if(m.tipo==='SUSCRIPCION') s[i]+=m.imp*c;
+    else if(m.tipo==='RESCATE') r[i]-=m.imp*c;
+  }
+  return {s,r};
+}
+
+/* ---------- estado de la vista ---------- */
+const CORTE='2026-07-31';                 // ultimo movimiento alcanzado por el ajuste
+const CORTE_MES='2026-07';                 // indice con el que se reexpresa
+let VIEW={company:'surtidor', modo:'real', desde:'2025-08-01', hasta:'2026-07-31', rendTipo:'bar'};
+let charts=[];
+function clearCharts(){ charts.forEach(c=>c.destroy()); charts=[]; }
+function mkChart(id,cfg){ const c=new Chart(document.getElementById(id),cfg); charts.push(c); return c; }
+
+const ALL_DATES = [...DATA.surtidor.mov, ...DATA.estacion.mov].map(m=>m.fecha)
+  .concat([...DATA.surtidor.pos, ...DATA.estacion.pos].map(p=>p.fecha)).sort();
+const MIN_D=ALL_DATES[0], MAX_D=ALL_DATES[ALL_DATES.length-1];
+
+/* ---------- render ---------- */
+function render(){
+  clearCharts();
+  const {company, modo, desde, hasta}=VIEW;
+  const hero=document.getElementById('hero'), kpis=document.getElementById('kpis'),
+        panels=document.getElementById('panels'), notes=document.getElementById('notes');
+  if(desde>hasta){
+    hero.innerHTML='<div class="empty">La fecha inicial es posterior a la final. Corregí el rango para ver los resultados.</div>';
+    kpis.innerHTML=''; panels.innerHTML=''; notes.innerHTML=''; return;
+  }
+  const topado = modo==='real' && hasta>CORTE;
+  const hastaEf = topado ? CORTE : hasta;
+  if(modo==='real' && desde>CORTE){
+    hero.innerHTML='<div class="empty">El ajuste por inflación llega hasta el 31/07/2026 y el rango elegido empieza después de esa fecha. Elegí un desde anterior o pasá a valores nominales.</div>';
+    kpis.innerHTML=''; panels.innerHTML=''; notes.innerHTML=''; return;
+  }
+  const ks=meses(desde,hastaEf);
+  const modoTxt = modo==='real' ? 'a moneda de '+fmtMes(CORTE_MES) : 'a valores nominales';
+
+  if(company==='both'){ renderCompare(ks, modoTxt, hastaEf); }
+  else { renderSingle(company, ks, modoTxt, hastaEf); }
+
+  let aviso='';
+  if(modo==='real'){
+    const emps = company==='both' ? ['surtidor','estacion'] : [company];
+    const post = emps.flatMap(e=>DATA[e].mov.filter(m=>m.fecha>CORTE && m.fecha<=hasta && m.tipo!=='SALDO INICIAL'));
+    aviso = `<div class="note warn"><strong>Ajuste al 31/07/2026.</strong> Solo se actualizan los movimientos concertados hasta esa fecha, y se reexpresan con el índice de ${fmtMes(CORTE_MES)} (${num(indice(CORTE_MES),4)}). `+
+      (topado
+        ? `El rango elegido llega al ${hasta.split('-').reverse().join('/')}, pero el reporte ajustado corta el 31/07/2026: `+
+          (post.length
+            ? `${post.length===1?'queda':'quedan'} fuera ${post.length} ${post.length===1?'operación':'operaciones'} por ${money0(post.reduce((a,m)=>a+m.imp,0))}, sin actualizar. `
+            : `no hay operaciones posteriores dentro del rango. `)+
+          `Para verlas, pasá a valores nominales.`
+        : `Los movimientos posteriores al 31/07/2026 no integran este reporte.`)+
+      `</div>`;
+  }
+  notes.innerHTML = aviso + `<div class="note">`+
+    `Los importes ${modo==='real'?'están reexpresados '+modoTxt+' con el índice de la Res. JG 539/18 (IPC nacional empalmado con IPIM), anticuando cada operación por su mes de concertación':'se muestran tal como figuran en el extracto, sin ajuste por inflación'}. `+
+    `El costo de las cuotapartes rescatadas se determina por lote, primero entrado primero salido. El resultado por tenencia compara la valuación al cierre contra el costo remanente. `+
+    `No incluye comisiones, impuestos, el RECPAM de los saldos monetarios ni el ajuste de las demás partidas del estado contable. `+
+    `Última posición informada: ${MAX_D.split('-').reverse().join('/')}.</div>`;
+}
+
+function heroHTML(c, label, sub){
+  return `<div class="hero-main">
+      <div class="hero-label">${label}</div>
+      <div class="hero-value tabular ${cls(c.total)}">${money0(c.total)}</div>
+      <div class="hero-note">${sub}</div>
+    </div>
+    <div class="hero-split">
+      <div><div class="l">Resultado realizado</div><div class="v tabular ${cls(c.realizado)}">${money(c.realizado)}</div></div>
+      <div><div class="l">Resultado por tenencia</div><div class="v tabular ${cls(c.tenencia)}">${money(c.tenencia)}</div></div>
+      <div><div class="l">Saldo al cierre</div><div class="v tabular">${money(c.fin)}</div></div>
+    </div>`;
+}
+
+function kpiCards(c){
+  const cards=[
+    {l:'Saldo al inicio', v:money(c.ini), p:num(c.qIni)+' cuotapartes'},
+    {l:'Suscripciones del período', v:money(c.sus), p:num(c.susQ)+' cuotapartes'},
+    {l:'Rescates del período', v:money(c.res), p:num(c.resQ)+' cuotapartes'},
+    {l:'Saldo al cierre', v:money(c.fin), p:num(c.qFin)+' cuotapartes'},
+  ];
+  return cards.map(k=>`<div class="kpi-card"><div class="kpi-label">${k.l}</div><div class="kpi-value tabular">${k.v}</div><div class="kpi-pct tabular">${k.p}</div></div>`).join('');
+}
+
+function renderSingle(emp, ks, modoTxt, hasta){
+  const {modo,desde}=VIEW;
+  const c=calcular(emp,desde,hasta,modo);
+  const infl = indice(ks[ks.length-1])/indice(ks[0])-1;
+  const rend = c.ini>0 ? c.total/c.ini : null;
+
+  document.getElementById('hero').innerHTML = heroHTML(c,
+    `Resultado del período — ${NOMBRE[emp]}, ${modo==='real'?'ajustado al 31/07/2026':'a valores nominales'}`,
+    `Del ${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}. `+
+    (modo==='real'
+      ? `La inflación acumulada del tramo fue ${pct(infl)}: el resultado ya descuenta esa pérdida de poder adquisitivo.`
+      : `Sin descontar la inflación del tramo, que fue ${pct(infl)}.`));
+
+  document.getElementById('kpis').innerHTML =
+    `<div class="kpi-row">${kpiCards(c)}</div>`;
+
+  const idx = indicesBasicos(c, infl, desde, hasta, modo);
+  const vol = volatilidadMensual(emp, ks);
+  document.getElementById('indices').innerHTML = `<div class="kpi-row idx">${indicesCards(idx, vol)}</div>`;
+
+  const fondos=Object.keys(STATE[emp]);
+  document.getElementById('panels').innerHTML = `
+    <div class="panel span-7">
+      <div class="panel-title">Saldo invertido mes a mes</div>
+      <div class="panel-sub">Valuación de la tenencia al cierre de cada mes, ${modoTxt}</div>
+      <div class="chart-box"><canvas id="chSaldo"></canvas></div>
+    </div>
+    <div class="panel span-5">
+      <div class="panel-title">El fondo contra la inflación</div>
+      <div class="panel-sub">Valor de la cuotaparte e índice FACPCE, base 100 en ${fmtMes(ks[0])}</div>
+      <div class="chart-box"><canvas id="chIndice"></canvas></div>
+    </div>
+    <div class="panel span-7">
+      <div class="panel-title">Suscripciones y rescates por mes</div>
+      <div class="panel-sub">Entradas y salidas de capital, ${modoTxt}</div>
+      <div class="chart-box"><canvas id="chFlujos"></canvas></div>
+    </div>
+    <div class="panel span-5">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Rendimiento mensual</div>
+          <div class="panel-sub">Variación de la cuotaparte contra la inflación del mes</div>
+        </div>
+        <div class="mini-seg" role="group" aria-label="Tipo de gráfico">
+          <button data-rend="bar" aria-pressed="${VIEW.rendTipo==='bar'}">Barras</button>
+          <button data-rend="line" aria-pressed="${VIEW.rendTipo==='line'}">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chRend"></canvas></div>
+    </div>
+    <div class="panel span-7">
+      <div class="panel-title">Operaciones del período</div>
+      <div class="panel-sub">${c.opes.length} operaciones entre las dos fechas elegidas</div>
+      <div class="table-wrap"><table class="data" id="tOpes"></table></div>
+    </div>
+    <div class="panel span-5">
+      <div class="panel-title">Lotes en cartera al cierre</div>
+      <div class="panel-sub">Cuotapartes que quedan vivas y su resultado no realizado</div>
+      <div class="table-wrap"><table class="data" id="tLotes"></table></div>
+    </div>`;
+
+  /* saldo */
+  const series=serieSaldo(emp,ks,modo,c.iCierre);
+  mkChart('chSaldo',{type:'line',
+    data:{labels:ks.map(fmtMes), datasets:series.map(s=>({
+      label:s.fondo.replace('FIMA ','').replace(' CLASE',' cl.'), data:s.data, borderColor:s.color,
+      backgroundColor:s.color+'22', tension:0.28, pointRadius:2.4, borderWidth:2.2, spanGaps:true, fill:true}))},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14}},
+        tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+money(x.parsed.y)}}},
+      scales:{x:{grid:{color:gridColor},ticks:{color:tickColor}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,callback:v=>money(v)},beginAtZero:true,stacked:false}}}});
+
+  /* indice */
+  const dsIdx=[{label:'Inflación (FACPCE)', data:base100(ks.map(k=>indice(k))), borderColor:'#C8721A',
+                borderDash:[5,4], tension:0.25, pointRadius:0, borderWidth:2}];
+  fondos.forEach((f,i)=>{
+    const s=base100(serieCuota(emp,f,ks));
+    if(s.some(x=>x!==null)) dsIdx.push({label:f.replace('FIMA ','').replace(' CLASE',' cl.'), data:s,
+      borderColor:FONDO_COLOR[i%FONDO_COLOR.length], tension:0.25, pointRadius:2.2, borderWidth:2.2, spanGaps:true});
+  });
+  mkChart('chIndice',{type:'line',data:{labels:ks.map(fmtMes),datasets:dsIdx},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'line',padding:12}},
+        tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+(x.parsed.y===null?'—':x.parsed.y.toFixed(1))}}},
+      scales:{x:{grid:{color:gridColor},ticks:{color:tickColor}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor}}}}});
+
+  /* flujos */
+  const fl=serieFlujos(emp,ks,desde,hasta,modo,c.iCierre);
+  mkChart('chFlujos',{type:'bar',
+    data:{labels:ks.map(fmtMes),datasets:[
+      {label:'Suscripciones',data:fl.s,backgroundColor:'#1E8A5F',borderRadius:3,maxBarThickness:26},
+      {label:'Rescates',data:fl.r,backgroundColor:'#C1443C',borderRadius:3,maxBarThickness:26}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14}},
+        tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+money(Math.abs(x.parsed.y))}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:tickColor}},
+        y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor,callback:v=>money(v)}}}}});
+
+  /* rendimiento mensual */
+  const fPrin=fondos[0];
+  const cuota=serieCuota(emp,fPrin,ks);
+  const rendM=cuota.map((v,i)=> (i===0||v===null||cuota[i-1]===null)? null : v/cuota[i-1]-1);
+  const inflM=ks.map((k,i)=> i===0? null : indice(k)/indice(ks[i-1])-1);
+  let rendChart=null;
+  function pintarRend(){
+    if(rendChart){ charts=charts.filter(c=>c!==rendChart); rendChart.destroy(); }
+    const linea = VIEW.rendTipo==='line';
+    const serie = (label,data,color)=> linea
+      ? {label,data,borderColor:color,backgroundColor:color,tension:0.3,pointRadius:2.6,borderWidth:2.2,spanGaps:true,fill:false}
+      : {label,data,backgroundColor:color,borderRadius:3,maxBarThickness:14};
+    rendChart = mkChart('chRend',{type:VIEW.rendTipo,
+      data:{labels:ks.map(fmtMes),datasets:[
+        serie(fPrin.replace('FIMA ','').replace(' CLASE',' cl.'), rendM, '#453876'),
+        serie('Inflación del mes', inflM, '#C8721A')]},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:linea?'circle':'rect',padding:14}},
+          tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+(x.parsed.y===null?'—':pct(x.parsed.y))}}},
+        scales:{x:{grid:{display:!linea?false:true,color:gridColor},ticks:{color:tickColor}},
+          y:{grid:{color:gridColor},ticks:{color:tickColor,callback:v=>(v*100).toFixed(1)+'%'}}}}});
+  }
+  pintarRend();
+  document.querySelectorAll('.mini-seg button[data-rend]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.mini-seg button[data-rend]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+      VIEW.rendTipo=b.dataset.rend; pintarRend();
+    });
+  });
+
+  /* tablas */
+  const tO=document.getElementById('tOpes');
+  tO.innerHTML = c.opes.length ? `
+    <thead><tr><th>Fecha</th><th>Fondo</th><th>Tipo</th><th>Cuotapartes</th><th>Valor cuota</th>
+      <th>Importe</th>${VIEW.modo==='real'?'<th>Coef.</th><th>Reexpresado</th>':''}<th>Resultado</th></tr></thead>
+    <tbody>${c.opes.map(o=>`<tr>
+      <td>${o.fecha.split('-').reverse().join('/')}</td>
+      <td>${o.fondo.replace('FIMA ','')}</td>
+      <td><span class="tag ${o.tipo==='RESCATE'?'tag-r':'tag-s'}">${o.tipo==='RESCATE'?'Rescate':'Suscripción'}</span></td>
+      <td class="tabular">${num(o.q)}</td>
+      <td class="tabular">$${num(o.v,6)}</td>
+      <td class="tabular">${money0(o.imp)}</td>
+      ${VIEW.modo==='real'?`<td class="tabular">${num(o.coefv,4)}</td><td class="tabular">${money0(o.ajust)}</td>`:''}
+      <td class="tabular ${o.res!==undefined?cls(o.res):''}">${o.res!==undefined?money0(o.res):'—'}</td>
+    </tr>`).join('')}</tbody>` : '<tbody><tr><td class="empty">No hay operaciones en el rango elegido.</td></tr></tbody>';
+
+  const tL=document.getElementById('tLotes');
+  tL.innerHTML = c.lotes.length ? `
+    <thead><tr><th>Lote</th><th>Origen</th><th>Cuotapartes</th><th>Costo</th><th>Valuación</th><th>Resultado</th></tr></thead>
+    <tbody>${c.lotes.map(l=>`<tr>
+      <td>${l.lote}</td>
+      <td>${l.fecha.split('-').reverse().join('/')}</td>
+      <td class="tabular">${num(l.q)}</td>
+      <td class="tabular">${money(l.costo)}</td>
+      <td class="tabular">${money(l.val)}</td>
+      <td class="tabular ${cls(l.res)}">${money(l.res)}</td>
+    </tr>`).join('')}</tbody>` : '<tbody><tr><td class="empty">Sin tenencia al cierre.</td></tr></tbody>';
+}
+
+function renderCompare(ks, modoTxt, hasta){
+  const {modo,desde}=VIEW;
+  const cs=calcular('surtidor',desde,hasta,modo), ce=calcular('estacion',desde,hasta,modo);
+  const tot=cs.total+ce.total;
+  const infl=indice(ks[ks.length-1])/indice(ks[0])-1;
+
+  document.getElementById('hero').innerHTML = `<div class="hero-main">
+      <div class="hero-label">Resultado conjunto del período, ${modo==='real'?'ajustado al 31/07/2026':'a valores nominales'}</div>
+      <div class="hero-value tabular ${cls(tot)}">${money0(tot)}</div>
+      <div class="hero-note">Del ${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}. Inflación acumulada del tramo: ${pct(infl)}.</div>
+    </div>
+    <div class="hero-split">
+      <div><div class="l">El Surtidor S.A.</div><div class="v tabular ${cls(cs.total)}">${money(cs.total)}</div></div>
+      <div><div class="l">La Estación S.A.</div><div class="v tabular ${cls(ce.total)}">${money(ce.total)}</div></div>
+    </div>`;
+
+  document.getElementById('kpis').innerHTML =
+    `<div class="kpi-group-label"><span class="dot" style="background:${COLOR.surtidor}"></span>El Surtidor S.A.</div>
+     <div class="kpi-row">${kpiCards(cs)}</div>
+     <div class="kpi-group-label"><span class="dot" style="background:${COLOR.estacion}"></span>La Estación S.A.</div>
+     <div class="kpi-row">${kpiCards(ce)}</div>`;
+
+  const idxS = indicesBasicos(cs, infl, desde, hasta, modo);
+  const idxE = indicesBasicos(ce, infl, desde, hasta, modo);
+  const volS = volatilidadMensual('surtidor', ks);
+  const volE = volatilidadMensual('estacion', ks);
+  document.getElementById('indices').innerHTML =
+    `<div class="kpi-group-label"><span class="dot" style="background:${COLOR.surtidor}"></span>El Surtidor S.A.</div>
+     <div class="kpi-row idx">${indicesCards(idxS, volS)}</div>
+     <div class="kpi-group-label"><span class="dot" style="background:${COLOR.estacion}"></span>La Estación S.A.</div>
+     <div class="kpi-row idx">${indicesCards(idxE, volE)}</div>`;
+
+  document.getElementById('panels').innerHTML = `
+    <div class="panel span-7">
+      <div class="panel-title">Saldo invertido mes a mes</div>
+      <div class="panel-sub">Tenencia total de cada empresa, ${modoTxt}</div>
+      <div class="chart-box"><canvas id="chCmpSaldo"></canvas></div>
+    </div>
+    <div class="panel span-5">
+      <div class="panel-title">Composición del resultado</div>
+      <div class="panel-sub">Realizado por rescates y por tenencia en cartera</div>
+      <div class="chart-box"><canvas id="chCmpRes"></canvas></div>
+    </div>
+    <div class="panel span-12">
+      <div class="panel-title">Cuadro comparativo</div>
+      <div class="panel-sub">Mismo período y mismo criterio de medición para las dos empresas</div>
+      <div class="table-wrap"><table class="data" id="tCmp"></table></div>
+    </div>`;
+
+  const sSur=serieSaldo('surtidor',ks,modo,cs.iCierre), sEst=serieSaldo('estacion',ks,modo,ce.iCierre);
+  const sumar = arr => ks.map((_,i)=> arr.reduce((s,x)=> s + (x.data[i]||0), 0));
+  mkChart('chCmpSaldo',{type:'line',
+    data:{labels:ks.map(fmtMes),datasets:[
+      {label:'El Surtidor S.A.',data:sumar(sSur),borderColor:COLOR.surtidor,backgroundColor:COLOR.surtidor+'1f',tension:0.28,pointRadius:2.4,borderWidth:2.2,fill:true},
+      {label:'La Estación S.A.',data:sumar(sEst),borderColor:COLOR.estacion,backgroundColor:COLOR.estacion+'1f',tension:0.28,pointRadius:2.4,borderWidth:2.2,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14}},
+        tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+money(x.parsed.y)}}},
+      scales:{x:{grid:{color:gridColor},ticks:{color:tickColor}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,callback:v=>money(v)},beginAtZero:true}}}});
+
+  mkChart('chCmpRes',{type:'bar',
+    data:{labels:['Realizado','Tenencia','Total'],datasets:[
+      {label:'El Surtidor S.A.',data:[cs.realizado,cs.tenencia,cs.total],backgroundColor:COLOR.surtidor,borderRadius:3,maxBarThickness:34},
+      {label:'La Estación S.A.',data:[ce.realizado,ce.tenencia,ce.total],backgroundColor:COLOR.estacion,borderRadius:3,maxBarThickness:34}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14}},
+        tooltip:{...tip(),callbacks:{label:x=>' '+x.dataset.label+': '+money(x.parsed.y)}}},
+      scales:{x:{grid:{display:false},ticks:{color:tickColor}},
+        y:{grid:{color:gridColor},ticks:{color:tickColor,callback:v=>money(v)}}}}});
+
+  const filas=[
+    ['Saldo al inicio', cs.ini, ce.ini],
+    ['Suscripciones del período', cs.sus, ce.sus],
+    ['Rescates del período', cs.res, ce.res],
+    ['Saldo al cierre', cs.fin, ce.fin],
+    ['Resultado realizado', cs.realizado, ce.realizado],
+    ['Resultado por tenencia', cs.tenencia, ce.tenencia],
+    ['Resultado total', cs.total, ce.total],
+  ];
+  document.getElementById('tCmp').innerHTML = `
+    <thead><tr><th>Concepto</th><th></th><th>El Surtidor S.A.</th><th>La Estación S.A.</th><th>Conjunto</th></tr></thead>
+    <tbody>${filas.map(([l,a,b],i)=>`<tr${i===filas.length-1?' style="font-weight:700"':''}>
+      <td>${l}</td><td></td>
+      <td class="tabular ${i>=4?cls(a):''}">${money0(a)}</td>
+      <td class="tabular ${i>=4?cls(b):''}">${money0(b)}</td>
+      <td class="tabular ${i>=4?cls(a+b):''}">${money0(a+b)}</td></tr>`).join('')}</tbody>`;
+}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll('.seg button[data-company]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button[data-company]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    VIEW.company=b.dataset.company; render();
+  });
+});
+document.querySelectorAll('.seg button[data-modo]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button[data-modo]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    VIEW.modo=b.dataset.modo; render();
+  });
+});
+document.getElementById('desde').addEventListener('change',e=>{ VIEW.desde=e.target.value; render(); });
+document.getElementById('hasta').addEventListener('change',e=>{ VIEW.hasta=e.target.value; render(); });
+document.querySelectorAll('.presets button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=b.dataset.preset;
+    if(p==='ejercicio'){ VIEW.desde='2025-08-01'; VIEW.hasta='2026-07-31'; }
+    if(p==='todo'){ VIEW.desde=MIN_D; VIEW.hasta=MAX_D; }
+    if(p==='semestre'){
+      const d=new Date(MAX_D); d.setMonth(d.getMonth()-5); d.setDate(1);
+      VIEW.desde=d.toISOString().slice(0,10); VIEW.hasta=MAX_D;
+    }
+    document.getElementById('desde').value=VIEW.desde;
+    document.getElementById('hasta').value=VIEW.hasta;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>

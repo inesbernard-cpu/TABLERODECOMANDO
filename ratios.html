@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ratios 2024–2025 · La Estación S.A. y El Surtidor S.A.</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c2430;--ink2:#55606e;--ink3:#8a929c;--paper:#f6f7f4;--card:#ffffff;--rule:#dde1dc;--a:#177a72;--a2:#c9e6e2;--b:#b8651d;--b2:#f2dfc9;--gray:#a3a79f;--up:#177a72;--dn:#b23a3a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums}
+header{padding:28px 32px 16px;border-bottom:1px solid var(--rule);background:var(--card)}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:500;font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--ink2);margin:0 0 18px;font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:transparent;padding:9px 16px;font:inherit;font-weight:500;color:var(--ink2);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--a);outline-offset:-2px}
+main{padding:24px 32px 48px;max-width:1180px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:28px}
+.kpi{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.kpi .l{color:var(--ink2);font-size:13px;margin:0 0 6px}
+.kpi .v{font-size:24px;font-weight:600;margin:0;letter-spacing:-.01em}
+.kpi .d{font-size:12px;margin:4px 0 0;color:var(--ink2)}
+.legend{display:flex;gap:18px;font-size:12px;color:var(--ink2);margin:0 0 10px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lgrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px}
+.lgrow .legend{margin:0}
+.mini{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--card)}
+.mini button{border:0;background:transparent;padding:3px 9px;font:inherit;font-size:12px;color:var(--ink2);cursor:pointer}
+.mini button[aria-pressed=true]{background:var(--ink);color:#fff}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+section{margin-bottom:34px}
+h2{font-size:17px;font-weight:600;margin:0 0 4px}
+.note{color:var(--ink2);font-size:13px;margin:0 0 14px;max-width:720px}
+.row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:880px){.row{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:500;color:var(--ink2);font-size:12px;background:#fbfbf9;position:sticky;top:0;z-index:2}
+th:first-child,td:first-child{position:sticky;left:0;z-index:1;background:var(--card)}
+th:first-child{z-index:3;background:#fbfbf9}
+div[id^="t-"]{overflow:auto;max-height:420px;border-radius:10px}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+tr:last-child td{border-bottom:0}
+td.db{width:118px;padding:6px 10px}
+td.rn{cursor:help}
+.chart{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px;position:relative;height:280px}
+.chart.tall{height:340px}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.na{color:var(--ink3)}
+.foot{color:var(--ink3);font-size:12px;border-top:1px solid var(--rule);padding-top:14px;margin-top:8px}
+@media (prefers-reduced-motion:no-preference){.seg button{transition:background .15s}}
+</style>
+</head>
+<body>
+<header>
+  <a href="inicio.html" style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink2); text-decoration:none; margin-bottom:14px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    Volver a Inicio
+  </a>
+  <h1>Ratios económico-financieros 2024–2025</h1>
+  <p class="sub">Ejercicios cerrados al 31 de julio. Cifras en moneda homogénea del 31/07/2025 (RT 54). Fuente: estados contables auditados, informe del 01/11/2025.</p>
+  <div class="seg" role="group" aria-label="Vista">
+    <button id="b-est" aria-pressed="true" onclick="setView('est')">La Estación S.A.</button>
+    <button id="b-sur" aria-pressed="false" onclick="setView('sur')">El Surtidor S.A.</button>
+    <button id="b-cmp" aria-pressed="false" onclick="setView('cmp')">Comparar empresas</button>
+  </div>
+</header>
+<main>
+  <div class="kpis" id="kpis"></div>
+
+  <section>
+    <h2>Liquidez y ciclo de caja</h2>
+    <p class="note">Días calculados sobre saldos de cierre (no hay balance al 31/07/2023 para promediar el 2024). El plazo de cobro incluye las ventas con tarjeta pendientes de acreditar.</p>
+    <div class="row">
+      <div id="t-liq"></div>
+      <div><div class="lgrow"><div class="legend" id="lg1"></div><div class="mini" role="group" aria-label="Tipo de gráfico"><button id="c-liq-bar" aria-pressed="true" onclick="setKind('c-liq','bar')">Barras</button><button id="c-liq-line" aria-pressed="false" onclick="setKind('c-liq','line')">Líneas</button></div></div><div class="chart"><canvas id="c-liq"></canvas></div>
+      <div class="lgrow" style="margin-top:14px"><div class="legend" id="lg2"></div><div class="mini" role="group" aria-label="Tipo de gráfico"><button id="c-cic-bar" aria-pressed="true" onclick="setKind('c-cic','bar')">Barras</button><button id="c-cic-line" aria-pressed="false" onclick="setKind('c-cic','line')">Líneas</button></div></div><div class="chart" style="height:220px"><canvas id="c-cic"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Endeudamiento y estructura patrimonial</h2>
+    <p class="note">Las deudas con partes relacionadas son dividendos pendientes de pago a socios, clasificados como pasivo no corriente.</p>
+    <div class="row">
+      <div id="t-end"></div>
+      <div><div class="lgrow"><div class="legend" id="lg3"></div><div class="mini" role="group" aria-label="Tipo de gráfico"><button id="c-est-bar" aria-pressed="true" onclick="setKind('c-est','bar')">Barras</button><button id="c-est-line" aria-pressed="false" onclick="setKind('c-est','line')">Líneas</button></div></div><div class="chart tall"><canvas id="c-est"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rentabilidad</h2>
+    <p class="note">En 2024 el resultado final de ambas empresas está muy influido por el RECPAM y otros resultados financieros; el resultado operativo es la referencia más limpia.</p>
+    <div class="row">
+      <div id="t-ren"></div>
+      <div><div class="lgrow"><div class="legend" id="lg4"></div><div class="mini" role="group" aria-label="Tipo de gráfico"><button id="c-ren-bar" aria-pressed="true" onclick="setKind('c-ren','bar')">Barras</button><button id="c-ren-line" aria-pressed="false" onclick="setKind('c-ren','line')">Líneas</button></div></div><div class="chart tall"><canvas id="c-ren"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Eficiencia, inversión y flujo de fondos</h2>
+    <p class="note">Cobertura de intereses solo disponible para La Estación 2025 (única apertura con línea de intereses en el Anexo III). Para 2024 se muestra el interés pagado según el estado de flujo de efectivo, que es una medida de caja y no de devengamiento.</p>
+    <div class="row">
+      <div id="t-efi"></div>
+      <div><div class="lgrow"><div class="legend" id="lg5"></div><div class="mini" role="group" aria-label="Tipo de gráfico"><button id="c-flu-bar" aria-pressed="true" onclick="setKind('c-flu','bar')">Barras</button><button id="c-flu-line" aria-pressed="false" onclick="setKind('c-flu','line')">Líneas</button></div></div><div class="chart tall"><canvas id="c-flu"></canvas></div></div>
+    </div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const NOM={est:'La Estación S.A.',sur:'El Surtidor S.A.'};
+const D={
+ est:{cuit:'30-67139992-3',
+  2025:{ac:895936996.58,anc:774252160.16,at:1670189156.74,pc:567078158.05,pnc:10733157.95,pt:577811316.00,pn:1092377840.74,caja:416685416.57,inv:138499144.83,bc:121488532.30,deud:34220332.57,tc:48082434.11,prov:125639888.88,comp:4797993646.31,vtas:6931642831.14,cmv:4859159960.24,gb:2072482870.89,adm:252079351.79,com:1058844892.13,otr:581071007.94,go:1891995251.86,ro:180487619.03,re:299773246.87,dep:203125639.39,fo:625068994.04,fi:-188659990.49,ff:-101459595.98,capex:290119586.46,rel:10733157.95,int:10115894.12,intpag:0},
+  2024:{ac:581193886.29,anc:687258213.09,at:1268452099.38,pc:272999835.50,pnc:202847670.02,pt:475847505.52,pn:792604593.87,caja:81736008.99,inv:140341911.09,bc:116488759.79,deud:8861392.99,tc:40703484.51,prov:74947902.22,comp:6370732544.17,vtas:8347981455.39,cmv:6532982137.88,gb:1814999316.15,adm:211465221.57,com:1479825170.68,otr:463357372.84,go:2154647765.09,ro:-339648448.94,re:508466037.93,dep:150643913.11,fo:24143855.62,fi:65956721.74,ff:-51522706.61,capex:46113518.14,rel:202847670.02,int:null,intpag:98669021.54}},
+ sur:{cuit:'30-70708298-0',
+  2025:{ac:1374174801.67,anc:2355145259.83,at:3729320061.50,pc:649000168.41,pnc:88019474.35,pt:737019642.75,pn:2992300418.75,caja:606034168.93,inv:92287964.13,bc:357153098.03,deud:95993126.60,tc:65637058.77,prov:181542473.45,comp:12130384256.89,vtas:18229106381.11,cmv:12149583900.61,gb:6079522480.49,adm:468052426.78,com:2712994177.06,otr:1416907733.55,go:4597954337.40,ro:1481568143.10,re:498978747.71,dep:263992254.15,fo:538749736.55,fi:-40391220.55,ff:-36772920.92,capex:77164141.49,rel:88019474.35,int:null,intpag:0},
+  2024:{ac:972074119.82,anc:2541973372.51,at:3514047492.33,pc:688794318.49,pnc:331931502.80,pt:1020725821.29,pn:2493321671.04,caja:144448573.85,inv:270873.54,bc:297818727.36,deud:117558853.07,tc:190478049.71,prov:449765103.64,comp:11981700842.86,vtas:16504319206.67,cmv:12224946311.11,gb:4279372895.57,adm:329451137.99,com:3619162134.47,otr:698607435.85,go:4647220708.31,ro:-367847812.74,re:-109419942.08,dep:297695016.97,fo:111410447.48,fi:-547465238.21,ff:-277548512.49,capex:660990729.37,rel:331931502.80,int:null,intpag:93162392.98}}
+};
+
+const fx=v=>v==null?'s/d':v.toFixed(2);
+const fp=v=>v==null?'s/d':(v*100).toFixed(1)+' %';
+const fd=v=>v==null?'s/d':Math.round(v)+' d';
+const fm=v=>v==null?'s/d':(v<0?'−':'')+'$ '+Math.round(Math.abs(v)/1e6).toLocaleString('es-AR')+' M';
+const dias=(s,f)=>365*s/f;
+
+const R={
+ liq:[
+  {n:'Liquidez corriente (AC / PC)',f:d=>d.ac/d.pc,fmt:fx,k:1,d:'Cuánto activo corriente hay por cada peso de pasivo corriente. Mide la capacidad de pagar las deudas de corto plazo.'},
+  {n:'Prueba ácida ((AC − Bs. de cambio) / PC)',f:d=>(d.ac-d.bc)/d.pc,fmt:fx,k:1,d:'Igual que la liquidez corriente, pero sin contar el stock (bienes de cambio), que es lo menos líquido del activo corriente.'},
+  {n:'Liquidez absoluta ((Caja + Inv. fin.) / PC)',f:d=>(d.caja+d.inv)/d.pc,fmt:fx,k:1,d:'Qué parte del pasivo corriente se cubre solo con caja e inversiones financieras, sin depender de cobrar ni de vender stock.'},
+  {n:'Capital de trabajo (AC − PC)',f:d=>d.ac-d.pc,fmt:fm,k:1,d:'Diferencia en pesos entre el activo y el pasivo corriente: el colchón disponible para financiar la operación diaria.'},
+  {n:'Días de inventario (Bs. de cambio / CMV)',f:d=>dias(d.bc,d.cmv),fmt:fd,k:-1,d:'Cuántos días de stock hay en existencia, en relación al costo de lo vendido. A menor número, más rápido rota la mercadería.'},
+  {n:'Plazo de cobro (Deudores + tarjetas / Ventas)',f:d=>dias(d.deud+d.tc,d.vtas),fmt:fd,k:-1,d:'Días promedio que tarda la empresa en cobrarles a sus clientes.'},
+  {n:'Plazo de pago (Proveedores / Compras)',f:d=>dias(d.prov,d.comp),fmt:fd,k:1,d:'Días promedio que tarda la empresa en pagarles a sus proveedores.'},
+  {n:'Ciclo de caja (inventario + cobro − pago)',f:d=>dias(d.bc,d.cmv)+dias(d.deud+d.tc,d.vtas)-dias(d.prov,d.comp),fmt:fd,k:-1,d:'Días que pasan desde que se paga una compra hasta que se cobra la venta correspondiente. Cuanto más bajo, menos financiamiento propio necesita el ciclo operativo.'}],
+ end:[
+  {n:'Endeudamiento (Pasivo / PN)',f:d=>d.pt/d.pn,fmt:fx,k:-1,d:'Cuánta deuda tiene la empresa por cada peso de patrimonio neto propio.'},
+  {n:'Pasivo total / Activo total',f:d=>d.pt/d.at,fmt:fp,k:-1,d:'Qué proporción del activo total está financiada con deuda de terceros.'},
+  {n:'Solvencia (PN / Pasivo)',f:d=>d.pn/d.pt,fmt:fx,k:1,d:'Inverso del endeudamiento: cuánto patrimonio propio respalda cada peso de deuda.'},
+  {n:'Financiación del activo con PN',f:d=>d.pn/d.at,fmt:fp,k:1,d:'Qué proporción del activo está financiada con recursos propios (patrimonio neto), en vez de con deuda.'},
+  {n:'Pasivo corriente / Pasivo total',f:d=>d.pc/d.pt,fmt:fp,k:0,d:'Qué parte de la deuda total vence en el corto plazo.'},
+  {n:'Inmovilización (ANC / Activo)',f:d=>d.anc/d.at,fmt:fp,k:0,d:'Qué proporción del activo está en bienes de uso y otros activos no corrientes, de menor liquidez.'},
+  {n:'Deuda con socios (dividendos) / PN',f:d=>d.rel/d.pn,fmt:fp,k:-1,d:'Cuánto se les debe a los socios en concepto de dividendos pendientes, en relación al patrimonio neto.'},
+  {n:'Cobertura del ANC con PN',f:d=>d.pn/d.anc,fmt:fx,k:1,d:'Si el patrimonio propio alcanza para financiar los activos no corrientes (bienes de uso), sin necesidad de deuda.'}],
+ ren:[
+  {n:'Margen bruto (GB / Ventas)',f:d=>d.gb/d.vtas,fmt:fp,k:1,d:'Qué porcentaje de las ventas queda después de descontar el costo de lo vendido.'},
+  {n:'Margen operativo (Rdo. op. / Ventas)',f:d=>d.ro/d.vtas,fmt:fp,k:1,d:'Qué porcentaje de las ventas queda como resultado luego de los gastos operativos, antes de impuestos y resultados financieros.'},
+  {n:'Margen EBITDA ((Rdo. op. + Amort.) / Ventas)',f:d=>(d.ro+d.dep)/d.vtas,fmt:fp,k:1,d:'Margen operativo sumando de nuevo las amortizaciones, para ver la rentabilidad antes de ese gasto que no implica salida de efectivo.'},
+  {n:'Margen neto (Rdo. ejercicio / Ventas)',f:d=>d.re/d.vtas,fmt:fp,k:1,d:'Qué porcentaje de las ventas queda como ganancia final del ejercicio.'},
+  {n:'ROA (Rdo. ejercicio / Activo)',f:d=>d.re/d.at,fmt:fp,k:1,d:'Rentabilidad del ejercicio en relación a todo el activo de la empresa.'},
+  {n:'ROA operativo (Rdo. op. / Activo)',f:d=>d.ro/d.at,fmt:fp,k:1,d:'Rentabilidad operativa (antes de resultados financieros e impuestos) en relación al activo total.'},
+  {n:'ROE (Rdo. ejercicio / PN)',f:d=>d.re/d.pn,fmt:fp,k:1,d:'Rentabilidad del ejercicio en relación al patrimonio neto de los socios.'},
+  {n:'Gastos de administración / Ventas',f:d=>d.adm/d.vtas,fmt:fp,k:-1,d:'Peso de los gastos administrativos sobre las ventas.'},
+  {n:'Gastos de comercialización / Ventas',f:d=>d.com/d.vtas,fmt:fp,k:-1,d:'Peso de los gastos de venta y comercialización sobre las ventas.'},
+  {n:'Otros gastos operativos / Ventas',f:d=>d.otr/d.vtas,fmt:fp,k:-1,d:'Peso de otros gastos operativos, no clasificados en administración ni comercialización, sobre las ventas.'}],
+ efi:[
+  {n:'Rotación del activo (Ventas / Activo)',f:d=>d.vtas/d.at,fmt:fx,k:1,d:'Cuántos pesos de venta genera cada peso de activo en el año.'},
+  {n:'Rotación de inventario (CMV / Bs. de cambio)',f:d=>d.cmv/d.bc,fmt:fx,k:1,d:'Cuántas veces se renueva el stock en el año, según el costo de lo vendido.'},
+  {n:'Rotación del activo fijo (Ventas / ANC)',f:d=>d.vtas/d.anc,fmt:fx,k:1,d:'Cuántos pesos de venta genera cada peso invertido en bienes de uso.'},
+  {n:'Flujo operativo / Ventas',f:d=>d.fo/d.vtas,fmt:fp,k:1,d:'Qué porcentaje de las ventas se convierte en efectivo generado por la operación.'},
+  {n:'Flujo operativo / Pasivo corriente',f:d=>d.fo/d.pc,fmt:fx,k:1,d:'Si el efectivo generado por la operación alcanza para cubrir la deuda de corto plazo.'},
+  {n:'Inversión en bienes de uso (capex) / Ventas',f:d=>d.capex/d.vtas,fmt:fp,k:0,d:'Cuánto invierte la empresa en bienes de uso en relación a lo que vende.'},
+  {n:'Capex / Amortización del ejercicio',f:d=>d.capex/d.dep,fmt:fx,k:0,d:'Si lo invertido en bienes de uso alcanza para reponer lo que se deprecia en el año.'},
+  {n:'Cobertura de intereses (Rdo. op. / Intereses devengados)',f:d=>d.int?d.ro/d.int:null,fmt:v=>v==null?'s/d':v.toFixed(1)+'×',k:1,d:'Cuántas veces el resultado operativo cubre los intereses devengados de la deuda.'},
+  {n:'Intereses pagados según flujo de efectivo',f:d=>d.intpag,fmt:fm,k:-1,d:'Monto de intereses efectivamente pagados en el período, según el estado de flujo de efectivo.'}]
+};
+
+let view='est',charts={},kinds={'c-liq':'bar','c-cic':'bar','c-ren':'bar','c-flu':'bar','c-est':'bar'};
+function ds(k,s,data){return k==='line'?{label:s.l,data,borderColor:s.c,backgroundColor:s.c,borderWidth:2,pointRadius:5,pointHoverRadius:7,tension:0,fill:false}:{label:s.l,data,backgroundColor:s.c,borderRadius:4,maxBarThickness:26};}
+function setKind(id,k){kinds[id]=k;for(const b of['bar','line'])document.getElementById(id+'-'+b).setAttribute('aria-pressed',String(k===b));render();}
+const rng=r=>{const v=[];for(const c of['est','sur'])for(const y of[2024,2025]){const x=r.f(D[c][y]);if(x!=null)v.push(x);}return[Math.min(...v),Math.max(...v)];};
+function dumb(r,a,b,ca,cb){
+ if(a==null||b==null)return'';
+ const[lo,hi]=rng(r);const sp=hi-lo||1;const px=v=>6+((v-lo)/sp)*94;
+ return `<svg width="106" height="16" viewBox="0 0 106 16" aria-hidden="true"><line x1="6" x2="100" y1="8" y2="8" stroke="#e6e8e3" stroke-width="2"/><line x1="${px(a)}" x2="${px(b)}" y1="8" y2="8" stroke="#cfd3cc" stroke-width="3"/><circle cx="${px(a)}" cy="8" r="4.5" fill="${ca}"/><circle cx="${px(b)}" cy="8" r="4.5" fill="${cb}"/></svg>`;
+}
+function delta(r,a,b){
+ if(a==null||b==null)return'<span class="na">–</span>';
+ const d=b-a;let cls='';if(r.k!==0&&Math.abs(d)>1e-9)cls=d*r.k>0?'up':'dn';
+ let t;if(r.fmt===fp)t=(d>=0?'+':'−')+(Math.abs(d)*100).toFixed(1)+' pp';else if(r.fmt===fm)t=(d>=0?'+':'')+fm(d);else if(r.fmt===fd)t=(d>=0?'+':'−')+Math.abs(Math.round(d))+' d';else t=(d>=0?'+':'−')+Math.abs(d).toFixed(2);
+ return `<span class="${cls}">${t}</span>`;
+}
+function table(id,rows){
+ let h;
+ if(view!=='cmp'){
+  const e=D[view],a=e[2024],b=e[2025];
+  h='<table><thead><tr><th>Ratio</th><th>2024</th><th>2025</th><th>Variación</th><th></th></tr></thead><tbody>'+rows.map(r=>{const va=r.f(a),vb=r.f(b);return `<tr><td class="rn" title="${r.d}">${r.n}</td><td>${r.fmt(va)}</td><td>${r.fmt(vb)}</td><td>${delta(r,va,vb)}</td><td class="db">${dumb(r,va,vb,'#a3a79f','#177a72')}</td></tr>`;}).join('')+'</tbody></table>';
+ }else{
+  const e4=D.est[2024],e5=D.est[2025],s4=D.sur[2024],s5=D.sur[2025];
+  h='<table><thead><tr><th>Ratio</th><th>Estación 2024</th><th>Estación 2025</th><th></th><th>Surtidor 2024</th><th>Surtidor 2025</th><th></th></tr></thead><tbody>'+rows.map(r=>{const a=r.f(e4),b=r.f(e5),c=r.f(s4),d=r.f(s5);return `<tr><td class="rn" title="${r.d}">${r.n}</td><td>${r.fmt(a)}</td><td>${r.fmt(b)}</td><td class="db">${dumb(r,a,b,'#a3a79f','#177a72')}</td><td>${r.fmt(c)}</td><td>${r.fmt(d)}</td><td class="db">${dumb(r,c,d,'#a3a79f','#b8651d')}</td></tr>`;}).join('')+'</tbody></table>';
+ }
+ document.getElementById(id).innerHTML=h;
+}
+function legend(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span><span class="sw" style="background:${i[1]}"></span>${i[0]}</span>`).join('');}
+function series(){
+ return view==='cmp'?[{l:'La Estación 2024',d:D.est[2024],c:'#9ccbc5'},{l:'La Estación 2025',d:D.est[2025],c:'#177a72'},{l:'El Surtidor 2024',d:D.sur[2024],c:'#e6c49c'},{l:'El Surtidor 2025',d:D.sur[2025],c:'#b8651d'}]:[{l:'2024',d:D[view][2024],c:'#a3a79f'},{l:'2025',d:D[view][2025],c:'#177a72'}];
+}
+function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
+const base=(suf,extra={})=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y??c.parsed.x).toFixed(2)+suf}}},scales:{x:{grid:{display:false},ticks:{color:'#8a929c',font:{size:11}}},y:{grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',font:{size:11},callback:v=>v+suf}}},...extra});
+function render(){
+ for(const b of['est','sur','cmp'])document.getElementById('b-'+b).setAttribute('aria-pressed',String(view===b));
+ const S=series();
+ let K;
+ if(view!=='cmp'){const e=D[view],a=e[2024],b=e[2025];
+  K=[['Ventas 2025',fm(b.vtas),(b.vtas/a.vtas-1)],['Resultado operativo 2025',fm(b.ro),b.ro-a.ro,'m'],['Resultado del ejercicio 2025',fm(b.re),b.re-a.re,'m'],['Patrimonio neto',fm(b.pn),(b.pn/a.pn-1)],['Efectivo al cierre',fm(b.caja),(b.caja/a.caja-1)]];
+  document.getElementById('foot').textContent=NOM[view]+' · CUIT '+e.cuit+' · Ejercicio 01/08/2024 – 31/07/2025.';
+ }else{const e4=D.est[2024],e5=D.est[2025],s4=D.sur[2024],s5=D.sur[2025];
+  const pr=(a,b)=>`<span class="${b>=a?'up':'dn'}">${fm(a)} → ${fm(b)}</span>`;
+  K=[['Ventas',pr(e4.vtas,e5.vtas),pr(s4.vtas,s5.vtas)],['Resultado operativo',pr(e4.ro,e5.ro),pr(s4.ro,s5.ro)],['Resultado del ejercicio',pr(e4.re,e5.re),pr(s4.re,s5.re)],['Patrimonio neto',pr(e4.pn,e5.pn),pr(s4.pn,s5.pn)],['Efectivo al cierre',pr(e4.caja,e5.caja),pr(s4.caja,s5.caja)]];
+  document.getElementById('foot').textContent='La Estación S.A. y El Surtidor S.A. · 2024 → 2025, cifras en moneda del 31/07/2025.';
+ }
+ document.getElementById('kpis').innerHTML=K.map(k=>{
+  if(view==='cmp')return `<div class="kpi"><p class="l">${k[0]}</p><p class="d" style="margin:0 0 2px;color:var(--ink3)">La Estación</p><p class="v" style="font-size:15px">${k[1]}</p><p class="d" style="margin:8px 0 2px;color:var(--ink3)">El Surtidor</p><p class="v" style="font-size:15px">${k[2]}</p></div>`;
+  let d='';if(k[2]!=null){const c=k[2]>=0?'up':'dn';d=`<p class="d ${c}">${k[3]==='m'?(k[2]>=0?'+':'')+fm(k[2]):(k[2]>=0?'+':'')+(k[2]*100).toFixed(1)+' %'} vs 2024</p>`;}
+  return `<div class="kpi"><p class="l">${k[0]}</p><p class="v">${k[1]}</p>${d}</div>`;}).join('');
+ table('t-liq',R.liq);table('t-end',R.end);table('t-ren',R.ren);table('t-efi',R.efi);
+ const lg=S.map(s=>[s.l,s.c]);legend('lg1',lg);legend('lg2',lg);legend('lg4',lg);legend('lg5',lg);
+
+ mk('c-liq',{type:kinds['c-liq'],data:{labels:['Liquidez corriente','Prueba ácida','Liquidez absoluta','Pasivo / PN'],datasets:S.map(s=>ds(kinds['c-liq'],s,[s.d.ac/s.d.pc,(s.d.ac-s.d.bc)/s.d.pc,(s.d.caja+s.d.inv)/s.d.pc,s.d.pt/s.d.pn].map(v=>+v.toFixed(3))))},options:base('')});
+ mk('c-cic',{type:kinds['c-cic'],data:{labels:['Inventario','Cobro','Pago','Ciclo de caja'],datasets:S.map(s=>{const i=dias(s.d.bc,s.d.cmv),c=dias(s.d.deud+s.d.tc,s.d.vtas),p=dias(s.d.prov,s.d.comp);return ds(kinds['c-cic'],s,[i,c,-p,i+c-p].map(v=>Math.round(v)));})},options:base(' d')});
+ const est=S.map(s=>s.d);const estLabels=view==='cmp'?['Estación 2024','Estación 2025','Surtidor 2024','Surtidor 2025']:['2024','2025'];
+ legend('lg3',[['Pasivo corriente','#c9737a'],['Pasivo no corriente','#e9b5b9'],['Patrimonio neto','#177a72']]);
+ const ke=kinds['c-est'],stk=ke==='bar';
+ const eds=(l,c,arr,r)=>ke==='line'?{label:l,data:arr,borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:5,pointHoverRadius:7,tension:0,fill:false}:{label:l,data:arr,backgroundColor:c,maxBarThickness:60,...(r?{borderRadius:4}:{})};
+ mk('c-est',{type:ke,data:{labels:estLabels,datasets:[eds('Pasivo corriente','#c9737a',est.map(d=>+(d.pc/d.at*100).toFixed(1))),eds('Pasivo no corriente','#e9b5b9',est.map(d=>+(d.pnc/d.at*100).toFixed(1))),eds('Patrimonio neto','#177a72',est.map(d=>+(d.pn/d.at*100).toFixed(1)),true)]},options:base(' %',{scales:{x:{stacked:stk,grid:{display:false},ticks:{color:'#8a929c'}},y:{stacked:stk,min:0,max:100,grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',callback:v=>v+' %'},title:{display:true,text:'% del activo total',color:'#8a929c',font:{size:11}}}}})});
+ mk('c-ren',{type:kinds['c-ren'],data:{labels:['Margen bruto','Margen operativo','Margen EBITDA','Margen neto','ROA','ROE'],datasets:S.map(s=>ds(kinds['c-ren'],s,[s.d.gb/s.d.vtas,s.d.ro/s.d.vtas,(s.d.ro+s.d.dep)/s.d.vtas,s.d.re/s.d.vtas,s.d.re/s.d.at,s.d.re/s.d.pn].map(v=>+(v*100).toFixed(2))))},options:base(' %')});
+ mk('c-flu',{type:kinds['c-flu'],data:{labels:['Operativo','Inversión','Financiación','Variación neta'],datasets:S.map(s=>ds(kinds['c-flu'],s,[s.d.fo,s.d.fi,s.d.ff,s.d.fo+s.d.fi+s.d.ff].map(v=>Math.round(v/1e6))))},options:base(' M',{scales:{x:{grid:{display:false},ticks:{color:'#8a929c'}},y:{grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',callback:v=>(v<0?'−':'')+'$ '+Math.abs(v)+' M'},title:{display:true,text:'Flujo de efectivo (millones)',color:'#8a929c',font:{size:11}}}}})});
+}
+function setView(v){view=v;render();}
+render();
+</script>
+</body>
+</html>

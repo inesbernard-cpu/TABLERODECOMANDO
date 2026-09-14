@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados Operativos — El Surtidor SA / La Estación SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#211F2B; --ink-dim:#6B667A; --ink-faint:#9691A3;
+    --paper:#F7F5FA; --card:#FFFFFF; --border:rgba(33,31,43,0.10);
+    --accent:#C8721A; --accent-soft:#FBE7D3; --accent-deep:#8F4F0E;
+    --accent2:#8F4F0E; --up:#1E8A5F; --dn:#C1443C; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; height:100%; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:16px 28px; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:8px; }
+  h1.page-title{ font-size:20px; font-weight:700; margin:0 0 4px; }
+  .page-sub{ font-size:12.5px; color:var(--ink-dim); margin:0 0 12px; }
+
+  .seg{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button{ border:0; background:transparent; padding:8px 15px; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+
+  #singleView{ height:calc(100vh - 108px); }
+  #singleView iframe{ width:100%; height:100%; border:0; display:block; }
+
+  #compareView{ display:none; max-width:1280px; margin:0 auto; padding:22px 28px 50px; }
+  .kpi-group-label{ font-size:11.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.03em; margin:0 0 8px; display:flex; align-items:center; gap:7px; }
+  .kpi-group-label .dot{ width:8px; height:8px; border-radius:50%; }
+  .kpi-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:14px 16px; }
+  .kpi-label{ font-size:11px; color:var(--ink-dim); margin-bottom:6px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; line-height:1; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-title{ font-size:13.5px; font-weight:600; margin-bottom:2px; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-bottom:10px; }
+  .chart-box{ position:relative; height:300px; }
+  .span-12{ grid-column:span 12; } .span-6{ grid-column:span 6; }
+
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(33,31,43,0.05); white-space:nowrap; }
+  table.data th:first-child, table.data td:first-child{ position:sticky; left:0; z-index:1; background:var(--card); }
+  table.data th:first-child{ z-index:3; }
+  .table-wrap{ overflow:auto; max-height:420px; position:relative; border:1px solid var(--border); border-radius:8px; }
+
+  .note{ font-size:11px; color:var(--ink-faint); margin-top:14px; line-height:1.5; }
+
+  @media (max-width: 900px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .span-6{ grid-column:span 12; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-link" href="inicio.html">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    Volver a Inicio
+  </a>
+  <h1 class="page-title">Resultados Operativos</h1>
+  <p class="page-sub">Ventas, costos y erogaciones. Elegí la empresa o comparalas.</p>
+  <div class="seg" role="group" aria-label="Empresa">
+    <button id="b-sur" aria-pressed="true" data-company="surtidor">El Surtidor S.A.</button>
+    <button id="b-cmp" aria-pressed="false" data-company="both">Comparar empresas</button>
+    <button id="b-est" aria-pressed="false" data-company="estacion">La Estación S.A.</button>
+  </div>
+</div>
+
+<div id="singleView">
+  <iframe id="companyFrame" src="resultados_surtidor.html" title="Panel de resultados"></iframe>
+</div>
+
+<div id="compareView">
+
+  <div class="kpi-group-label"><span class="dot" style="background:#453876"></span>El Surtidor S.A. — total del período</div>
+  <div class="kpi-row" id="kpiSurtidor"></div>
+
+  <div class="kpi-group-label"><span class="dot" style="background:#1D6FA5"></span>La Estación S.A. — total del período</div>
+  <div class="kpi-row" id="kpiEstacion"></div>
+
+  <div class="grid">
+    <div class="panel span-6">
+      <div class="panel-title">Evolución mensual de ventas</div>
+      <div class="panel-sub">Ventas totales por empresa, ago. 2025 – jul. 2026</div>
+      <div class="chart-box"><canvas id="chartVentas"></canvas></div>
+    </div>
+    <div class="panel span-6">
+      <div class="panel-title">Evolución mensual de utilidad neta</div>
+      <div class="panel-sub">Utilidad neta total por empresa</div>
+      <div class="chart-box"><canvas id="chartUtilNeta"></canvas></div>
+    </div>
+    <div class="panel span-12">
+      <div class="panel-title">Ventas por rubro — comparado</div>
+      <div class="panel-sub">Rubros presentes en ambas empresas (no incluye "Pto. de Palos", exclusivo de El Surtidor)</div>
+      <div class="chart-box"><canvas id="chartRubros"></canvas></div>
+    </div>
+    <div class="panel span-12">
+      <div class="panel-title">Detalle por rubro</div>
+      <div class="table-wrap">
+        <table class="data" id="rubroTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="panel span-12" style="min-height:380px;">
+      <div class="panel-title">Erogaciones por concepto — comparado</div>
+      <div class="panel-sub">Top 12 conceptos de erogaciones presentes en ambas empresas, total del período</div>
+      <div class="chart-box" style="height:380px;"><canvas id="chartErogConceptos"></canvas></div>
+    </div>
+    <div class="panel span-12">
+      <div class="panel-title">Detalle de erogaciones por concepto</div>
+      <div class="table-wrap">
+        <table class="data" id="erogTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    Comparación calculada con el criterio "Con ajuste DUI" + "Transporte redistribuido" (vista por defecto de ambos paneles) para que las cifras sean equivalentes entre empresas. El Surtidor S.A. tiene un rubro adicional, "Pto. de Palos", sin equivalente en La Estación S.A., por lo que no se incluye en la comparación por rubro. La comparación de erogaciones incluye únicamente los 37 conceptos presentes en ambas empresas; conceptos exclusivos de una sola empresa (por ejemplo "Regalías - Shop" en El Surtidor) no se muestran acá. No se incluyen las amortizaciones. Para el detalle completo de cada empresa (sucursales, centros de costo, otros criterios de ajuste), usá las pestañas "El Surtidor S.A." o "La Estación S.A." de arriba.
+  </div>
+
+</div>
+
+<script>
+const COMPARE = {"monthly":{"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"],"surtidor":[{"ventas":1571253266.7497,"costo":1043347927.8611,"util_bruta":527905338.8886,"erog":483960406.53394794,"util_neta":43944932.3546},{"ventas":1586523251.3443,"costo":1071195517.2329,"util_bruta":515327734.1113,"erog":505020628.3860245,"util_neta":10307105.7253},{"ventas":1729934329.5205,"costo":1162752627.1192,"util_bruta":567181702.4013,"erog":523732787.47205275,"util_neta":43448914.9293},{"ventas":1591739180.6687,"costo":1070396554.2754,"util_bruta":521342626.3933,"erog":549280883.826312,"util_neta":-27938257.433},{"ventas":2011052734.8329,"costo":1371220750.9561,"util_bruta":639831983.8768,"erog":577159944.2018423,"util_neta":62672039.675},{"ventas":1849398586.235,"costo":1248088038.9801,"util_bruta":601310547.2549,"erog":579142155.925957,"util_neta":22168391.329},{"ventas":1668025663.6852,"costo":1154362931.74,"util_bruta":513662731.9452,"erog":548193132.6295218,"util_neta":-34530400.6844},{"ventas":1950414444.2329,"costo":1350239554.27,"util_bruta":600174889.9629,"erog":626399669.3810661,"util_neta":-26224779.4182},{"ventas":1859463563.7692,"costo":1283511423.35,"util_bruta":575952140.4192,"erog":587422265.1534069,"util_neta":-11470124.7342},{"ventas":1940598861.439,"costo":1335122835.78,"util_bruta":605476025.659,"erog":630237253.7197565,"util_neta":-24761228.0608},{"ventas":1929850095.7782,"costo":1332030993.97,"util_bruta":597819101.8082,"erog":614295124.9025031,"util_neta":-16476023.0943},{"ventas":2107752661.9539,"costo":1438192828.58,"util_bruta":669559833.3739,"erog":605783572.1350538,"util_neta":63776261.2389}],"estacion":[{"ventas":568395291.1140001,"costo":356250136.61,"util_bruta":212145154.504,"erog":145726161.924165,"util_neta":66418992.57983506},{"ventas":594532585.191,"costo":386442175.88,"util_bruta":208090409.311,"erog":159048941.197594,"util_neta":49041468.113405995},{"ventas":676642568.949,"costo":430785259.55999994,"util_bruta":245857309.389,"erog":153314658.78204498,"util_neta":92542650.606955},{"ventas":600849580.2080001,"costo":411874387.085,"util_bruta":188975193.12300003,"erog":151556912.13681498,"util_neta":37418280.986185044},{"ventas":752184169.432,"costo":530083357.67999995,"util_bruta":222100811.75200003,"erog":178552953.34298396,"util_neta":43547858.409016035},{"ventas":639181096.196,"costo":445177992.3399999,"util_bruta":194003103.85599995,"erog":159167239.97473395,"util_neta":34835863.88126598},{"ventas":569315290.92,"costo":391736102.50399995,"util_bruta":177579188.41599998,"erog":160985046.60360098,"util_neta":16594141.812399},{"ventas":689428705.2909999,"costo":469826032.9700001,"util_bruta":219602672.32099992,"erog":166236872.39672697,"util_neta":53365799.92427295},{"ventas":778428414.2122498,"costo":501886338.73,"util_bruta":276542075.4822498,"erog":175509740.129565,"util_neta":101032335.3526848},{"ventas":698748707.343,"costo":487937403.01000005,"util_bruta":210811304.33300003,"erog":114076284.51521,"util_neta":96735019.81779003},{"ventas":699039854.21,"costo":487015707.15999997,"util_bruta":212024147.0500001,"erog":185127981.758824,"util_neta":26896165.29117606},{"ventas":774646891.8740001,"costo":515037371.02,"util_bruta":259609520.85399997,"erog":175111316.77411598,"util_neta":84498204.07988401}]},"rubros":[{"rubro":"COMBUSTIBLES","surtidor_ventas":17284332784.154762,"surtidor_util_neta":-51309395.891299486,"estacion_ventas":6880175312.896361,"estacion_util_neta":693951271.7039384},{"rubro":"LUBRICANTES","surtidor_ventas":164072591.98285717,"surtidor_util_neta":0,"estacion_ventas":66543074.31110352,"estacion_util_neta":13514420.623883659},{"rubro":"TRANSPORTE","surtidor_ventas":322272653.1366667,"surtidor_util_neta":117924477.14505728,"estacion_ventas":459388607.44900006,"estacion_util_neta":36185530.3153251},{"rubro":"OTRAS MERCADERIAS","surtidor_ventas":1690441988.3795238,"surtidor_util_neta":-157736498.37721163,"estacion_ventas":635286160.2837855,"estacion_util_neta":-40724441.788277104}]};
+const EROG_COMPARE = {"top":[{"concepto":"HABERES Y CARGAS SOCIALES","surtidor":3099548862.23,"estacion":981044367.07},{"concepto":"IMPUESTOS NACIONALES","surtidor":964279389.54,"estacion":251965080.15},{"concepto":"IMPUESTOS PROVINCIALES","surtidor":444651263.8,"estacion":158255277.83},{"concepto":"HONORARIOS","surtidor":135623116.47,"estacion":49848607.07},{"concepto":"ENERGIA ELECTRICA","surtidor":120549354.92,"estacion":33264074.41},{"concepto":"PLAN MARKETING SHELL","surtidor":97772036.2,"estacion":-13214599.54},{"concepto":"IMPUESTOS MUNICIPALES","surtidor":77979033.66,"estacion":32577688.7},{"concepto":"COMISION COBRANZA CASH SHELL","surtidor":84184957.77,"estacion":22821907.86},{"concepto":"VIGILANCIA, HIGIENE Y SEGURIDAD LABORAL","surtidor":69656209.45,"estacion":22864720.87},{"concepto":"MANTENIMIENTO EDIFICIO","surtidor":57835443.06,"estacion":21595162.03},{"concepto":"SHELL BOX","surtidor":-32783271.08,"estacion":-44247626.13},{"concepto":"RECONOCIMIENTO RETAILING SHELL","surtidor":57973077.08,"estacion":17871916.84}],"all":[{"concepto":"HABERES Y CARGAS SOCIALES","surtidor":3099548862.23,"estacion":981044367.07},{"concepto":"IMPUESTOS NACIONALES","surtidor":964279389.54,"estacion":251965080.15},{"concepto":"IMPUESTOS PROVINCIALES","surtidor":444651263.8,"estacion":158255277.83},{"concepto":"HONORARIOS","surtidor":135623116.47,"estacion":49848607.07},{"concepto":"ENERGIA ELECTRICA","surtidor":120549354.92,"estacion":33264074.41},{"concepto":"PLAN MARKETING SHELL","surtidor":97772036.2,"estacion":-13214599.54},{"concepto":"IMPUESTOS MUNICIPALES","surtidor":77979033.66,"estacion":32577688.7},{"concepto":"COMISION COBRANZA CASH SHELL","surtidor":84184957.77,"estacion":22821907.86},{"concepto":"VIGILANCIA, HIGIENE Y SEGURIDAD LABORAL","surtidor":69656209.45,"estacion":22864720.87},{"concepto":"MANTENIMIENTO EDIFICIO","surtidor":57835443.06,"estacion":21595162.03},{"concepto":"SHELL BOX","surtidor":-32783271.08,"estacion":-44247626.13},{"concepto":"RECONOCIMIENTO RETAILING SHELL","surtidor":57973077.08,"estacion":17871916.84},{"concepto":"GASTOS DESCARTABLES VASOS PLATOS, ETC","surtidor":60495824.47,"estacion":3418496.41},{"concepto":"CAMION MANTENIMIENTO","surtidor":22219847.06,"estacion":35675475.09},{"concepto":"INSUMOS LIMPIEZA","surtidor":44387524.46,"estacion":6448083.91},{"concepto":"MANTENIMIENTO MAQUINARIAS Y EQUIPOS","surtidor":29447463.0,"estacion":11533007.04},{"concepto":"GASTOS GENERALES","surtidor":29654631.99,"estacion":4086419.66},{"concepto":"SEGUROS","surtidor":11080141.85,"estacion":21123161.6},{"concepto":"UNIFORMES","surtidor":22796150.09,"estacion":6642606.4},{"concepto":"CAMION COMBUSTIBLES Y LUBRICANTES","surtidor":2083536.31,"estacion":20062050.74},{"concepto":"GASTOS NO GRAVADOS","surtidor":7856671.6,"estacion":13168128.19},{"concepto":"FLETES OTRAS MERCADERIAS","surtidor":13582081.82,"estacion":6620092.02},{"concepto":"PUBLICIDAD Y PROPAGANDA","surtidor":12019834.66,"estacion":6355412.85},{"concepto":"TELEFONÍA E INTERNET","surtidor":7215629.74,"estacion":10599015.36},{"concepto":"GASTOS Y COMISIONES BANCARIAS","surtidor":12226410.32,"estacion":4255937.87},{"concepto":"SHELL FLOTA","surtidor":11838716.85,"estacion":3453570.36},{"concepto":"INSUMOS INFORMATICOS","surtidor":8284496.73,"estacion":3237928.91},{"concepto":"SELLADOS Y CERTIFICACIONES VS","surtidor":7914008.09,"estacion":2622818.25},{"concepto":"GASTOS DE OFICINA","surtidor":5964369.44,"estacion":2172134.48},{"concepto":"MANTENIMIENTO DE RODADOS","surtidor":2700090.25,"estacion":3262693.15},{"concepto":"GASTOS DE VIAJES","surtidor":2682118.61,"estacion":789394.8},{"concepto":"CAMION PEAJES","surtidor":1468763.55,"estacion":1932913.59},{"concepto":"COMBUSTIBLES Y LUBRICANTES","surtidor":288580.55,"estacion":1897183.81},{"concepto":"OTROS TRIBUTOS","surtidor":1172400.0,"estacion":360000.0},{"concepto":"FUMIGACION","surtidor":502000.0,"estacion":286000.0},{"concepto":"APORTE VOLUNTARIO CIPET","surtidor":264720.0,"estacion":398880.0},{"concepto":"CAMION GOMERIA","surtidor":75131.0,"estacion":226000.0}]};
+
+(function(){
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#6B667A';
+  Chart.defaults.borderColor = 'rgba(33,31,43,0.06)';
+
+  const MES_NOMBRES = {'01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun','07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'};
+  function fmtPeriodo(p){ const [y,m] = p.split('-'); return MES_NOMBRES[m]+' '+y.slice(2); }
+  function fmtMoney(n){
+    const abs = Math.abs(n);
+    if (abs >= 1e9) return (n/1e9).toFixed(2)+' mil M';
+    if (abs >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0});
+  }
+  function fmtPct(n){ return (n*100).toFixed(1)+'%'; }
+
+  const gridColor = 'rgba(33,31,43,0.06)';
+  const tickColor = '#8A8698';
+  function tooltipBase(){
+    return { backgroundColor:'#211F2B', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#D8D5E2', padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+
+  function sumField(arr, field){ return arr.reduce((s,d)=>s+d[field],0); }
+
+  let COMPANY_TOTALS = null;
+
+  function renderKPIs(){
+    const sTot = { ventas: sumField(COMPARE.monthly.surtidor,'ventas'), costo: sumField(COMPARE.monthly.surtidor,'costo'),
+                   util_bruta: sumField(COMPARE.monthly.surtidor,'util_bruta'), erog: sumField(COMPARE.monthly.surtidor,'erog'),
+                   util_neta: sumField(COMPARE.monthly.surtidor,'util_neta') };
+    const eTot = { ventas: sumField(COMPARE.monthly.estacion,'ventas'), costo: sumField(COMPARE.monthly.estacion,'costo'),
+                   util_bruta: sumField(COMPARE.monthly.estacion,'util_bruta'), erog: sumField(COMPARE.monthly.estacion,'erog'),
+                   util_neta: sumField(COMPARE.monthly.estacion,'util_neta') };
+    COMPANY_TOTALS = { surtidor: sTot, estacion: eTot };
+
+    function cardsHTML(t){
+      return [
+        {label:'Ventas', value: fmtMoney(t.ventas)},
+        {label:'Costo', value: fmtMoney(t.costo)},
+        {label:'Utilidad bruta', value: fmtMoney(t.util_bruta), pct: t.util_bruta/t.ventas},
+        {label:'Erogaciones', value: fmtMoney(t.erog)},
+        {label:'Utilidad neta', value: fmtMoney(t.util_neta), pct: t.util_neta/t.ventas},
+      ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value tabular">${c.value}</div>${c.pct!==undefined ? `<div class="kpi-pct tabular">${fmtPct(c.pct)} de ventas</div>` : ''}</div>`).join('');
+    }
+    document.getElementById('kpiSurtidor').innerHTML = cardsHTML(sTot);
+    document.getElementById('kpiEstacion').innerHTML = cardsHTML(eTot);
+  }
+
+  let charts = {};
+  function buildTrendCharts(){
+    const labels = COMPARE.monthly.periods.map(fmtPeriodo);
+    const colors = { surtidor:'#453876', estacion:'#1D6FA5' };
+
+    charts.ventas = new Chart(document.getElementById('chartVentas'), {
+      type:'line',
+      data:{ labels, datasets:[
+        { label:'El Surtidor S.A.', data: COMPARE.monthly.surtidor.map(d=>d.ventas), borderColor:colors.surtidor, backgroundColor:colors.surtidor, tension:0.3, pointRadius:2.5, borderWidth:2.2 },
+        { label:'La Estación S.A.', data: COMPARE.monthly.estacion.map(d=>d.ventas), borderColor:colors.estacion, backgroundColor:colors.estacion, tension:0.3, pointRadius:2.5, borderWidth:2.2 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14}}, tooltip:{...tooltipBase(), callbacks:{label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`}} },
+        scales:{ x:{grid:{color:gridColor}, ticks:{color:tickColor}}, y:{grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true} }
+      }
+    });
+
+    charts.utilNeta = new Chart(document.getElementById('chartUtilNeta'), {
+      type:'line',
+      data:{ labels, datasets:[
+        { label:'El Surtidor S.A.', data: COMPARE.monthly.surtidor.map(d=>d.util_neta), borderColor:colors.surtidor, backgroundColor:colors.surtidor, tension:0.3, pointRadius:2.5, borderWidth:2.2 },
+        { label:'La Estación S.A.', data: COMPARE.monthly.estacion.map(d=>d.util_neta), borderColor:colors.estacion, backgroundColor:colors.estacion, tension:0.3, pointRadius:2.5, borderWidth:2.2 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14}}, tooltip:{...tooltipBase(), callbacks:{label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`}} },
+        scales:{ x:{grid:{color:gridColor}, ticks:{color:tickColor}}, y:{grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}} }
+      }
+    });
+  }
+
+  function buildRubroChart(){
+    const labels = COMPARE.rubros.map(r=>r.rubro);
+    charts.rubros = new Chart(document.getElementById('chartRubros'), {
+      type:'bar',
+      data:{ labels, datasets:[
+        { label:'El Surtidor S.A. — Ventas', data: COMPARE.rubros.map(r=>r.surtidor_ventas), backgroundColor:'#453876', borderRadius:3, maxBarThickness:40 },
+        { label:'La Estación S.A. — Ventas', data: COMPARE.rubros.map(r=>r.estacion_ventas), backgroundColor:'#1D6FA5', borderRadius:3, maxBarThickness:40 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14}}, tooltip:{...tooltipBase(), callbacks:{label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`}} },
+        scales:{ x:{grid:{display:false}, ticks:{color:tickColor}}, y:{grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true} }
+      }
+    });
+  }
+
+  function renderRubroTable(){
+    const table = document.getElementById('rubroTable');
+    table.querySelector('thead') ? null : null;
+    table.innerHTML = `
+      <thead><tr>
+        <th>Rubro</th><th>Ventas — El Surtidor</th><th>Util. neta — El Surtidor</th><th>Ventas — La Estación</th><th>Util. neta — La Estación</th>
+      </tr></thead>
+      <tbody>
+        ${COMPARE.rubros.map(r=>`
+          <tr>
+            <td>${r.rubro}</td>
+            <td class="tabular">${fmtMoney(r.surtidor_ventas)}</td>
+            <td class="tabular">${fmtMoney(r.surtidor_util_neta)}</td>
+            <td class="tabular">${fmtMoney(r.estacion_ventas)}</td>
+            <td class="tabular">${fmtMoney(r.estacion_util_neta)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+  }
+
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+
+  function buildErogChart(){
+    const labels = EROG_COMPARE.top.map(r=>r.concepto);
+    const sVentas = COMPANY_TOTALS.surtidor.ventas, eVentas = COMPANY_TOTALS.estacion.ventas;
+    charts.erog = new Chart(document.getElementById('chartErogConceptos'), {
+      type:'bar',
+      data:{ labels, datasets:[
+        { label:'El Surtidor S.A.', data: EROG_COMPARE.top.map(r=>r.surtidor), backgroundColor:'#453876', borderRadius:3, maxBarThickness:16 },
+        { label:'La Estación S.A.', data: EROG_COMPARE.top.map(r=>r.estacion), backgroundColor:'#1D6FA5', borderRadius:3, maxBarThickness:16 }
+      ]},
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14}},
+          tooltip:{...tooltipBase(), callbacks:{label:c=>{
+            const ventas = c.datasetIndex===0 ? sVentas : eVentas;
+            return ` ${c.dataset.label}: ${fmtMoney(c.parsed.x)} (${fmtPct(c.parsed.x/ventas)} de ventas)`;
+          }}} },
+        scales:{ x:{grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}}, y:{grid:{display:false}, ticks:{color:tickColor, font:{size:10.5}}} }
+      }
+    });
+  }
+
+  function renderErogTable(){
+    const table = document.getElementById('erogTable');
+    const sVentas = COMPANY_TOTALS.surtidor.ventas, eVentas = COMPANY_TOTALS.estacion.ventas;
+    table.innerHTML = `
+      <thead><tr><th>Concepto</th><th>El Surtidor S.A.</th><th>% ventas</th><th>La Estación S.A.</th><th>% ventas</th></tr></thead>
+      <tbody>
+        ${EROG_COMPARE.all.map(r=>`
+          <tr>
+            <td>${r.concepto}</td>
+            <td class="tabular">${fmtMoney(r.surtidor)}</td>
+            <td class="tabular">${fmtPct(r.surtidor/sVentas)}</td>
+            <td class="tabular">${fmtMoney(r.estacion)}</td>
+            <td class="tabular">${fmtPct(r.estacion/eVentas)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+  }
+
+  function renderCompare(){
+    destroyCharts();
+    renderKPIs();
+    buildTrendCharts();
+    buildRubroChart();
+    renderRubroTable();
+    buildErogChart();
+    renderErogTable();
+  }
+
+  // ---------- company selector ----------
+  const singleView = document.getElementById('singleView');
+  const compareView = document.getElementById('compareView');
+  const iframe = document.getElementById('companyFrame');
+  let compareBuilt = false;
+
+  document.querySelectorAll('.seg button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const company = btn.dataset.company;
+      document.querySelectorAll('.seg button').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
+      if (company === 'both'){
+        singleView.style.display = 'none';
+        compareView.style.display = 'block';
+        if (!compareBuilt){ renderCompare(); compareBuilt = true; }
+      } else {
+        compareView.style.display = 'none';
+        singleView.style.display = 'block';
+        const src = company === 'surtidor' ? 'resultados_surtidor.html' : 'resultados_estacion.html';
+        if (iframe.getAttribute('src') !== src) iframe.setAttribute('src', src);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

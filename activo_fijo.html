@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inversión en Activo Fijo — El Surtidor SA / La Estación SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#221A12; --ink-dim:#7A6A57; --ink-faint:#A8998A;
+    --paper:#FAF6F1; --card:#FFFFFF; --border:rgba(34,26,18,0.10);
+    --accent:#8B5E34; --accent-soft:#EFE3D3; --accent-deep:#5F3E1F;
+    --accent2:#3E6B8B; --accent2-soft:#DCE9F0; --accent2-deep:#274a63;
+    --up:#1E8A5F; --dn:#C1443C; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+  ::selection{ background:var(--accent-soft); color:var(--accent-deep); }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:18px 28px; }
+  .topbar-inner{ max-width:1320px; margin:0 auto; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:10px; }
+  .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.02em; color:var(--ink-dim); }
+  .brand span{ color:var(--accent); transition:color .15s ease; }
+  h1.page-title{ font-size:23px; font-weight:700; margin:2px 0 10px; }
+  .page-sub{ font-size:13.5px; color:var(--ink-dim); margin:0 0 14px; max-width:72ch; }
+
+  .seg{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button{ border:0; background:transparent; padding:9px 16px; font:inherit; font-size:13px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+
+  .layout{ max-width:1320px; margin:0 auto; padding:24px 28px 60px; display:flex; gap:20px; align-items:flex-start; }
+
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:18px; display:flex; flex-direction:column; gap:18px; position:sticky; top:20px;
+  }
+  .filter-block{ display:flex; flex-direction:column; gap:8px; }
+  .filter-block.disabled{ opacity:0.45; pointer-events:none; }
+  .filter-label{ font-size:11.5px; font-weight:600; color:var(--ink-dim); display:flex; align-items:center; gap:6px; }
+  .seg.mini{ width:100%; }
+  .seg.mini button{ flex:1; padding:8px 6px; font-size:11.5px; }
+
+  .chip-group{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 10px; border-radius:100px; font-size:11.5px; font-weight:500; font-family:inherit; cursor:pointer;
+    display:flex; align-items:center; gap:5px; transition:all .15s ease;
+  }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; }
+  .chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+  .chip-hint{ font-size:10.5px; color:var(--ink-faint); line-height:1.4; }
+  .reset-btn{
+    background:transparent; border:1px solid var(--border); color:var(--ink-dim);
+    padding:8px 10px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--dn); color:var(--dn); }
+
+  .main{ flex:1; min-width:0; }
+
+  .kpi-group-label{ font-size:11.5px; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.03em; margin:0 0 8px; display:flex; align-items:center; gap:7px; }
+  .kpi-group-label .dot{ width:8px; height:8px; border-radius:50%; }
+  .kpi-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:14px; }
+  .kpi-row:last-of-type{ margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; line-height:1; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:6px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .panel-title{ font-size:13.5px; font-weight:600; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .chart-box{ position:relative; flex:1; min-height:280px; }
+  .span-12{ grid-column:span 12; } .span-7{ grid-column:span 7; } .span-5{ grid-column:span 5; }
+
+  .toggle-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .toggle-group button{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toggle-group button.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+
+  .table-wrap{ overflow:auto; max-height:440px; position:relative; border:1px solid var(--border); border-radius:8px; }
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(34,26,18,0.05); white-space:nowrap; }
+  table.data th:first-child, table.data td:first-child{ position:sticky; left:0; z-index:1; background:var(--card); }
+  table.data th:first-child{ z-index:3; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  table.data tbody tr:hover td:first-child{ background:var(--paper); }
+  .export-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .export-btn:hover{ background:var(--accent); color:#fff; }
+
+  .foot-note{ margin-top:22px; font-size:11.5px; color:var(--ink-faint); line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+
+  @media (max-width: 1080px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; position:static; flex-direction:row; flex-wrap:wrap; }
+    .filter-block{ min-width:180px; flex:1; }
+  }
+  @media (max-width: 780px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .span-7,.span-5{ grid-column:span 12; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="inicio.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Volver a Inicio
+    </a>
+    <div>
+      <div class="brand" id="brandLabel">EL SURTIDOR <span>SA</span></div>
+      <h1 class="page-title">Inversión en Activo Fijo</h1>
+      <p class="page-sub">Altas y bajas de bienes de uso en relación a las ventas netas del ejercicio, y detalle de incorporaciones por rubro, proveedor y comprobante.</p>
+      <div class="seg" role="group" aria-label="Empresa">
+        <button id="b-sur" aria-pressed="true" data-company="surtidor">El Surtidor S.A.</button>
+        <button id="b-cmp" aria-pressed="false" data-company="both">Comparar empresas</button>
+        <button id="b-est" aria-pressed="false" data-company="estacion">La Estación S.A.</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="filter-block" id="ejercicioBlock">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Ejercicio (altas)
+      </div>
+      <div class="seg mini" role="group" aria-label="Ejercicio">
+        <button data-ej="2025" aria-pressed="false">2025</button>
+        <button data-ej="2026" aria-pressed="false">2026</button>
+        <button data-ej="both" aria-pressed="true">Ambos</button>
+      </div>
+    </div>
+
+    <div class="filter-block" id="rubroBlock">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Rubro
+      </div>
+      <div class="chip-group" id="fRubro"></div>
+      <div class="chip-hint" id="rubroHint">Clic para ver solo ese rubro. Clic de nuevo para volver a ver todos.</div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Restablecer filtros</button>
+  </aside>
+
+  <div class="main">
+
+    <div id="kpiZone"></div>
+
+    <div class="grid">
+
+      <div class="panel span-12" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="histTitle">Evolución histórica — Altas y Bajas de activo fijo</div>
+            <div class="panel-sub">% sobre ventas netas del ejercicio, 2020–2026</div>
+          </div>
+          <div class="toggle-group" id="histKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartHistorico"></canvas></div>
+      </div>
+
+      <div class="panel span-7" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="rankTitle">Participación de altas por rubro</div>
+            <div class="panel-sub" id="rankingSub">Valor neto, ejercicio seleccionado</div>
+          </div>
+          <div class="toggle-group" id="rankKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartRanking"></canvas></div>
+      </div>
+
+      <div class="panel span-5" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="resumenTitle">Resumen por rubro</div>
+            <div class="panel-sub" id="resumenSub">Valor neto y % sobre el total de altas</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="resumenTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="panel span-12" id="detallePanel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Detalle de incorporaciones</div>
+            <div class="panel-sub" id="detalleSub">Rubro, proveedor, fecha, comprobante y valor neto</div>
+          </div>
+          <button class="export-btn" id="exportBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="detalleTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="foot-note" id="footNote">
+      Fuente: registros de compras/ventas de Calden Oil, para los ejercicios cerrados en julio de 2025 y julio de 2026. Datos históricos suministrados para los ejercicios anteriores, sin detalle.
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.9,"altas":1196674.58,"pct_altas":0.004709674570792881,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2021,"ventas":269886878.36,"altas":14612010.499999998,"pct_altas":0.05414124091097586,"bajas":843903.85,"pct_bajas":0.0031268798806673485},{"ejercicio":2022,"ventas":656363095.24,"altas":2464445.17,"pct_altas":0.0037546979528135602,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2023,"ventas":1412037292.22,"altas":38583353.21,"pct_altas":0.027324599302430173,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2024,"ventas":3906696975.92,"altas":42973256.07,"pct_altas":0.010999894881757523,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2025,"ventas":6127844181.71,"altas":262308357.45000002,"pct_altas":0.042805977056812466,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2026,"ventas":7853794223.941251,"altas":530510738.5,"pct_altas":0.06754833694048264,"bajas":0.0,"pct_bajas":0.0}],"detalle":[{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2024-09-24","comprobante":"FAA-00002-00002972","valor_neto":11872000.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CETROGAR S.A.","fecha":"2024-11-11","comprobante":"FAA-01819-00002425","valor_neto":74048.76},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2024-11-25","comprobante":"FAA-00006-00001830","valor_neto":27629154.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-01-27","comprobante":"FAA-00012-00021264","valor_neto":93826.13},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-01-27","comprobante":"FAA-00011-00016360","valor_neto":1029906.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"PAN CON PAN DE IRISARRI MARIA FERNANDA","fecha":"2025-02-27","comprobante":"FAA-00004-00002696","valor_neto":907149.32},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-06","comprobante":"FAA-00011-00016457","valor_neto":438365.75},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"SMART IT SOLUTIONS SRL","fecha":"2025-03-06","comprobante":"FAA-00002-00043893","valor_neto":1420724.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-12","comprobante":"FAA-00012-00021400","valor_neto":222474.86},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-12","comprobante":"FAA-00011-00016471","valor_neto":2441890.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-03-17","comprobante":"FAA-00004-00000465","valor_neto":1246943.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"NCA-00031-00000439","valor_neto":-3471796.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"NCA-00032-00000587","valor_neto":-316301.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"FAA-00032-00001403","valor_neto":316301.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"FAA-00031-00000452","valor_neto":3471796.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-09","comprobante":"FAA-00011-00016623","valor_neto":1065759.5},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"NCA-00031-00000481","valor_neto":-3008250.52},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"FAA-00031-00000495","valor_neto":1504125.26},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002563","valor_neto":3883705.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-21","comprobante":"NDA-00006-00000186","valor_neto":34480.0},{"ejercicio":2025,"rubro":"Muebles y Utiles","proveedor":"RAMON VALDEZ","fecha":"2025-07-17","comprobante":"FAA-00006-00000325","valor_neto":454132.23},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2024-10-22","comprobante":"FAA-00002-00003008","valor_neto":496944.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"LOCANE GUSTAVO FABIAN","fecha":"2024-11-25","comprobante":"FAA-00002-00000043","valor_neto":6319336.4},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2025-02-26","comprobante":"FAA-00002-00003202","valor_neto":603770.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"ZETABURGOS SRL","fecha":"2025-02-27","comprobante":"FAA-00011-00067414","valor_neto":493304.28},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-03-26","comprobante":"FAA-00002-00000402","valor_neto":507800.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-04-07","comprobante":"FAA-00002-00000406","valor_neto":507800.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002563","valor_neto":581455.0},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2024-11-26","comprobante":"FAA-00039-00001428","valor_neto":5203619.91},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-02-25","comprobante":"FAA-00039-00001647","valor_neto":93696801.31},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-02-28","comprobante":"FAA-00039-00001672","valor_neto":1691815.41},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-03-10","comprobante":"NCA-00021-00001542","valor_neto":-100592236.63},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-03-10","comprobante":"FAA-00021-00000814","valor_neto":201487513.81},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"THAR S.A.","fecha":"2025-08-10","comprobante":"FAA-00007-00006234","valor_neto":2892561.98},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-08-13","comprobante":"FAA-00004-00000500","valor_neto":163694.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-11-11","comprobante":"FAA-00001-00000644","valor_neto":275393.38},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-04-12","comprobante":"FAA-00001-00000670","valor_neto":317445.6},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"D.F. MEGAFRIO S.R.L.","fecha":"2026-05-19","comprobante":"FAA-00011-00063518","valor_neto":638682.45},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-09-07","comprobante":"FAA-00001-00000691","valor_neto":250560.59},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"UNIMATE SA","fecha":"2026-03-11","comprobante":"FAA-00012-00002244","valor_neto":17949524.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"RAIZEN ARGENTINA S.A.","fecha":"2025-10-30","comprobante":"FAA-05004-00019399","valor_neto":58175447.4},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2025-11-07","comprobante":"FAA-00007-00004082","valor_neto":5178002.25},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-11-19","comprobante":"FAA-00006-00002953","valor_neto":11156325.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2025-11-20","comprobante":"FAA-00005-00000414","valor_neto":11931165.29},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-11-26","comprobante":"NDA-00006-00000233","valor_neto":352305.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-02-02","comprobante":"FAA-00005-00000425","valor_neto":9707198.35},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-03-05","comprobante":"FAA-00005-00000428","valor_neto":988925.62},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2026-03-24","comprobante":"FAA-00007-00004178","valor_neto":2474916.6},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2026-03-26","comprobante":"NCA-00007-00001163","valor_neto":-2474916.6},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"HECTOR V LOSI Y CIA S R L","fecha":"2026-08-11","comprobante":"FAA-00011-00013646","valor_neto":1976653.6},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-03-06","comprobante":"FAA-00039-00002324","valor_neto":12642533.94},{"ejercicio":2026,"rubro":"Rodados","proveedor":"DANES SRL","fecha":"2026-05-06","comprobante":"FAA-00022-00000504","valor_neto":163483440.0},{"ejercicio":2026,"rubro":"Rodados","proveedor":"DANES SRL","fecha":"2026-05-11","comprobante":"NDA-00012-00002473","valor_neto":577680.0},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-07-01","comprobante":"NCA-00021-00001963","valor_neto":-12642533.94},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-07-01","comprobante":"FAA-00021-00000959","valor_neto":244495733.94}]},"surtidor":{"historico":[{"ejercicio":2020,"ventas":439843859.15,"altas":13682697.26,"pct_altas":0.031108078413193872,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2021,"ventas":474722023.48,"altas":5645789.4,"pct_altas":0.011892832269741657,"bajas":843903.85,"pct_bajas":0.0017776800069515914},{"ejercicio":2022,"ventas":1349001975.43,"altas":26948255.89,"pct_altas":0.019976439160817486,"bajas":389452.34,"pct_bajas":0.00028869664173461306},{"ejercicio":2023,"ventas":2909090608.63,"altas":106147844.43,"pct_altas":0.03648832529145216,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2024,"ventas":7803954471.63,"altas":285075257.68,"pct_altas":0.036529590058007703,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2025,"ventas":16098263874.4,"altas":84705319.99,"pct_altas":0.005261767396216013,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2026,"ventas":21436124123.0,"altas":386263986.9,"pct_altas":0.01801930165563634,"bajas":126783710.41,"pct_bajas":0.005914488537317563}],"detalle":[{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"RGC ELECTRONICS","fecha":"2024-08-07","comprobante":"FAA-00005-00067479","valor_neto":19323.96},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ELECTRICIDAD TOTAL S.A","fecha":"2024-08-13","comprobante":"FAA-00015-00052159","valor_neto":56796.69},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IMS INTERNATIONAL MERCHANDISING SOLUTION","fecha":"2024-08-14","comprobante":"NCA-00006-00000873","valor_neto":-2534755.2},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IMS INTERNATIONAL MERCHANDISING SOLUTION","fecha":"2024-08-14","comprobante":"FAA-00008-00000376","valor_neto":3257686.2},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"SMART IT SOLUTIONS SRL","fecha":"2024-08-15","comprobante":"FAA-00002-00033384","valor_neto":1981900.45},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"KOL RAM","fecha":"2024-08-23","comprobante":"FAA-00008-00023878","valor_neto":277685.97},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"LIBERCAM DE LIBERTECH SRL","fecha":"2024-08-26","comprobante":"FAA-00004-00379916","valor_neto":29255.71},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"SMART IT SOLUTIONS SRL","fecha":"2024-08-29","comprobante":"FAA-00002-00034312","valor_neto":1945610.88},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"FIRSTLABEL S.R.L","fecha":"2024-09-12","comprobante":"FAA-00004-01051842","valor_neto":289255.37},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"COLUCC EQUIPAMIENTO S.A","fecha":"2024-09-13","comprobante":"FAA-00001-00008144","valor_neto":785123.14},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IMS INTERNATIONAL MERCHANDISING SOLUTION","fecha":"2024-09-20","comprobante":"FAA-00006-00002260","valor_neto":2340730.0},{"ejercicio":2025,"rubro":"Vajilla","proveedor":"AMARILLA SEBASTIAN","fecha":"2024-10-16","comprobante":"FAA-00006-00026389","valor_neto":105719.01},{"ejercicio":2025,"rubro":"Vajilla","proveedor":"VANINA PASCUZZO","fecha":"2024-10-21","comprobante":"FAA-00011-00001892","valor_neto":77603.31},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX2 ILUMINACION SA LUCTRON","fecha":"2024-10-22","comprobante":"FAA-00002-00003005","valor_neto":496944.0},{"ejercicio":2025,"rubro":"Vajilla","proveedor":"VOLF SA","fecha":"2024-10-23","comprobante":"FAA-00040-00049661","valor_neto":186417.9},{"ejercicio":2025,"rubro":"Vajilla","proveedor":"GASTROBAIRES SA","fecha":"2024-10-23","comprobante":"FAA-00006-00062994","valor_neto":479731.29},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"MIGSA SA","fecha":"2024-10-23","comprobante":"FAA-00018-00014799","valor_neto":951142.15},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"D'ARTELUZ ILUMINACION CAP I SEC IV","fecha":"2024-10-24","comprobante":"FAA-00005-00003500","valor_neto":292764.46},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000149","valor_neto":508183.63},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000148","valor_neto":961137.73},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000147","valor_neto":1260355.34},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000146","valor_neto":1489338.61},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000145","valor_neto":1901269.26},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-10-31","comprobante":"FAA-00002-00000150","valor_neto":1807326.48},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2024-11-06","comprobante":"FAA-00002-00000151","valor_neto":1256649.01},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"FRAVEGA SACI","fecha":"2024-11-14","comprobante":"FAA-03624-00001513","valor_neto":1652891.74},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CARREFOUR INC. S.A.","fecha":"2024-11-14","comprobante":"FAA-15639-00002645","valor_neto":227603.31},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CARREFOUR INC. S.A.","fecha":"2024-11-14","comprobante":"FAA-15639-00002646","valor_neto":278181.82},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CARREFOUR INC. S.A.","fecha":"2024-11-14","comprobante":"FAA-15639-00002647","valor_neto":455206.61},{"ejercicio":2025,"rubro":"Vajilla","proveedor":"MARKET & PASTA (LEDESMA MARIA CECILIA P.","fecha":"2024-11-19","comprobante":"FAA-00008-00000466","valor_neto":118595.04},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"LOCANE GUSTAVO FABIAN","fecha":"2024-11-25","comprobante":"FAA-00002-00000044","valor_neto":751045.1},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IRISARRI MARIA FERNANDA","fecha":"2024-12-05","comprobante":"FAA-00004-00002538","valor_neto":2540814.48},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"BERTONI ALBERTO PRIMO","fecha":"2024-12-10","comprobante":"FAA-00002-00003418","valor_neto":4178512.4},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IMS INTERNATIONAL MERCHANDISING SOLUTION","fecha":"2024-12-11","comprobante":"FAA-00008-00000402","valor_neto":6042820.0},{"ejercicio":2025,"rubro":"Muebles y Utiles","proveedor":"VENTURINI DOMINGO","fecha":"2025-01-20","comprobante":"FAA-00002-00000071","valor_neto":2925454.55},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"MARBA SERVICIOS INTEGRALES","fecha":"2025-01-27","comprobante":"FAA-00001-00000046","valor_neto":3660000.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-02-01","comprobante":"FAA-00011-00016456","valor_neto":896447.7},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CORE SOLUCIONES-PLAA JUAN MANUEL","fecha":"2025-02-19","comprobante":"FAA-00003-00009929","valor_neto":1276018.1},{"ejercicio":2025,"rubro":"Construcción","proveedor":"PAUNA SA","fecha":"2025-02-20","comprobante":"FAA-00011-00013369","valor_neto":950000.0},{"ejercicio":2025,"rubro":"Construcción","proveedor":"PAUNA SA","fecha":"2025-02-20","comprobante":"FAA-00011-00013370","valor_neto":1770000.0},{"ejercicio":2025,"rubro":"Construcción","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-02-24","comprobante":"FAA-00002-00000396","valor_neto":212800.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-07","comprobante":"FAA-00012-00021380","valor_neto":31656.55},{"ejercicio":2025,"rubro":"Inmuebles","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-03-10","comprobante":"FAA-00002-00000397","valor_neto":377100.0},{"ejercicio":2025,"rubro":"Muebles y Utiles","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-03-19","comprobante":"FAA-00002-00000400","valor_neto":215400.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"RES SUR SRL","fecha":"2025-03-25","comprobante":"FAA-00002-00002002","valor_neto":13258734.0},{"ejercicio":2025,"rubro":"Muebles y Utiles","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-04-03","comprobante":"FAA-00002-00000404","valor_neto":215400.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-04-09","comprobante":"FAA-00001-00000615","valor_neto":738461.16},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"HWUDI-MAX S.R.L","fecha":"2025-04-23","comprobante":"FAA-00015-00000792","valor_neto":122171.04},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"IMPORTADORA FOTOGRAFICA","fecha":"2025-04-24","comprobante":"FAA-00012-00074932","valor_neto":73523.14},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-09","comprobante":"FAA-00012-00021569","valor_neto":76964.3},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-09","comprobante":"FAA-00011-00016622","valor_neto":2179453.6},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-05-09","comprobante":"FAA-00004-00000479","valor_neto":35000.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-05-09","comprobante":"FAA-00004-00000477","valor_neto":216200.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-05-09","comprobante":"FAA-00004-00000478","valor_neto":238000.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"NCA-00031-00000482","valor_neto":-3075901.3},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"NCA-00032-00000643","valor_neto":-108620.85},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"FAA-00032-00001456","valor_neto":108620.85},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"FAA-00031-00000496","valor_neto":3075901.3},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"PAUNA SA","fecha":"2025-07-07","comprobante":"FAA-00011-00013720","valor_neto":1850000.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002562","valor_neto":12622365.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"ENTERBYTE SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002562","valor_neto":1744365.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE SRL","fecha":"2025-07-21","comprobante":"NDA-00006-00000187","valor_neto":110940.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"TECHTERM S.A.","fecha":"2025-07-29","comprobante":"FAA-00045-00004328","valor_neto":2440000.0},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"LEGUIZAMON GLADYS","fecha":"2025-08-07","comprobante":"FAA-00016-00000939","valor_neto":32834.7},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"THAR SA","fecha":"2025-08-10","comprobante":"FAA-00007-00006232","valor_neto":2768595.04},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"VENTURINI DOMINGO","fecha":"2025-08-29","comprobante":"FAA-00002-00000074","valor_neto":2314050.0},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"CHEN QIU","fecha":"2025-09-03","comprobante":"FAA-00003-00000003","valor_neto":79338.84},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"LEGUIZAMON GLADYS","fecha":"2025-09-09","comprobante":"FAA-00016-00000999","valor_neto":56892.52},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2025-09-12","comprobante":"FAA-00101-00000519","valor_neto":54545.44},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"LEGUIZAMON GLADYS","fecha":"2025-09-16","comprobante":"FAA-00016-00001013","valor_neto":23305.78},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"TBCIN S.A","fecha":"2025-09-16","comprobante":"FAA-00006-00000778","valor_neto":378842.98},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-09-17","comprobante":"FAA-00002-00000184","valor_neto":28973.43},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-09-17","comprobante":"FAA-00002-00000183","valor_neto":194135.95},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-09-17","comprobante":"FAA-00002-00000182","valor_neto":512215.88},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-09-17","comprobante":"FAA-00002-00000181","valor_neto":6323428.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"IMPORTADORA FOTOGRAFICA","fecha":"2025-09-22","comprobante":"FAA-00012-00078710","valor_neto":75255.06},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"SMART IT SOLUTIONS SRL","fecha":"2025-09-24","comprobante":"FAA-00002-00051241","valor_neto":158371.04},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-09-24","comprobante":"FAA-00004-00000507","valor_neto":432636.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"DF MEGAFRIO SRL TURBO BLENDER","fecha":"2025-09-26","comprobante":"FAA-00011-00056655","valor_neto":555866.2},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GELIN GROUP S.A","fecha":"2025-09-30","comprobante":"FAA-00012-00000233","valor_neto":268267.69},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"OPORTUTEK S.A","fecha":"2025-09-30","comprobante":"FAA-00007-00003678","valor_neto":448757.85},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GELIN GROUP S.A","fecha":"2025-10-01","comprobante":"FAA-00012-00000244","valor_neto":134133.85},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GELIN GROUP S.A","fecha":"2025-10-01","comprobante":"FAA-00012-00000245","valor_neto":134133.85},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-10-02","comprobante":"FAA-00001-00000639","valor_neto":2340994.3},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GELIN GROUP S.A","fecha":"2025-10-03","comprobante":"NCA-00012-00000011","valor_neto":-268267.69},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2025-10-09","comprobante":"FAA-00003-00076964","valor_neto":136010.33},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2025-10-09","comprobante":"FAA-00003-00076965","valor_neto":136010.33},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2025-10-15","comprobante":"FAA-00104-00000306","valor_neto":87520.64},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2025-10-16","comprobante":"FAA-00101-00000539","valor_neto":60247.93},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"INX2 ILUMINACION SA LUCTRON","fecha":"2025-10-20","comprobante":"FAA-00002-00003663","valor_neto":11511500.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"FRAVEGA SACI","fecha":"2025-10-24","comprobante":"FAA-03325-00018022","valor_neto":386776.03},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-11-05","comprobante":"FAA-00004-00000522","valor_neto":308438.02},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-11-11","comprobante":"FAA-00001-00000646","valor_neto":83415.6},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-11-11","comprobante":"FAA-00001-00000645","valor_neto":499993.99},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE SRL","fecha":"2025-11-19","comprobante":"FAA-00006-00002954","valor_neto":18395318.57},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE SRL","fecha":"2025-11-26","comprobante":"NDA-00006-00000232","valor_neto":580905.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"NEA REFRIGERACION","fecha":"2025-12-16","comprobante":"FAA-00012-00000136","valor_neto":1409954.76},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"MULTIEQUIP EQUIPAMIENTOS SEGOVIA JUAN RA","fecha":"2025-12-17","comprobante":"FAA-00012-00009404","valor_neto":1157023.97},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GRUPO NARDELLI SA","fecha":"2025-12-19","comprobante":"FAA-00003-00000361","valor_neto":666214.48},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"KUCHEN BAZAR SRL","fecha":"2026-01-03","comprobante":"FAA-00001-00019385","valor_neto":50178.7},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"INX2 ILUMINACION SA LUCTRON","fecha":"2026-01-13","comprobante":"FAA-00002-00003802","valor_neto":436272.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"COSENZA DARIO ALBERTO","fecha":"2026-01-14","comprobante":"FAA-00004-00000530","valor_neto":480502.91},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"MIKE LYNCH SRL","fecha":"2026-01-22","comprobante":"FAA-00002-00000588","valor_neto":2140338.85},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"BERTONI ALBERTO PRIMO","fecha":"2026-01-26","comprobante":"FAA-00002-00003758","valor_neto":6181818.18},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"GASTROBAIRES SA","fecha":"2026-02-02","comprobante":"FAA-00006-00072174","valor_neto":176648.8},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-02-02","comprobante":"FAA-00005-00000426","valor_neto":2223966.94},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2026-02-13","comprobante":"FAA-00101-00000608","valor_neto":27272.73},{"ejercicio":2026,"rubro":"Rodados","proveedor":"MAMPRIN SCEVOLA SRL","fecha":"2026-02-13","comprobante":"FAA-00014-00004777","valor_neto":253409479.6},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2026-02-26","comprobante":"FAA-00024-00003431","valor_neto":95139.36},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2026-02-26","comprobante":"FAA-00024-00003432","valor_neto":95139.36},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2026-02-26","comprobante":"FAA-00024-00003433","valor_neto":95139.36},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2026-02-26","comprobante":"FAA-00024-00003435","valor_neto":98022.03},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"NETSHOP GROUP SRL","fecha":"2026-02-26","comprobante":"FAA-00024-00003434","valor_neto":140495.04},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"NEA REFRIGERACION","fecha":"2026-03-04","comprobante":"FAA-00012-00000265","valor_neto":891818.18},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-03-05","comprobante":"FAA-00005-00000429","valor_neto":1482644.63},{"ejercicio":2026,"rubro":"Rodados","proveedor":"MAMPRIN SCEVOLA SRL","fecha":"2026-03-16","comprobante":"NCA-00014-00000734","valor_neto":-243745.04},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-04-12","comprobante":"FAA-00001-00000672","valor_neto":530260.33},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-04-12","comprobante":"FAA-00001-00000673","valor_neto":551021.02},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"VENTURINI DOMINGO","fecha":"2026-05-05","comprobante":"FAA-00002-00000082","valor_neto":7427810.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GRUPO COMERCIAL E INDUSTRIAL FARINA SA","fecha":"2026-05-12","comprobante":"FAA-00010-00004390","valor_neto":2404178.28},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"LOCANE GUSTAVO FABIAN","fecha":"2026-05-18","comprobante":"FAA-00002-00000076","valor_neto":51087709.2},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-06-02","comprobante":"FAA-00001-00000680","valor_neto":1062156.94},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-06-04","comprobante":"FAA-00001-00000681","valor_neto":433452.71},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2026-06-12","comprobante":"FAA-00001-00000653","valor_neto":81818.16},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"VILLALBA HNOS S.R.L","fecha":"2026-06-19","comprobante":"FAA-00105-00000389","valor_neto":49999.99},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-07-15","comprobante":"FAA-00001-00000686","valor_neto":1356633.46},{"ejercicio":2026,"rubro":"Vajilla","proveedor":"GASTROBAIRES SA","fecha":"2026-07-29","comprobante":"FAA-00006-00075465","valor_neto":502436.28},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"GRUPO NARDELLI SA","fecha":"2026-07-30","comprobante":"FAA-00003-00000483","valor_neto":528742.5}]}};
+(function(){
+
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#7A6A57';
+  Chart.defaults.borderColor = 'rgba(34,26,18,0.06)';
+
+  const COMPANIES = {
+    surtidor: { name:'El Surtidor S.A.', short:'EL SURTIDOR', accent:'#8B5E34', accentSoft:'#EFE3D3', accentDeep:'#5F3E1F' },
+    estacion: { name:'La Estación S.A.', short:'LA ESTACIÓN', accent:'#3E6B8B', accentSoft:'#DCE9F0', accentDeep:'#274A63' }
+  };
+  const COMPANY_ACCENT_BOTH = { surtidor:'#8B5E34', estacion:'#3E6B8B' };
+
+  const RUBRO_PALETTE = ['#8B5E34','#1E8A5F','#2B6CB0','#C1443C','#9C6ADE','#B98600','#5C8A99','#A85D8C'];
+  const ALL_RUBROS = {
+    surtidor: [...new Set(DATA_ALL.surtidor.detalle.map(d=>d.rubro))].sort(),
+    estacion: [...new Set(DATA_ALL.estacion.detalle.map(d=>d.rubro))].sort()
+  };
+  const RUBRO_COLOR = { surtidor:{}, estacion:{} };
+  Object.keys(ALL_RUBROS).forEach(k=>{
+    ALL_RUBROS[k].forEach((r,i)=>{ RUBRO_COLOR[k][r] = RUBRO_PALETTE[i % RUBRO_PALETTE.length]; });
+  });
+  const COMMON_RUBROS = ALL_RUBROS.surtidor.filter(r=> ALL_RUBROS.estacion.includes(r)).sort();
+
+  function fmtMoney(n){
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0});
+  }
+  function fmtMoneyFull(n){ return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0}); }
+  function fmtPct(n){ return (n*100).toFixed(1)+'%'; }
+  function fmtFecha(f){ if(!f) return ''; const [y,m,d]=f.split('-'); return `${d}/${m}/${y}`; }
+
+  const state = {
+    company: 'surtidor', // 'surtidor' | 'estacion' | 'both'
+    ejercicio: 'both',
+    rubros: new Set(ALL_RUBROS.surtidor),
+    histKind: 'bar',
+    rankKind: 'bar'
+  };
+
+  function applyAccent(){
+    const root = document.documentElement.style;
+    if (state.company !== 'both'){
+      const c = COMPANIES[state.company];
+      root.setProperty('--accent', c.accent); root.setProperty('--accent-soft', c.accentSoft); root.setProperty('--accent-deep', c.accentDeep);
+    } else {
+      root.setProperty('--accent', '#5F3E1F'); root.setProperty('--accent-soft', '#EAE1D4'); root.setProperty('--accent-deep', '#3E2812');
+    }
+    document.getElementById('brandLabel').innerHTML = state.company==='both'
+      ? 'EL SURTIDOR <span>SA</span> · LA ESTACIÓN <span>SA</span>'
+      : `${COMPANIES[state.company].short} <span>SA</span>`;
+  }
+
+  document.querySelectorAll('.seg[aria-label="Empresa"] button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const company = btn.dataset.company;
+      if (company === state.company) return;
+      state.company = company;
+      document.querySelectorAll('.seg[aria-label="Empresa"] button').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
+      if (company !== 'both') state.rubros = new Set(ALL_RUBROS[company]);
+      applyAccent();
+      buildRubroChips();
+      updateBlocksVisibility();
+      render();
+    });
+  });
+
+  function updateBlocksVisibility(){
+    const rubroBlock = document.getElementById('rubroBlock');
+    const hint = document.getElementById('rubroHint');
+    if (state.company === 'both'){
+      rubroBlock.classList.add('disabled');
+      hint.textContent = 'No aplica en modo "Comparar empresas": se muestran los rubros en común entre ambas.';
+    } else {
+      rubroBlock.classList.remove('disabled');
+      hint.textContent = 'Clic para ver solo ese rubro. Clic de nuevo para volver a ver todos.';
+    }
+  }
+
+  // ---------- ejercicio selector ----------
+  document.querySelectorAll('.seg.mini button[data-ej]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.ejercicio = btn.dataset.ej;
+      document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
+      render();
+    });
+  });
+
+  // ---------- rubro chips ----------
+  let rubroChipMap = {};
+  const fRubroEl = document.getElementById('fRubro');
+  function buildRubroChips(){
+    fRubroEl.innerHTML = '';
+    rubroChipMap = {};
+    if (state.company === 'both') return;
+    ALL_RUBROS[state.company].forEach(r=>{
+      const chip = document.createElement('button');
+      chip.className = 'chip active';
+      chip.innerHTML = `<span class="dot" style="background:${RUBRO_COLOR[state.company][r]}"></span>${r}`;
+      chip.addEventListener('click', ()=> toggleRubro(r));
+      rubroChipMap[r] = chip;
+      fRubroEl.appendChild(chip);
+    });
+  }
+  function syncRubroChips(){
+    if (state.company === 'both') return;
+    ALL_RUBROS[state.company].forEach(r=>{
+      if (state.rubros.has(r)) rubroChipMap[r].classList.add('active');
+      else rubroChipMap[r].classList.remove('active');
+    });
+  }
+  function toggleRubro(r){
+    const all = ALL_RUBROS[state.company];
+    if (state.rubros.size === all.length){ state.rubros = new Set([r]); }
+    else if (state.rubros.size === 1 && state.rubros.has(r)){ state.rubros = new Set(all); }
+    else if (state.rubros.has(r)){ state.rubros.delete(r); if(state.rubros.size===0) state.rubros = new Set(all); }
+    else { state.rubros.add(r); }
+    syncRubroChips();
+    render();
+  }
+  function isolateRubro(r){
+    if (state.company === 'both') return;
+    state.rubros = new Set([r]); syncRubroChips(); render();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    state.ejercicio='both';
+    if (state.company !== 'both') state.rubros = new Set(ALL_RUBROS[state.company]);
+    document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej==='both'?'true':'false'));
+    syncRubroChips();
+    render();
+  });
+
+  document.getElementById('histKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.histKind = btn.dataset.kind;
+      document.getElementById('histKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  document.getElementById('rankKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.rankKind = btn.dataset.kind;
+      document.getElementById('rankKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+
+  // ---------- data helpers (single company) ----------
+  function getFiltered(){
+    const d = DATA_ALL[state.company];
+    return d.detalle.filter(row=>{
+      if (state.ejercicio !== 'both' && String(row.ejercicio) !== state.ejercicio) return false;
+      if (!state.rubros.has(row.rubro)) return false;
+      return true;
+    });
+  }
+  function aggByRubro(rows){
+    const map = {};
+    rows.forEach(d=>{
+      if (!map[d.rubro]) map[d.rubro] = { valor:0, n:0 };
+      map[d.rubro].valor += d.valor_neto; map[d.rubro].n += 1;
+    });
+    return map;
+  }
+  function getFilteredForCompany(company){
+    const d = DATA_ALL[company];
+    return d.detalle.filter(row=> state.ejercicio === 'both' || String(row.ejercicio) === state.ejercicio);
+  }
+
+  // ---------- KPIs ----------
+  function renderKPIs(){
+    const zone = document.getElementById('kpiZone');
+    function cardsFor(company){
+      const ejActual = state.ejercicio === 'both' ? 2026 : parseInt(state.ejercicio);
+      const h = DATA_ALL[company].historico.find(x=>x.ejercicio===ejActual);
+      const filtered = company===state.company && state.company!=='both' ? getFiltered() : getFilteredForCompany(company);
+      return [
+        { label:`Ventas netas — ejercicio ${ejActual}`, value: fmtMoneyFull(h.ventas) },
+        { label:'Altas en activo fijo', value: fmtMoneyFull(h.altas), pct: fmtPct(h.pct_altas)+' de ventas' },
+        { label:'Bajas en activo fijo', value: fmtMoneyFull(h.bajas), pct: fmtPct(h.pct_bajas)+' de ventas' },
+        { label:'Comprobantes (filtro actual)', value: filtered.length },
+        { label:'Total de altas (filtro actual)', value: fmtMoneyFull(filtered.reduce((s,d)=>s+d.valor_neto,0)) },
+      ];
+    }
+    function cardsHTML(cards){
+      return cards.map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value tabular">${c.value}</div>${c.pct?`<div class="kpi-pct tabular">${c.pct}</div>`:''}</div>`).join('');
+    }
+    if (state.company !== 'both'){
+      zone.innerHTML = `<div class="kpi-row">${cardsHTML(cardsFor(state.company))}</div>`;
+    } else {
+      zone.innerHTML = `
+        <div class="kpi-group-label"><span class="dot" style="background:${COMPANY_ACCENT_BOTH.surtidor}"></span>El Surtidor S.A.</div>
+        <div class="kpi-row">${cardsHTML(cardsFor('surtidor'))}</div>
+        <div class="kpi-group-label"><span class="dot" style="background:${COMPANY_ACCENT_BOTH.estacion}"></span>La Estación S.A.</div>
+        <div class="kpi-row">${cardsHTML(cardsFor('estacion'))}</div>
+      `;
+    }
+  }
+
+  // ---------- charts ----------
+  let charts = {};
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+  const gridColor = 'rgba(34,26,18,0.06)';
+  const tickColor = '#9A8B79';
+  function tooltipBase(){
+    return { backgroundColor:'#221A12', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#EBE1D4',
+             padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+  function pointerCursor(evt, elements){ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+
+  function buildHistorico(){
+    const ctx = document.getElementById('chartHistorico');
+    const isLine = state.histKind === 'line';
+    const commonOpts = isLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.4, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:isLine?undefined:22 };
+
+    if (state.company === 'both'){
+      document.getElementById('histTitle').textContent = 'Evolución histórica comparada — Altas / Ventas';
+      const labels = DATA_ALL.surtidor.historico.map(h=>h.ejercicio);
+      const sData = DATA_ALL.surtidor.historico.map(h=>h.pct_altas*100);
+      const eData = DATA_ALL.estacion.historico.map(h=>h.pct_altas*100);
+      charts.hist = new Chart(ctx, {
+        type: isLine ? 'line' : 'bar',
+        data:{ labels, datasets:[
+          { label:'El Surtidor S.A. — Altas/Ventas', data:sData, borderColor:COMPANY_ACCENT_BOTH.surtidor, backgroundColor:COMPANY_ACCENT_BOTH.surtidor, ...commonOpts },
+          { label:'La Estación S.A. — Altas/Ventas', data:eData, borderColor:COMPANY_ACCENT_BOTH.estacion, backgroundColor:COMPANY_ACCENT_BOTH.estacion, ...commonOpts }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          onHover: pointerCursor,
+          onClick: (evt, els) => { if (els.length){ const ej=labels[els[0].index]; if(ej===2025||ej===2026){ state.ejercicio=String(ej); document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej===String(ej)?'true':'false')); render(); } } },
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
+            tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, beginAtZero:true } }
+        }
+      });
+      return;
+    }
+
+    document.getElementById('histTitle').textContent = 'Evolución histórica — Altas y Bajas de activo fijo';
+    const hist = DATA_ALL[state.company].historico;
+    const labels = hist.map(h=>h.ejercicio);
+    charts.hist = new Chart(ctx, {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Altas / Ventas', data: hist.map(h=>h.pct_altas*100), borderColor:'#8B5E34', backgroundColor:'#8B5E34', ...commonOpts },
+        { label:'Bajas / Ventas', data: hist.map(h=>h.pct_bajas*100), borderColor:'#C1443C', backgroundColor:'#C1443C', ...commonOpts }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        onHover: pointerCursor,
+        onClick: (evt, els) => { if (els.length){ const ej=labels[els[0].index]; if(ej===2025||ej===2026){ state.ejercicio=String(ej); document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej===String(ej)?'true':'false')); render(); } } },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:(c)=> (labels[c.dataIndex]===2025||labels[c.dataIndex]===2026) ? 'Clic para ver el detalle de ese ejercicio' : '' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, beginAtZero:true } }
+      }
+    });
+  }
+
+  function buildRanking(){
+    const ctx = document.getElementById('chartRanking');
+    const sub = document.getElementById('rankingSub');
+    const title = document.getElementById('rankTitle');
+    const isLine = state.rankKind === 'line';
+    const ejTxt = state.ejercicio==='both' ? '2025 y 2026' : state.ejercicio;
+
+    if (state.company === 'both'){
+      title.textContent = 'Participación de altas por rubro — comparado';
+      sub.textContent = `Rubros en común, valor neto, ejercicio ${ejTxt}`;
+      const sRows = getFilteredForCompany('surtidor').filter(d=>COMMON_RUBROS.includes(d.rubro));
+      const eRows = getFilteredForCompany('estacion').filter(d=>COMMON_RUBROS.includes(d.rubro));
+      const sAgg = aggByRubro(sRows), eAgg = aggByRubro(eRows);
+      const labels = COMMON_RUBROS;
+      const sData = labels.map(r=> sAgg[r]?sAgg[r].valor:0);
+      const eData = labels.map(r=> eAgg[r]?eAgg[r].valor:0);
+
+      if (isLine){
+        charts.rank = new Chart(ctx, { type:'line', data:{ labels, datasets:[
+          { label:'El Surtidor S.A.', data:sData, borderColor:COMPANY_ACCENT_BOTH.surtidor, backgroundColor:COMPANY_ACCENT_BOTH.surtidor, pointRadius:5, pointHoverRadius:7, borderWidth:2.2, tension:0.15 },
+          { label:'La Estación S.A.', data:eData, borderColor:COMPANY_ACCENT_BOTH.estacion, backgroundColor:COMPANY_ACCENT_BOTH.estacion, pointRadius:5, pointHoverRadius:7, borderWidth:2.2, tension:0.15 }
+        ]}, options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true } }
+        }});
+      } else {
+        charts.rank = new Chart(ctx, { type:'bar', data:{ labels, datasets:[
+          { label:'El Surtidor S.A.', data:sData, backgroundColor:COMPANY_ACCENT_BOTH.surtidor, borderRadius:3, maxBarThickness:26 },
+          { label:'La Estación S.A.', data:eData, backgroundColor:COMPANY_ACCENT_BOTH.estacion, borderRadius:3, maxBarThickness:26 }
+        ]}, options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true } }
+        }});
+      }
+      return;
+    }
+
+    title.textContent = 'Participación de altas por rubro';
+    sub.textContent = `Valor neto, ejercicio ${ejTxt}`;
+    const filtered = getFiltered();
+    const agg = aggByRubro(filtered);
+    const entries = Object.entries(agg).map(([r,v])=>({rubro:r, valor:v.valor})).sort((a,b)=>b.valor-a.valor);
+    const colors = entries.map(e=>RUBRO_COLOR[state.company][e.rubro]);
+
+    if (isLine){
+      charts.rank = new Chart(ctx, { type:'line', data:{ labels: entries.map(e=>e.rubro), datasets:[{ data: entries.map(e=>e.valor), borderColor:'#8A8698', backgroundColor:colors, pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:7, pointHoverRadius:9, borderWidth:2, tension:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, onHover:pointerCursor,
+          onClick:(evt,els)=>{ if(els.length) isolateRubro(entries[els[0].index].rubro); },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para aislar' } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true } }
+        }});
+    } else {
+      charts.rank = new Chart(ctx, { type:'bar', data:{ labels: entries.map(e=>e.rubro), datasets:[{ data: entries.map(e=>e.valor), backgroundColor: colors, borderRadius:4, maxBarThickness:40 }] },
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, onHover:pointerCursor,
+          onClick:(evt,els)=>{ if(els.length) isolateRubro(entries[els[0].index].rubro); },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.x)}`, afterLabel:()=>'Clic para aislar' } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true }, y:{ grid:{display:false}, ticks:{color:tickColor} } }
+        }});
+    }
+  }
+
+  // ---------- resumen table ----------
+  function renderResumenTable(){
+    const sub = document.getElementById('resumenSub');
+    const title = document.getElementById('resumenTitle');
+
+    if (state.company === 'both'){
+      title.textContent = 'Resumen por rubro — comparado';
+      const sRows = getFilteredForCompany('surtidor').filter(d=>COMMON_RUBROS.includes(d.rubro));
+      const eRows = getFilteredForCompany('estacion').filter(d=>COMMON_RUBROS.includes(d.rubro));
+      const sAgg = aggByRubro(sRows), eAgg = aggByRubro(eRows);
+      const sTotal = sRows.reduce((s,d)=>s+d.valor_neto,0), eTotal = eRows.reduce((s,d)=>s+d.valor_neto,0);
+      sub.textContent = `Rubros en común entre ambas empresas`;
+      const table = document.getElementById('resumenTable');
+      table.querySelector('thead').innerHTML = '<tr><th>Rubro</th><th>El Surtidor</th><th>La Estación</th></tr>';
+      table.querySelector('tbody').innerHTML = COMMON_RUBROS.map(r=>{
+        const sv = sAgg[r]?sAgg[r].valor:0, ev = eAgg[r]?eAgg[r].valor:0;
+        return `<tr><td style="border-left:3px solid ${RUBRO_COLOR.surtidor[r]}; padding-left:9px;">${r}</td><td class="tabular">${fmtMoneyFull(sv)}</td><td class="tabular">${fmtMoneyFull(ev)}</td></tr>`;
+      }).join('') + `<tr style="font-weight:700; border-top:2px solid var(--border);"><td>Total (rubros en común)</td><td class="tabular">${fmtMoneyFull(sTotal)}</td><td class="tabular">${fmtMoneyFull(eTotal)}</td></tr>`;
+      return;
+    }
+
+    title.textContent = 'Resumen por rubro';
+    const filtered = getFiltered();
+    const total = filtered.reduce((s,d)=>s+d.valor_neto,0);
+    const agg = aggByRubro(filtered);
+    const entries = Object.entries(agg).map(([r,v])=>({rubro:r, valor:v.valor, n:v.n, pct: total? v.valor/total : 0})).sort((a,b)=>b.valor-a.valor);
+    sub.textContent = `Valor neto y % sobre el total de altas — $${total.toLocaleString('es-AR',{maximumFractionDigits:0})} en total`;
+    const table = document.getElementById('resumenTable');
+    table.querySelector('thead').innerHTML = '<tr><th>Rubro</th><th>Comprob.</th><th>Valor neto</th><th>% s/altas</th></tr>';
+    table.querySelector('tbody').innerHTML = entries.map(e=>`
+      <tr style="cursor:pointer;" data-rubro="${e.rubro}">
+        <td style="border-left:3px solid ${RUBRO_COLOR[state.company][e.rubro]}; padding-left:9px;">${e.rubro}</td>
+        <td class="tabular">${e.n}</td><td class="tabular">${fmtMoneyFull(e.valor)}</td><td class="tabular">${fmtPct(e.pct)}</td>
+      </tr>
+    `).join('');
+    table.querySelectorAll('tbody tr').forEach(tr=> tr.addEventListener('click', ()=> isolateRubro(tr.dataset.rubro)));
+  }
+
+  // ---------- detalle table ----------
+  let detSort = { col:'fecha', dir:'asc' };
+  function renderDetalleTable(){
+    const panel = document.getElementById('detallePanel');
+    if (state.company === 'both'){ panel.style.display = 'none'; return; }
+    panel.style.display = '';
+
+    const sub = document.getElementById('detalleSub');
+    const ejTxt = state.ejercicio==='both' ? 'ejercicios 2025 y 2026' : `ejercicio ${state.ejercicio}`;
+    const filtered = getFiltered();
+    sub.textContent = `Rubro, proveedor, fecha, comprobante y valor neto — ${ejTxt} · ${filtered.length} comprobantes`;
+
+    const totalPorRubro = aggByRubro(filtered);
+    const totalGeneral = filtered.reduce((s,d)=>s+d.valor_neto,0);
+    let rows = filtered.map(d=>({ ...d, pctRubro: totalGeneral ? (totalPorRubro[d.rubro]?totalPorRubro[d.rubro].valor/totalGeneral:0) : 0 }));
+    rows.sort((a,b)=>{
+      let av=a[detSort.col], bv=b[detSort.col];
+      if (typeof av === 'string'){ av=av.toLowerCase(); bv=(bv||'').toLowerCase(); }
+      if (av<bv) return detSort.dir==='asc'?-1:1;
+      if (av>bv) return detSort.dir==='asc'?1:-1;
+      return 0;
+    });
+
+    const table = document.getElementById('detalleTable');
+    const cols = [ {k:'rubro', label:'Rubro'}, {k:'proveedor', label:'Proveedor'}, {k:'fecha', label:'Fecha'}, {k:'comprobante', label:'Comprobante'}, {k:'valor_neto', label:'Valor neto'}, {k:'pctRubro', label:'% del rubro s/altas'} ];
+    table.querySelector('thead').innerHTML = '<tr>' + cols.map(c=>{
+      const arrow = detSort.col===c.k ? (detSort.dir==='asc'?' ▲':' ▼') : '';
+      return `<th data-col="${c.k}">${c.label}${arrow}</th>`;
+    }).join('') + '</tr>';
+    table.querySelector('tbody').innerHTML = rows.map(r=>`
+      <tr>
+        <td style="border-left:3px solid ${RUBRO_COLOR[state.company][r.rubro]}; padding-left:9px;">${r.rubro}</td>
+        <td>${r.proveedor}</td><td class="tabular">${fmtFecha(r.fecha)}</td><td>${r.comprobante||''}</td>
+        <td class="tabular">${fmtMoneyFull(r.valor_neto)}</td><td class="tabular">${fmtPct(r.pctRubro)}</td>
+      </tr>
+    `).join('');
+    table.querySelectorAll('th').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const col = th.dataset.col;
+        if (detSort.col===col){ detSort.dir = detSort.dir==='asc'?'desc':'asc'; } else { detSort.col=col; detSort.dir = col==='fecha' ? 'asc' : 'desc'; }
+        renderDetalleTable();
+      });
+    });
+  }
+
+  // ---------- export ----------
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación. Probá recargar la página.'); return; }
+    if (state.company === 'both') return;
+    const filtered = getFiltered();
+    const totalPorRubro = aggByRubro(filtered);
+    const totalGeneral = filtered.reduce((s,d)=>s+d.valor_neto,0);
+    const wb = XLSX.utils.book_new();
+
+    const detRows = filtered.map(d=>({
+      'Rubro': d.rubro, 'Proveedor': d.proveedor, 'Fecha': fmtFecha(d.fecha), 'Comprobante': d.comprobante,
+      'Valor neto': Math.round(d.valor_neto), '% del rubro s/altas': totalGeneral ? +(totalPorRubro[d.rubro].valor/totalGeneral*100).toFixed(2) : 0
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(detRows);
+    ws1['!cols'] = [{wch:20},{wch:34},{wch:12},{wch:22},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Detalle altas');
+
+    const resumenRows = Object.entries(totalPorRubro).map(([r,v])=>({ 'Rubro':r, 'Comprobantes':v.n, 'Valor neto': Math.round(v.valor), '% s/altas': totalGeneral? +(v.valor/totalGeneral*100).toFixed(2):0 })).sort((a,b)=>b['Valor neto']-a['Valor neto']);
+    const ws2 = XLSX.utils.json_to_sheet(resumenRows);
+    ws2['!cols'] = [{wch:20},{wch:14},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por rubro');
+
+    const histRows = DATA_ALL[state.company].historico.map(h=>({ 'Ejercicio':h.ejercicio, 'Ventas netas':Math.round(h.ventas), 'Altas':Math.round(h.altas), '% altas s/ventas':+(h.pct_altas*100).toFixed(2), 'Bajas':Math.round(h.bajas), '% bajas s/ventas':+(h.pct_bajas*100).toFixed(2) }));
+    const ws3 = XLSX.utils.json_to_sheet(histRows);
+    ws3['!cols'] = [{wch:10},{wch:16},{wch:16},{wch:14},{wch:14},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Histórico');
+
+    const ejLabel = state.ejercicio==='both' ? 'todos' : state.ejercicio;
+    XLSX.writeFile(wb, `activo_fijo_${state.company}_${ejLabel}.xlsx`);
+  });
+
+  // ---------- master render ----------
+  function render(){
+    renderKPIs();
+    destroyCharts();
+    buildHistorico();
+    buildRanking();
+    renderResumenTable();
+    renderDetalleTable();
+  }
+
+  buildRubroChips();
+  updateBlocksVisibility();
+  applyAccent();
+  render();
+})();
+</script>
+</body>
+</html>

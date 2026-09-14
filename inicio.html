@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablero de Gestión — El Surtidor SA / La Estación SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#D3110B;
+    --red-deep:#A50C08;
+    --yellow:#FFC800;
+    --yellow-soft:#FFE380;
+    --ink:#231710;
+    --ink-dim:#6B5B52;
+    --paper:#FFFBF3;
+    --card:#FFFFFF;
+    --border:rgba(35,23,16,0.10);
+    --radius-l:20px;
+    --radius-m:12px;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.display{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:var(--yellow); color:var(--ink); }
+
+  :focus-visible{
+    outline:2.5px solid var(--red-deep);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+
+  .backdrop{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:
+      radial-gradient(760px 520px at 50% -10%, rgba(255,200,0,0.18), transparent 62%),
+      var(--paper);
+  }
+
+  .page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 24px 24px;
+  }
+
+  /* ---------- Mark ---------- */
+  .mark-wrap{
+    position:relative;
+    width:56px;
+    height:50px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .mark-glow{
+    position:absolute;
+    inset:-30px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,200,0,0.35), rgba(211,17,11,0.12) 55%, transparent 72%);
+    animation:glowPulse 4.2s ease-in-out infinite;
+  }
+  .mark{
+    position:relative;
+    width:56px;
+    height:49px;
+    animation:markBreathe 4.2s ease-in-out infinite;
+    transform-origin:50% 85%;
+  }
+
+  @keyframes glowPulse{
+    0%, 100%{ opacity:0.55; transform:scale(0.94); }
+    50%{ opacity:1; transform:scale(1.05); }
+  }
+  @keyframes markBreathe{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.035); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .mark-glow, .mark{ animation:none !important; }
+  }
+
+  /* ---------- Hero text ---------- */
+  .hero{
+    text-align:center;
+    max-width:580px;
+    margin-bottom:24px;
+  }
+  .eyebrow-free-title{
+    font-size:24px;
+    font-weight:700;
+    margin:0 0 6px;
+    line-height:1.15;
+  }
+  .hero p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-dim);
+    line-height:1.5;
+  }
+
+  /* ---------- Cards ---------- */
+  .board{
+    width:100%;
+    max-width:1280px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:12px;
+  }
+  @media (max-width: 660px){
+    .board{ grid-template-columns:1fr; }
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius-l);
+    padding:16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:5px;
+    background:var(--accent, var(--red));
+  }
+  .card:not(.soon):hover, .card:not(.soon):focus-visible{
+    transform:translateY(-3px);
+    box-shadow:0 18px 34px rgba(35,23,16,0.10);
+    border-color:rgba(35,23,16,0.16);
+  }
+  .card:not(.soon):active{ transform:translateY(-1px); }
+
+  .card-icon{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--accent-soft, var(--yellow-soft));
+    color:var(--accent, var(--red-deep));
+    flex-shrink:0;
+  }
+
+  .card-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15.5px;
+    font-weight:600;
+    margin:0;
+  }
+  .card-desc{
+    margin:0;
+    font-size:11.5px;
+    color:var(--ink-dim);
+    line-height:1.45;
+    flex:1;
+  }
+  .card-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--ink-dim);
+    padding-top:8px;
+    border-top:1px solid var(--border);
+  }
+  .card-meta .go{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-weight:600;
+    color:var(--accent, var(--red-deep));
+  }
+  .card-meta .go svg{ transition:transform .18s ease; }
+  .card:hover .card-meta .go svg{ transform:translateX(3px); }
+
+  .card.fuel{ --accent:var(--red-deep); --accent-soft:#FCE2DF; }
+  .card.ratios{ --accent:#177A72; --accent-soft:#DCEEEC; }
+  .card.resultados{ --accent:#C8721A; --accent-soft:#FBE7D3; }
+  .card.datapos{ --accent:#2563C7; --accent-soft:#DCE7F9; }
+  .card.legajos{ --accent:#0F8B6C; --accent-soft:#D9F0E7; }
+  .card.rrhh{ --accent:#5B4B9A; --accent-soft:#E7E2F5; }
+  .card.financieros{ --accent:#0E7C6B; --accent-soft:#D7F0EA; }
+  .card.activofijo{ --accent:#8B5E34; --accent-soft:#EFE3D3; }
+  .card.rrhh-estacion{ --accent:#1D6FA5; --accent-soft:#DCEBF5; }
+
+  .ext-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    color:var(--ink-dim);
+  }
+
+  .datapos-creds{
+    background:#F5F8FD;
+    border:1px solid rgba(37,99,199,0.15);
+    border-radius:8px;
+    padding:5px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    cursor:default;
+  }
+  .cred-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+  }
+  .cred-label{
+    color:var(--ink-dim);
+    width:52px;
+    flex-shrink:0;
+  }
+  .cred-value{
+    font-family:'Space Grotesk',sans-serif;
+    color:var(--ink);
+    flex:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .copy-btn{
+    background:#fff;
+    border:1px solid rgba(37,99,199,0.25);
+    color:#2563C7;
+    border-radius:6px;
+    width:24px;
+    height:24px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .copy-btn:hover{ background:#EAF1FC; }
+  .copy-btn:active{ transform:scale(0.92); }
+  .copy-btn.copied{ background:#DCF3E4; border-color:#3EA35B; color:#238A45; }
+
+  .card.soon{
+    --accent:#B7ABA0;
+    --accent-soft:#F1ECE6;
+    cursor:default;
+  }
+  .card.soon .card-title{ color:#8A7D72; }
+  .card.soon .card-icon{ color:#A79A8E; }
+  .badge-soon{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    color:#8A7D72;
+    background:#F1ECE6;
+    border-radius:100px;
+    padding:3px 10px;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot{
+    margin-top:20px;
+    text-align:center;
+    font-size:10.5px;
+    color:var(--ink-dim);
+    line-height:1.5;
+  }
+  .foot strong{ color:var(--ink); font-weight:600; }
+
+  @media (max-width: 720px){
+    .eyebrow-free-title{ font-size:26px; }
+    .page{ padding:48px 18px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="backdrop"></div>
+
+<div class="page">
+
+  <div class="mark-wrap">
+    <div class="mark-glow" aria-hidden="true"></div>
+    <svg class="mark" viewBox="0 0 100 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M50 88 C24 88 8 68 8 42 C8 30 13 20 20 13" stroke="#D3110B" stroke-width="7" stroke-linecap="round"/>
+      <path d="M50 88 C76 88 92 68 92 42 C92 30 87 20 80 13" stroke="#FFC800" stroke-width="7" stroke-linecap="round"/>
+      <path d="M50 88 C32 88 20 72 20 52 C20 42 24 34 30 28" stroke="#D3110B" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+      <path d="M50 88 C68 88 80 72 80 52 C80 42 76 34 70 28" stroke="#FFC800" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+      <path d="M50 88 C38 88 30 76 30 62 C30 55 33 49 37 45" stroke="#D3110B" stroke-width="7" stroke-linecap="round" opacity="0.35"/>
+      <path d="M50 88 C62 88 70 76 70 62 C70 55 67 49 63 45" stroke="#FFC800" stroke-width="7" stroke-linecap="round" opacity="0.45"/>
+    </svg>
+  </div>
+
+  <div class="hero">
+    <p style="font-weight:600; font-size:14px; color:var(--ink-dim); margin:0 0 8px; letter-spacing:0.02em;">El Surtidor SA · La Estación SA</p>
+    <h1 class="eyebrow-free-title">Tablero de Gestión</h1>
+    <p>Acceso central a los paneles de gestión. Elegí cuál querés abrir.</p>
+  </div>
+
+  <div class="board">
+    <a class="card fuel" href="portal.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="10" height="18" rx="1.5"/><rect x="7" y="6" width="4" height="4"/><path d="M14 9h3a2 2 0 0 1 2 2v7a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">Monitor de Combustibles</h2>
+        <p class="card-desc">Información de precios y volúmenes de combustibles vendidos, en la ciudad de Formosa, en la zona norte del país y en Argentina.</p>
+      </div>
+      <div class="card-meta">
+        <span>3 paneles · Mensual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card resultados" href="resultados.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">Resultados Operativos</h2>
+        <p class="card-desc">Ventas, costos y erogaciones por sucursal y centro de costo. Elegí la empresa o comparalas.</p>
+      </div>
+      <div class="card-meta">
+        <span>2 empresas · Mensual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card ratios" href="ratios.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="4" height="10"/><rect x="10" y="5" width="4" height="15"/><rect x="17" y="13" width="4" height="7"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">Ratios</h2>
+        <p class="card-desc">Ratios económico-financieros de La Estación S.A. y El Surtidor S.A., ejercicios 2024 y 2025, con comparativo entre empresas.</p>
+      </div>
+      <div class="card-meta">
+        <span>2 empresas · Anual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card datapos" href="https://app.datapos.com.ar/" target="_blank" rel="noopener noreferrer">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">DataPos</h2>
+        <p class="card-desc">Conciliación de ventas y medios de pago: acreditaciones, liquidaciones y trazabilidad de cada operación.</p>
+      </div>
+
+      <div class="datapos-creds" onclick="event.preventDefault(); event.stopPropagation();">
+        <div class="cred-row">
+          <span class="cred-label">Usuario</span>
+          <span class="cred-value">elsurtidordatos@gmail.com</span>
+          <button type="button" class="copy-btn" data-copy="elsurtidordatos@gmail.com" title="Copiar usuario">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+          </button>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Clave</span>
+          <span class="cred-value">Shell$1</span>
+          <button type="button" class="copy-btn" data-copy="Shell$1" title="Copiar clave">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-meta">
+        <span class="ext-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+          Sitio externo · Tiempo real
+        </span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card rrhh" href="rrhh.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">RRHH</h2>
+        <p class="card-desc">Legajos, haberes y contribuciones patronales por centro de costo, mes a mes. Elegí la empresa o comparalas.</p>
+      </div>
+      <div class="card-meta">
+        <span>2 empresas · Mensual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card financieros" href="inversiones.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 12l3-3 3 3 5-6"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">Resultados Financieros</h2>
+        <p class="card-desc">Inversiones financieras (FCI FIMA — Banco Galicia): saldos, rendimientos, suscripciones y rescates. Elegí la empresa o comparalas.</p>
+      </div>
+      <div class="card-meta">
+        <span>2 empresas · Mensual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+
+    <a class="card activofijo" href="activo_fijo.html">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="14" rx="1"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>
+      </div>
+      <div>
+        <h2 class="card-title">Inversión en Activo Fijo</h2>
+        <p class="card-desc">Altas y bajas de bienes de uso en relación a las ventas del ejercicio, y detalle de incorporaciones por rubro y proveedor. Elegí la empresa o comparalas.</p>
+      </div>
+      <div class="card-meta">
+        <span>2 empresas · Anual</span>
+        <span class="go">Abrir
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+    </a>
+  </div>
+
+  <div class="foot">
+    Elaborado por la administración de <strong>LA ESTACIÓN S.A.</strong> y <strong>EL SURTIDOR S.A.</strong>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const text = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.classList.add('copied');
+        setTimeout(()=> btn.classList.remove('copied'), 1200);
+      });
+    });
+  });
+</script>
+</body>
+</html>
