@@ -546,6 +546,7 @@
 
   <!-- ============ VISTA: EROGACIONES ============ -->
   <section class="view" id="view-erogaciones">
+    <div id="erogChipRow"></div>
     <div class="kpi-grid" id="kpiErog" style="grid-template-columns:repeat(4,1fr);"></div>
 
     <div class="grid2">
@@ -1148,9 +1149,11 @@ function renderResumen(months){
 function renderRubroChip(){
   const el = document.getElementById('rubroChipRow');
   if(!el) return;
-  el.innerHTML = selectedRubro
-    ? `<div class="filter-chip">Rubro: ${esc(selectedRubro)}<button title="Quitar filtro de rubro" onclick="window.__clearRubro()">✕</button></div>`
+  let html = selectedRubro
+    ? `<div class="filter-chip">Rubro: ${esc(selectedRubro)}<button title="Quitar filtro de rubro" onclick="window.__clearRubro()">✕</button></div> `
     : '';
+  if(selectedCategory) html += `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`;
+  el.innerHTML = html;
 }
 window.__clearRubro = () => { selectedRubro = null; render(); };
 
@@ -1227,10 +1230,11 @@ function renderRubroErogPanel(months){
 
   const top = totalsByCat[0] || {cat:'-', total:0};
   if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  renderRubroChip();
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErogRubros', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedCategory = top12[i].cat; renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', cc); }
+    onBarClick: (i) => { selectedCategory = top12[i].cat; renderRubroChip(); renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', cc); }
   });
   renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', selectedRubro?cc:null);
 }
@@ -1257,14 +1261,15 @@ function renderGrupoChip(){
   if(!el) return;
   let html = '';
   if(selectedFamiliaG) html += `<div class="filter-chip">Familia: ${esc(selectedFamiliaG)}<button title="Quitar filtro" onclick="window.__clearFamiliaG()">✕</button></div> `;
-  if(selectedCCG) html += `<div class="filter-chip">Centro de costo: ${esc(selectedCCG)}<button title="Quitar filtro" onclick="window.__clearCCG()">✕</button></div>`;
+  if(selectedCCG) html += `<div class="filter-chip">Centro de costo: ${esc(selectedCCG)}<button title="Quitar filtro" onclick="window.__clearCCG()">✕</button></div> `;
+  if(selectedGrupo) html += `<div class="filter-chip">Grupo: ${esc(selectedGrupo)}<button title="Quitar filtro" onclick="window.__clearGrupo()">✕</button></div>`;
   el.innerHTML = html;
 }
 window.__clearFamiliaG = () => { selectedFamiliaG = null; render(); };
 window.__clearCCG = () => { selectedCCG = null; render(); };
+window.__clearGrupo = () => { selectedGrupo = null; render(); };
 
 function renderGrupos(months){
-  renderGrupoChip();
   const rows = grupoFilteredRows(months, selectedFamiliaG, selectedCCG);
 
   const totalNeto = rows.reduce((a,r)=>a+r.neto,0);
@@ -1285,10 +1290,11 @@ function renderGrupos(months){
   const top15 = grupoList.slice(0,15);
   hBarChart('chartGrupoRanking', {
     labels: top15.map(r=>r.g), data: top15.map(r=>r.neto), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedGrupo = top15[i].g; renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow(); }
+    onBarClick: (i) => { selectedGrupo = top15[i].g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow(); }
   });
 
   if(!selectedGrupo || !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = top.g;
+  renderGrupoChip();
   renderGrupoTrend(months);
   renderGrupoQty(months);
 
@@ -1336,7 +1342,7 @@ function renderGrupos(months){
       <td class="num">${fmtPct(part)}</td></tr>`;
   }).join('');
   tbody.querySelectorAll('tr[data-g]').forEach(tr => tr.addEventListener('click', () => {
-    selectedGrupo = tr.dataset.g; renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow();
+    selectedGrupo = tr.dataset.g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow();
   }));
   highlightGrupoRow();
 
@@ -1410,10 +1416,11 @@ function renderErogaciones(months){
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErog', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedCategory = top12[i].cat; renderErogTrend(months); highlightErogRow(); }
+    onBarClick: (i) => { selectedCategory = top12[i].cat; renderErogChip(); renderErogTrend(months); highlightErogRow(); }
   });
 
   if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  renderErogChip();
   renderErogTrend(months);
 
   const tbody = document.querySelector('#tblErogaciones tbody');
@@ -1422,7 +1429,7 @@ function renderErogaciones(months){
       <td class="num">${fmtPct(grandTotal?r.total/grandTotal:0)}</td>
       <td class="num">${fmtMoneyFull(r.total/months.length)}</td></tr>`).join('');
   tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedCategory = tr.dataset.cat; renderErogTrend(months); highlightErogRow();
+    selectedCategory = tr.dataset.cat; renderErogChip(); renderErogTrend(months); highlightErogRow();
   }));
   highlightErogRow();
 
@@ -1434,6 +1441,14 @@ function renderErogaciones(months){
     });
   };
 }
+function renderErogChip(){
+  const el = document.getElementById('erogChipRow');
+  if(!el) return;
+  el.innerHTML = selectedCategory
+    ? `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`
+    : '';
+}
+window.__clearCategory = () => { selectedCategory = null; render(); };
 function highlightErogRow(){
   document.querySelectorAll('#tblErogaciones tbody tr').forEach(tr => {
     tr.style.background = tr.dataset.cat === selectedCategory ? '#f2ede0' : '';
