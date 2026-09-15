@@ -1533,7 +1533,16 @@ const RAW_DATA = [{"periodo": "2025/07", "operador": "ANGEL LUIS BIGATTI", "band
       `${state.estaciones.size} de ${ALL_STATION_IDS.length} estaciones seleccionadas`;
   }
 
-  document.getElementById('stationSearch').addEventListener('input', renderStationList);
+  document.getElementById('stationSearch').addEventListener('input', ()=>{
+    renderStationList();
+    const q = document.getElementById('stationSearch').value.trim();
+    if (q && visibleStationIds.length){
+      pushHistory();
+      state.estaciones = new Set(visibleStationIds);
+      updateStationCount();
+      render();
+    }
+  });
 
   document.getElementById('stationShowOnly').addEventListener('click', ()=>{
     if (!visibleStationIds.length) return;
@@ -1978,7 +1987,7 @@ const RAW_DATA = [{"periodo": "2025/07", "operador": "ANGEL LUIS BIGATTI", "band
     const ctx = document.getElementById('chartProductMixByStation');
     charts.productMixByStation = new Chart(ctx, {
       type:'bar',
-      data:{ labels: ids.map(id=>STATION_INFO[id].direccion), datasets },
+      data:{ labels: ids.map(id=>stationLabelShort(id)), datasets },
       options:{
         indexAxis:'y',
         responsive:true, maintainAspectRatio:false,
