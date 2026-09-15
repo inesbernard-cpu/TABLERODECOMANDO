@@ -1074,6 +1074,50 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
 
     title.textContent = 'Estructura del costo laboral por centro de costo';
     sub.textContent = `Haberes vs. contribuciones patronales — ${rangeTxt}`;
+
+    if (state.centrosCosto.size === 1){
+      const ccName = [...state.centrosCosto][0];
+      title.textContent = `Estructura del costo laboral — ${ccName}`;
+      sub.textContent = `Haberes vs. contribuciones patronales por mes — ${rangeTxt}`;
+      const labels = periods.map(fmtPeriodo);
+      const haberesData = periods.map(p => totalsForRows(filtered.filter(d=>d.periodo===p)).haberes);
+      const empleadorData = periods.map(p => totalsForRows(filtered.filter(d=>d.periodo===p)).empleador);
+      const color = COMPANIES[state.company].accent;
+
+      if (isLine){
+        charts.struct = new Chart(ctx, {
+          type:'line',
+          data:{ labels, datasets:[
+            { label:'Haberes', data: haberesData, borderColor: color, backgroundColor: color, pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.25 },
+            { label:'Contribuciones patronales', data: empleadorData, borderColor:'#C8721A', backgroundColor:'#C8721A', pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.25 }
+          ]},
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            onHover: pointerCursor,
+            onClick: (evt, elements) => { if (elements.length) drillToPeriod(periods[elements[0].index]); },
+            plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'circle', padding:14 } }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`, afterLabel:()=>'Clic para ver solo este mes' } } },
+            scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:yTick, beginAtZero:true } }
+          }
+        });
+      } else {
+        charts.struct = new Chart(ctx, {
+          type:'bar',
+          data:{ labels, datasets:[
+            { label:'Haberes', data: haberesData, backgroundColor: color, stack:'s', borderRadius:3, maxBarThickness:34 },
+            { label:'Contribuciones patronales', data: empleadorData, backgroundColor:'#C8721A', stack:'s', borderRadius:3, maxBarThickness:34 }
+          ]},
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            onHover: pointerCursor,
+            onClick: (evt, elements) => { if (elements.length) drillToPeriod(periods[elements[0].index]); },
+            plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rect', padding:14 } }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`, afterLabel:()=>'Clic para ver solo este mes' } } },
+            scales:{ x:{ grid:{display:false}, ticks:{color:tickColor}, stacked:true }, y:{ grid:{color:gridColor}, ticks:yTick, stacked:true, beginAtZero:true } }
+          }
+        });
+      }
+      return;
+    }
+
     const agg = aggByCC(filtered);
     const entries = Object.entries(agg).sort((a,b)=>b[1].total-a[1].total);
     const ccList = entries.map(([cc])=>cc);
