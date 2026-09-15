@@ -501,6 +501,20 @@
     <div class="panel" style="margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
         <div>
+          <h3>Comparar entre sucursales — grupo seleccionado</h3>
+          <div class="desc" id="grupoSucursalDesc">Ventas netas por sucursal · elegí un grupo en el ranking o en la tabla</div>
+        </div>
+        <div class="pill-row" style="margin:0;">
+          <span class="pill" data-gmode="bar" id="pillGrupoSucursalBar">Barras</span>
+          <span class="pill active" data-gmode="line" id="pillGrupoSucursalLine">Líneas</span>
+        </div>
+      </div>
+      <div class="chart-wrap tall"><div id="chartGrupoSucursal" class="chartbox"></div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
           <h3>Cantidad vendida — grupo seleccionado</h3>
           <div class="desc">Unidades / litros / kg según el grupo (columna "Cantidad" de la planilla)</div>
         </div>
@@ -614,7 +628,7 @@
         <h3>Erogaciones — sucursal × centro de costo</h3>
         <button type="button" class="dl-btn" onclick="downloadTableAsXls('tblMatrix','erogaciones_sucursal_centro_costo.xls')">⬇ Descargar XLS</button>
       </div>
-      <div class="desc">Total del período seleccionado, en $</div>
+      <div class="desc">Total del período seleccionado, en $ · en cursiva: "Integrado" y "General" son montos a prorratear, no sucursales ni centros de costo propios</div>
       <div class="scroll-y">
         <table class="data" id="tblMatrix"></table>
       </div>
@@ -783,6 +797,7 @@ let selectedFamiliaG = null;
 let selectedCCG = null;
 let grupoTrendMode = 'line';
 let grupoQtyMode = 'line';
+let grupoSucursalMode = 'line';
 let familiaTrendMode = 'bar';
 function toggleFamiliaG(f){
   if(selectedFamiliaG === f){ selectedFamiliaG = null; selectedRubro = null; }
@@ -1140,6 +1155,7 @@ function wirePillToggle(idBar, idLine, setMode){
   elLine.addEventListener('click', () => { setMode('line'); elLine.classList.add('active'); elBar.classList.remove('active'); render(); });
 }
 wirePillToggle('pillGrupoTrendBar','pillGrupoTrendLine', m => grupoTrendMode = m);
+wirePillToggle('pillGrupoSucursalBar','pillGrupoSucursalLine', m => grupoSucursalMode = m);
 wirePillToggle('pillGrupoQtyBar','pillGrupoQtyLine', m => grupoQtyMode = m);
 wirePillToggle('pillFamiliaBar','pillFamiliaLine', m => familiaTrendMode = m);
 
@@ -1444,12 +1460,13 @@ function renderGrupos(sel, months){
   const top15 = grupoList.slice(0,15);
   hBarChart('chartGrupoRanking', {
     labels: top15.map(r=>r.g), data: top15.map(r=>r.neto), color: COLORS.amberDeep,
-    onBarClick: (i) => { const g = top15[i].g; selectedGrupo = (selectedGrupo === g) ? null : g; renderGrupoChip(); renderGrupoTrend(branch, months); renderGrupoQty(branch, months); highlightGrupoRow(); }
+    onBarClick: (i) => { const g = top15[i].g; selectedGrupo = (selectedGrupo === g) ? null : g; renderGrupoChip(); renderGrupoTrend(branch, months); renderGrupoSucursalCompare(months); renderGrupoQty(branch, months); highlightGrupoRow(); }
   });
 
   if(!selectedGrupo || !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = top.g;
   renderGrupoChip();
   renderGrupoTrend(branch, months);
+  renderGrupoSucursalCompare(months);
   renderGrupoQty(branch, months);
 
   // Familia breakdown (ignora selectedFamiliaG para mostrar el universo completo, respeta selectedCCG y sucursal/período)
@@ -1500,7 +1517,7 @@ function renderGrupos(sel, months){
       <td class="num">${fmtPct(part)}</td></tr>`;
   }).join('');
   tbody.querySelectorAll('tr[data-g]').forEach(tr => tr.addEventListener('click', () => {
-    selectedGrupo = (selectedGrupo === tr.dataset.g) ? null : tr.dataset.g; renderGrupoChip(); renderGrupoTrend(branch, months); renderGrupoQty(branch, months); highlightGrupoRow();
+    selectedGrupo = (selectedGrupo === tr.dataset.g) ? null : tr.dataset.g; renderGrupoChip(); renderGrupoTrend(branch, months); renderGrupoSucursalCompare(months); renderGrupoQty(branch, months); highlightGrupoRow();
   }));
   highlightGrupoRow();
 
@@ -1553,6 +1570,24 @@ function renderGrupoQty(branch, months){
   } else {
     lineChart('chartGrupoQty', {
       labels: months.map(monthLabel), series, height: 360, formatY: fmtQty, formatTip: fmtQty,
+      onPointClick: (s,i) => filterByMonth(months[i])
+    });
+  }
+}
+function renderGrupoSucursalCompare(months){
+  document.getElementById('grupoSucursalDesc').textContent = 'Ventas netas por sucursal · Grupo: ' + selectedGrupo;
+  const rows = GROWS.filter(r => r.g === selectedGrupo);
+  const byMonthBranch = (p, b) => rows.filter(r => r.p === p && r.s === b).reduce((a,r)=>a+r.neto, 0);
+  const series = BRANCHES.map(b => ({ name: BRANCH_LABEL[b], color: BRANCH_COLOR[b], data: months.map(p => byMonthBranch(p, b)) }));
+  if(grupoSucursalMode === 'bar'){
+    barChart('chartGrupoSucursal', {
+      labels: months.map(monthLabel), series,
+      onBarClick: (s,i) => filterByMonth(months[i]),
+      onLabelClick: (li) => filterByMonth(months[li])
+    });
+  } else {
+    lineChart('chartGrupoSucursal', {
+      labels: months.map(monthLabel), series, height: 360,
       onPointClick: (s,i) => filterByMonth(months[i])
     });
   }
@@ -1706,23 +1741,31 @@ function renderCentros(months){
   });
 
   const cols = ['TRANSPORTE','PTO. DE PALOS','INTEGRADO','PLAYA','SHOP','GENERAL'];
+  const PRORR = { 'INTEGRADO': true, 'GENERAL': true };
   const rows = ['AV. 25 DE MAYO','AV. KIRCHNER','VILLA DEL CARMEN','GENERAL'];
-  let thead = '<thead><tr><th>Sucursal</th>'+cols.map(c=>`<th style="${selectedCC===c?'color:var(--amber-deep);':''}cursor:pointer;" data-cc="${esc(c)}">${esc(c)}</th>`).join('')+'<th>Total</th></tr></thead>';
+  let thead = '<thead><tr><th>Sucursal</th>'+cols.map(c=>{
+    const prorrStyle = PRORR[c] ? 'font-style:italic;color:var(--ink-soft);' : '';
+    const label = c==='INTEGRADO' ? 'Integrado (prorrateable)' : (c==='GENERAL' ? 'General (prorrateable)' : c);
+    return `<th style="${selectedCC===c?'color:var(--amber-deep);':''}${prorrStyle}cursor:pointer;" data-cc="${esc(c)}">${esc(label)}</th>`;
+  }).join('')+'<th>Total</th></tr></thead>';
   let tbody = '<tbody>';
   const colSums = cols.map(()=>0); let grand = 0;
   rows.forEach(r => {
     let rowTotal = 0;
+    const rowIsProrr = r === 'GENERAL';
     const cells = cols.map((c,ci) => {
       const hl = selectedCC === c ? 'background:#f2ede0;font-weight:600;' : '';
+      const prorrStyle = (PRORR[c] || rowIsProrr) ? 'font-style:italic;color:var(--ink-soft);' : '';
       if(BRANCH_CC[r].includes(c)){
         const v = totalCC(r,c,months); rowTotal += v; colSums[ci] += v;
-        return `<td class="num" style="${hl}">${fmtMoneyFull(v)}</td>`;
+        return `<td class="num" style="${hl}${prorrStyle}">${fmtMoneyFull(v)}</td>`;
       }
-      return `<td class="num" style="${hl}">\u2014</td>`;
+      return `<td class="num" style="${hl}${prorrStyle}">\u2014</td>`;
     }).join('');
     grand += rowTotal;
-    const rLabel = r==='AV. 25 DE MAYO' ? 'Centro (Av. 25 de Mayo)' : (r==='AV. KIRCHNER'?'Av. Kirchner':(r==='VILLA DEL CARMEN'?'Villa del Carmen':'General'));
-    tbody += `<tr><td>${esc(rLabel)}</td>${cells}<td class="num" style="font-weight:700;">${fmtMoneyFull(rowTotal)}</td></tr>`;
+    const rLabel = r==='AV. 25 DE MAYO' ? 'Centro (Av. 25 de Mayo)' : (r==='AV. KIRCHNER'?'Av. Kirchner':(r==='VILLA DEL CARMEN'?'Villa del Carmen':'General (prorrateable, no es sucursal)'));
+    const rowStyle = rowIsProrr ? 'font-style:italic;color:var(--ink-soft);' : '';
+    tbody += `<tr style="${rowStyle}"><td>${esc(rLabel)}</td>${cells}<td class="num" style="font-weight:700;">${fmtMoneyFull(rowTotal)}</td></tr>`;
   });
   tbody += `<tr class="total-row"><td>Total</td>${colSums.map(v=>`<td class="num">${fmtMoneyFull(v)}</td>`).join('')}<td class="num">${fmtMoneyFull(grand)}</td></tr>`;
   tbody += '</tbody>';
@@ -1742,14 +1785,17 @@ function renderCentros(months){
 
 function renderCcConcepts(months){
   const ccList = ['TRANSPORTE','PTO. DE PALOS','INTEGRADO','PLAYA','SHOP','GENERAL'];
+  const PRORR = { 'INTEGRADO': true, 'GENERAL': true };
+  const CC_TITLE = { 'INTEGRADO': 'Integrado (prorrateable, no es CC)', 'GENERAL': 'General (prorrateable, no es CC)' };
   const html = ccList.map(cc => {
     const rows = ALL_CATS.map(c => ({ cat:c, total: categoryTotalForCC(c, cc, months) }))
       .filter(r => r.total !== 0).sort((a,b)=>b.total-a.total).slice(0,5);
     const grandTotal = ccBranchesFor(cc).reduce((s,b) => s + totalCC(b, cc, months), 0);
-    const card = miniHBarCardHTML(cc, grandTotal, rows.map(r=>r.cat), rows.map(r=>r.total), ccColorFor(cc));
+    const card = miniHBarCardHTML(CC_TITLE[cc] || cc, grandTotal, rows.map(r=>r.cat), rows.map(r=>r.total), ccColorFor(cc));
     const dim = selectedCC && selectedCC !== cc;
     const hl = selectedCC === cc;
-    return `<div style="cursor:pointer;${dim?'opacity:.45;':''}${hl?'outline:2px solid '+COLORS.amberDeep+';border-radius:4px;':''}" data-cc="${esc(cc)}">${card}</div>`;
+    const prorrStyle = PRORR[cc] ? 'border:1px dashed var(--ink-soft);border-radius:6px;opacity:.85;' : '';
+    return `<div style="cursor:pointer;${prorrStyle}${dim?'opacity:.45;':''}${hl?'outline:2px solid '+COLORS.amberDeep+';border-radius:4px;':''}" data-cc="${esc(cc)}">${card}</div>`;
   }).join('');
   const gridEl = document.getElementById('ccConceptGrid');
   gridEl.innerHTML = html;
