@@ -1392,6 +1392,8 @@ const RAW_DATA = [{"periodo": "2025/07", "operador": "ANGEL LUIS BIGATTI", "band
       state.banderas.add(b);
     }
     syncBanderaChips();
+    renderStationList();
+    updateStationCount();
     render();
   }
   function toggleProducto(p){
@@ -1495,8 +1497,9 @@ const RAW_DATA = [{"periodo": "2025/07", "operador": "ANGEL LUIS BIGATTI", "band
   function renderStationList(){
     const q = document.getElementById('stationSearch').value.trim().toLowerCase();
     visibleStationIds = ALL_STATION_IDS.filter(id=>{
-      if (!q) return true;
       const info = STATION_INFO[id];
+      if (!state.banderas.has(info.bandera)) return false;
+      if (!q) return true;
       return (info.operador+' '+info.direccion).toLowerCase().includes(q);
     });
     const container = document.getElementById('stationList');
@@ -1982,7 +1985,7 @@ const RAW_DATA = [{"periodo": "2025/07", "operador": "ANGEL LUIS BIGATTI", "band
       backgroundColor: PRODUCT_COLORS[p],
       stack:'mix',
       maxBarThickness:28
-    }));
+    })).filter(ds => ds.data.some(v => v > 0));
 
     const ctx = document.getElementById('chartProductMixByStation');
     charts.productMixByStation = new Chart(ctx, {

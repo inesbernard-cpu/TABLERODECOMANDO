@@ -1257,7 +1257,7 @@ const RAW_DATA = (function(){
   const STATION_INFO = {};
   RAW_DATA.forEach(d=>{
     const id = d.operador+'|'+d.direccion;
-    if (!STATION_INFO[id]) STATION_INFO[id] = { operador:d.operador, direccion:d.direccion, bandera:d.bandera };
+    if (!STATION_INFO[id]) STATION_INFO[id] = { operador:d.operador, direccion:d.direccion, bandera:d.bandera, provincia:d.provincia };
   });
   const ALL_STATION_IDS = Object.keys(STATION_INFO).sort((a,b)=>{
     const A = STATION_INFO[a], B = STATION_INFO[b];
@@ -1444,6 +1444,8 @@ const RAW_DATA = (function(){
       state.provincias.add(pr);
     }
     syncProvinciaChips();
+    renderStationList();
+    updateStationCount();
     render();
   }
   function toggleBandera(b){
@@ -1459,6 +1461,8 @@ const RAW_DATA = (function(){
       state.banderas.add(b);
     }
     syncBanderaChips();
+    renderStationList();
+    updateStationCount();
     render();
   }
   function toggleProducto(p){
@@ -1573,8 +1577,10 @@ const RAW_DATA = (function(){
   function renderStationList(){
     const q = document.getElementById('stationSearch').value.trim().toLowerCase();
     visibleStationIds = ALL_STATION_IDS.filter(id=>{
-      if (!q) return true;
       const info = STATION_INFO[id];
+      if (!state.provincias.has(info.provincia)) return false;
+      if (!state.banderas.has(info.bandera)) return false;
+      if (!q) return true;
       return (info.operador+' '+info.direccion).toLowerCase().includes(q);
     });
     const container = document.getElementById('stationList');
@@ -1611,7 +1617,16 @@ const RAW_DATA = (function(){
       `${state.estaciones.size} de ${ALL_STATION_IDS.length} estaciones seleccionadas`;
   }
 
-  document.getElementById('stationSearch').addEventListener('input', renderStationList);
+  document.getElementById('stationSearch').addEventListener('input', ()=>{
+    renderStationList();
+    const q = document.getElementById('stationSearch').value.trim();
+    if (q && visibleStationIds.length){
+      pushHistory();
+      state.estaciones = new Set(visibleStationIds);
+      updateStationCount();
+      render();
+    }
+  });
 
   document.getElementById('stationShowOnly').addEventListener('click', ()=>{
     if (!visibleStationIds.length) return;
@@ -2055,12 +2070,12 @@ const RAW_DATA = (function(){
       backgroundColor: PRODUCT_COLORS[p],
       stack:'mix',
       maxBarThickness:28
-    }));
+    })).filter(ds => ds.data.some(v => v > 0));
 
     const ctx = document.getElementById('chartProductMixByStation');
     charts.productMixByStation = new Chart(ctx, {
       type:'bar',
-      data:{ labels: ids.map(id=>STATION_INFO[id].direccion), datasets },
+      data:{ labels: ids.map(id=>stationLabelShort(id)), datasets },
       options:{
         indexAxis:'y',
         responsive:true, maintainAspectRatio:false,

@@ -133,6 +133,13 @@
 <div class="layout">
 
   <div id="view-resultados">
+  <div class="filter-row" style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+    <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Desde</label>
+    <select id="resDesde" class="search-input" style="width:auto;"></select>
+    <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Hasta</label>
+    <select id="resHasta" class="search-input" style="width:auto;"></select>
+    <div id="resChipRow" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
   <div class="kpi-row" id="kpiRow"></div>
 
   <div class="grid">
@@ -141,7 +148,7 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Evolución mensual — Ventas, costo y utilidad bruta</div>
-          <div class="panel-sub">Enero – septiembre 2026 (setiembre parcial)</div>
+          <div class="panel-sub">Clic en un mes del gráfico para aislarlo</div>
         </div>
         <div class="toggle-group" id="evolKindToggle">
           <button data-kind="bar" class="active">Barras</button>
@@ -184,11 +191,18 @@
   </div>
 
   <div class="foot-note">
-    Fuente: reporte "Rentabilidad por local" (Puerto de Palos, local 0000), año calendario 2026. Setiembre incluye datos parciales al 15/09/2026. Esta pestaña muestra únicamente Ventas, Costo y Utilidad Bruta — no incluye erogaciones ni utilidad neta. Es una fuente independiente de la pestaña "Resultados" del panel general de El Surtidor y puede no coincidir con ella.
+    Fuente: registros de Mr. Comanda, desde el 01/01/2026.
   </div>
   </div>
 
   <div id="view-medios" style="display:none;">
+    <div class="filter-row" style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Desde</label>
+      <select id="medDesde" class="search-input" style="width:auto;"></select>
+      <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Hasta</label>
+      <select id="medHasta" class="search-input" style="width:auto;"></select>
+      <div id="medRangeChipRow" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
     <div class="kpi-row" id="kpiMedios"></div>
     <div class="grid">
       <div class="panel span-7" style="min-height:340px;">
@@ -221,7 +235,7 @@
         <div class="panel-head">
           <div>
             <div class="panel-title">Mix de medios de pago</div>
-            <div class="panel-sub">Top 8 medios · % del total, por mes</div>
+            <div class="panel-sub">Top 8 medios · % del total, por mes · clic en un segmento para filtrar la tabla por ese mes y método</div>
           </div>
           <div class="toggle-group" id="mixKindToggle">
             <button data-kind="bar" class="active">Barras</button>
@@ -229,6 +243,23 @@
           </div>
         </div>
         <div class="chart-box"><canvas id="chartMediosMix"></canvas></div>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Detalle por medio de pago y mes</div>
+            <div class="panel-sub">Importe, cantidad de operaciones y ticket promedio · clic en el gráfico "Mix de medios de pago" para filtrar por mes y método</div>
+          </div>
+          <button class="export-btn" id="exportMediosBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div id="mediosChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
+        <div class="table-wrap">
+          <table class="data" id="mediosTable"><thead></thead><tbody></tbody></table>
+        </div>
       </div>
 
       <div class="panel span-6" style="min-height:320px;">
@@ -286,36 +317,27 @@
         </div>
         <div class="chart-box"><canvas id="chartOpsDia"></canvas></div>
       </div>
-      <div class="panel span-12">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title">Detalle por medio de pago y mes</div>
-            <div class="panel-sub">Importe, cantidad de operaciones y ticket promedio · clic en los gráficos de arriba para filtrar</div>
-          </div>
-          <button class="export-btn" id="exportMediosBtn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-            Exportar a Excel
-          </button>
-        </div>
-        <div id="mediosChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
-        <div class="table-wrap">
-          <table class="data" id="mediosTable"><thead></thead><tbody></tbody></table>
-        </div>
-      </div>
     </div>
     <div class="foot-note">
-      Fuente: "Estadísticas de medios de pago" (VFP), 8 planillas mensuales (enero a agosto 2026), Pto. de Palos. Cada mes valida exacto contra el total general de la planilla de origen.
+      Fuente: registros de Mr. Comanda, desde el 01/01/2026.
     </div>
   </div>
 
   <div id="view-menu" style="display:none;">
+    <div class="filter-row" style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Desde</label>
+      <select id="menuDesde" class="search-input" style="width:auto;"></select>
+      <label style="font-size:11.5px;font-weight:600;color:var(--ink-dim);">Hasta</label>
+      <select id="menuHasta" class="search-input" style="width:auto;"></select>
+      <div id="menuRangeChipRow" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
     <div class="kpi-row" id="kpiMenu"></div>
     <div class="grid">
       <div class="panel span-6" style="min-height:340px;">
         <div class="panel-head">
           <div>
             <div class="panel-title">Margen promedio por rubro del menú</div>
-            <div class="panel-sub">% sobre precio de venta, sin IVA</div>
+            <div class="panel-sub">% sobre precio de venta, sin IVA · clic en un rubro para verlo en el gráfico de evolución</div>
           </div>
           <div class="toggle-group" id="margenRubroKindToggle">
             <button data-kind="bar" class="active">Barras</button>
@@ -327,8 +349,8 @@
       <div class="panel span-6" style="min-height:340px;">
         <div class="panel-head">
           <div>
-            <div class="panel-title">Utilidad bruta estimada (medios de pago × margen del menú)</div>
-            <div class="panel-sub">Ventas totales por mes × margen promedio ponderado (71,1%)</div>
+            <div class="panel-title" id="utilEstTitle">Evolución de ventas, costo y utilidad — Todos los rubros</div>
+            <div class="panel-sub" id="utilEstSub">Ventas reales de medios de pago × margen promedio del menú (71,1%)</div>
           </div>
           <div class="toggle-group" id="utilEstKindToggle">
             <button data-kind="bar" class="active">Barras</button>
@@ -336,6 +358,34 @@
           </div>
         </div>
         <div class="chart-box"><canvas id="chartUtilEstimada"></canvas></div>
+      </div>
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title" id="utilEstTableTitle">Detalle mensual — Todos los rubros</div>
+            <div class="panel-sub">Ventas, costo y utilidad estimados por mes, según el rango y el rubro elegidos arriba</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="utilEstTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Menú completo</div>
+            <div class="panel-sub" id="menuFullSub">Precio, costo y margen por producto · clic en "Margen por rubro" para filtrar</div>
+          </div>
+          <button class="export-btn" id="exportMenuBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div id="menuChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"></div>
+        <input type="text" class="search-input" id="menuSearch" placeholder="Buscar producto...">
+        <div class="table-wrap">
+          <table class="data" id="menuTable"><thead></thead><tbody></tbody></table>
+        </div>
       </div>
       <div class="panel span-6">
         <div class="panel-head">
@@ -359,26 +409,9 @@
           <table class="data" id="highMarginTable"><thead></thead><tbody></tbody></table>
         </div>
       </div>
-      <div class="panel span-12">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title">Menú completo</div>
-            <div class="panel-sub" id="menuFullSub">Precio, costo y margen por producto · clic en "Margen por rubro" para filtrar</div>
-          </div>
-          <button class="export-btn" id="exportMenuBtn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-            Exportar a Excel
-          </button>
-        </div>
-        <div id="menuChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"></div>
-        <input type="text" class="search-input" id="menuSearch" placeholder="Buscar producto...">
-        <div class="table-wrap">
-          <table class="data" id="menuTable"><thead></thead><tbody></tbody></table>
-        </div>
-      </div>
     </div>
     <div class="foot-note">
-      Fuente: "Costo y precio de venta de productos" (ART_Y_COSTOS), El Surtidor S.A. — 322 productos con precio de venta cargado, de los cuales 310 tienen costo de receta informado (12 productos, por ejemplo del rubro Cumpleaños, no tienen costo cargado y quedan afuera del cálculo de margen). Importes sin I.V.A. <strong>La utilidad estimada es una proyección</strong> (ventas reales de medios de pago × margen promedio del menú) y es independiente de la utilidad de la pestaña "Resultados", que sale de la contabilidad — pueden no coincidir.
+      Fuente: registros de Mr. Comanda, desde el 01/01/2026.
     </div>
   </div>
 
@@ -1429,8 +1462,46 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
   function fmtPeriodo(p){ const [y,m] = p.split('-'); return MESES[m]+'·'+y.slice(2); }
 
   const state = { evolKind: 'bar', margenKind: 'line' };
+  const RES_DEFAULT_DESDE = Math.max(0, DATA.periods.indexOf('2026-01'));
+  let resDesdeIdx = RES_DEFAULT_DESDE, resHastaIdx = DATA.periods.length - 1;
 
-  function currentData(){ return DATA; }
+  function currentData(){
+    return {
+      periods: DATA.periods.slice(resDesdeIdx, resHastaIdx+1),
+      monthly: DATA.monthly.slice(resDesdeIdx, resHastaIdx+1)
+    };
+  }
+
+  function populateResSelects(){
+    const opts = DATA.periods.map((p,i)=>`<option value="${i}">${fmtPeriodo(p)}</option>`).join('');
+    document.getElementById('resDesde').innerHTML = opts;
+    document.getElementById('resHasta').innerHTML = opts;
+    document.getElementById('resDesde').value = resDesdeIdx;
+    document.getElementById('resHasta').value = resHastaIdx;
+  }
+  function renderResChip(){
+    const el = document.getElementById('resChipRow');
+    if (!el) return;
+    if (resDesdeIdx === RES_DEFAULT_DESDE && resHastaIdx === DATA.periods.length-1){ el.innerHTML=''; return; }
+    const label = resDesdeIdx === resHastaIdx ? fmtPeriodo(DATA.periods[resDesdeIdx]) : `${fmtPeriodo(DATA.periods[resDesdeIdx])} – ${fmtPeriodo(DATA.periods[resHastaIdx])}`;
+    el.innerHTML = `<div class="filter-chip">Período: ${label}<button onclick="window.__clearResRange()">✕</button></div>`;
+  }
+  window.__clearResRange = () => {
+    resDesdeIdx = RES_DEFAULT_DESDE; resHastaIdx = DATA.periods.length-1;
+    populateResSelects(); renderResChip(); render();
+  };
+  populateResSelects();
+  renderResChip();
+  document.getElementById('resDesde').addEventListener('change', (e)=>{
+    resDesdeIdx = +e.target.value;
+    if (resDesdeIdx > resHastaIdx) resHastaIdx = resDesdeIdx;
+    populateResSelects(); renderResChip(); render();
+  });
+  document.getElementById('resHasta').addEventListener('change', (e)=>{
+    resHastaIdx = +e.target.value;
+    if (resHastaIdx < resDesdeIdx) resDesdeIdx = resHastaIdx;
+    populateResSelects(); renderResChip(); render();
+  });
 
   document.getElementById('evolKindToggle').querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1457,16 +1528,6 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
   }
   function pointerCursor(evt, elements){ if(evt.native && evt.native.target) evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
 
-  function togglePeriodoFiltro(p){
-    filtroPeriodo = (filtroPeriodo === p) ? null : p;
-    renderMediosChips();
-    renderMediosTable();
-  }
-  function toggleMetodoFiltro(m){
-    filtroMetodo = (filtroMetodo === m) ? null : m;
-    renderMediosChips();
-    renderMediosTable();
-  }
   function renderMediosChips(){
     const el = document.getElementById('mediosChipRow');
     if (!el) return;
@@ -1482,6 +1543,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
     filtroRubro = (filtroRubro === r) ? null : r;
     renderMenuChips();
     renderMenuTable();
+    buildUtilEstimada();
   }
   function renderMenuChips(){
     const el = document.getElementById('menuChipRow');
@@ -1524,8 +1586,10 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
         { label:'Utilidad bruta', data: d.monthly.map(m=>m.util_bruta), borderColor:'#1E8A5F', backgroundColor:'#1E8A5F', ...commonOpts }
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length){ resDesdeIdx = resHastaIdx = els[0].index; populateResSelects(); renderResChip(); render(); } },
+        onHover: pointerCursor,
         plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
-          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para aislar este mes' } } },
         scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
       }
     });
@@ -1588,6 +1652,50 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
 
   // ================= MEDIOS DE PAGO =================
   const VFP_MONTHS = Object.keys(VFP).sort();
+
+  const MENU_DEFAULT_DESDE = Math.max(0, VFP_MONTHS.indexOf('2026-01'));
+  let menuDesdeIdx = MENU_DEFAULT_DESDE, menuHastaIdx = VFP_MONTHS.length - 1;
+  function currentMenuVfpMonths(){ return VFP_MONTHS.slice(menuDesdeIdx, menuHastaIdx+1); }
+  function populateMenuSelects(){
+    const opts = VFP_MONTHS.map((p,i)=>`<option value="${i}">${fmtPeriodo(p)}</option>`).join('');
+    document.getElementById('menuDesde').innerHTML = opts;
+    document.getElementById('menuHasta').innerHTML = opts;
+    document.getElementById('menuDesde').value = menuDesdeIdx;
+    document.getElementById('menuHasta').value = menuHastaIdx;
+  }
+  function renderMenuRangeChip(){
+    const el = document.getElementById('menuRangeChipRow');
+    if (!el) return;
+    if (menuDesdeIdx === MENU_DEFAULT_DESDE && menuHastaIdx === VFP_MONTHS.length-1){ el.innerHTML=''; return; }
+    const label = menuDesdeIdx === menuHastaIdx ? fmtPeriodo(VFP_MONTHS[menuDesdeIdx]) : `${fmtPeriodo(VFP_MONTHS[menuDesdeIdx])} – ${fmtPeriodo(VFP_MONTHS[menuHastaIdx])}`;
+    el.innerHTML = `<div class="filter-chip">Rango: ${label}<button onclick="window.__clearMenuRange()">✕</button></div>`;
+  }
+  window.__clearMenuRange = () => {
+    menuDesdeIdx = MENU_DEFAULT_DESDE; menuHastaIdx = VFP_MONTHS.length-1;
+    populateMenuSelects(); renderMenuRangeChip(); buildUtilEstimada();
+  };
+
+  const MED_DEFAULT_DESDE = Math.max(0, VFP_MONTHS.indexOf('2026-01'));
+  let medDesdeIdx = MED_DEFAULT_DESDE, medHastaIdx = VFP_MONTHS.length - 1;
+  function currentVfpMonths(){ return VFP_MONTHS.slice(medDesdeIdx, medHastaIdx+1); }
+  function populateMedSelects(){
+    const opts = VFP_MONTHS.map((p,i)=>`<option value="${i}">${fmtPeriodo(p)}</option>`).join('');
+    document.getElementById('medDesde').innerHTML = opts;
+    document.getElementById('medHasta').innerHTML = opts;
+    document.getElementById('medDesde').value = medDesdeIdx;
+    document.getElementById('medHasta').value = medHastaIdx;
+  }
+  function renderMedRangeChip(){
+    const el = document.getElementById('medRangeChipRow');
+    if (!el) return;
+    if (medDesdeIdx === MED_DEFAULT_DESDE && medHastaIdx === VFP_MONTHS.length-1){ el.innerHTML=''; return; }
+    const label = medDesdeIdx === medHastaIdx ? fmtPeriodo(VFP_MONTHS[medDesdeIdx]) : `${fmtPeriodo(VFP_MONTHS[medDesdeIdx])} – ${fmtPeriodo(VFP_MONTHS[medHastaIdx])}`;
+    el.innerHTML = `<div class="filter-chip">Rango: ${label}<button onclick="window.__clearMedRange()">✕</button></div>`;
+  }
+  window.__clearMedRange = () => {
+    medDesdeIdx = MED_DEFAULT_DESDE; medHastaIdx = VFP_MONTHS.length-1;
+    populateMedSelects(); renderMedRangeChip(); renderMedios();
+  };
   let mediosKind = 'bar';
   let efvsdigKind = 'bar';
   let mixKind = 'bar';
@@ -1605,18 +1713,19 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
   let utilEstKind = 'bar';
 
   function renderMedios(){
-    const totals = VFP_MONTHS.map(m => VFP[m].total_importe);
-    const totalCantSum = VFP_MONTHS.reduce((s,m)=>s+VFP[m].total_cant,0);
+    const VFP_MONTHS_FULL = currentVfpMonths();
+    const totals = VFP_MONTHS_FULL.map(m => VFP[m].total_importe);
+    const totalCantSum = VFP_MONTHS_FULL.reduce((s,m)=>s+VFP[m].total_cant,0);
     const grandTotal = totals.reduce((a,b)=>a+b,0);
     const avgTicket = totalCantSum ? grandTotal/totalCantSum : 0;
     document.getElementById('kpiMedios').innerHTML = [
-      { label:'Ventas totales (8 meses)', value: fmtMoneyFull(grandTotal) },
-      { label:'Promedio mensual', value: fmtMoneyFull(grandTotal/VFP_MONTHS.length) },
+      { label:'Ventas totales ('+VFP_MONTHS_FULL.length+' meses)', value: fmtMoneyFull(grandTotal) },
+      { label:'Promedio mensual', value: fmtMoneyFull(grandTotal/VFP_MONTHS_FULL.length) },
       { label:'Operaciones totales', value: totalCantSum.toLocaleString('es-AR',{maximumFractionDigits:0}) },
       { label:'Ticket promedio', value: fmtMoneyFull(avgTicket) },
     ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value tabular">${c.value}</div></div>`).join('');
 
-    const labels = VFP_MONTHS.map(fmtPeriodo);
+    const labels = VFP_MONTHS_FULL.map(fmtPeriodo);
     const isLine = mediosKind === 'line';
     const commonOpts = isLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
     if (charts.mediosEvol) charts.mediosEvol.destroy();
@@ -1624,15 +1733,13 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
       type: isLine ? 'line' : 'bar',
       data:{ labels, datasets:[{ label:'Ventas totales', data: totals, borderColor:'#8F221A', backgroundColor:'#8F221A', ...commonOpts }] },
       options:{ responsive:true, maintainAspectRatio:false,
-        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-        onHover: pointerCursor,
-        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar la tabla por este mes' } } },
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}` } } },
         scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
       }
     });
 
     if (charts.efvsdig) charts.efvsdig.destroy();
-    const efPct = VFP_MONTHS.map(m => {
+    const efPct = VFP_MONTHS_FULL.map(m => {
       const ef = VFP[m].metodos.filter(x=>x.metodo.indexOf('EFECTIVO')>=0).reduce((a,x)=>a+x.importe,0);
       return VFP[m].total_importe ? ef/VFP[m].total_importe*100 : 0;
     });
@@ -1666,39 +1773,39 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
 
     if (charts.mix) charts.mix.destroy();
     const allMethods = {};
-    VFP_MONTHS.forEach(m => VFP[m].metodos.forEach(x=>{ allMethods[x.metodo] = (allMethods[x.metodo]||0) + x.importe; }));
+    VFP_MONTHS_FULL.forEach(m => VFP[m].metodos.forEach(x=>{ allMethods[x.metodo] = (allMethods[x.metodo]||0) + x.importe; }));
     const top8 = Object.entries(allMethods).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
     const palette = ['#8F221A','#C1443C','#B98600','#1E8A5F','#2B6CB0','#9C6ADE','#5C8A99','#A85D8C'];
     const mixIsLine = mixKind === 'line';
     if (mixIsLine){
       const mixDatasetsLine = top8.map((method,i) => ({
         label: method,
-        data: VFP_MONTHS.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
+        data: VFP_MONTHS_FULL.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
         borderColor: palette[i%palette.length], backgroundColor: palette[i%palette.length], pointRadius:3, pointHoverRadius:5, borderWidth:2, tension:0.3, fill:false
       }));
       charts.mix = new Chart(document.getElementById('chartMediosMix'), {
         type:'line',
         data:{ labels, datasets: mixDatasetsLine },
         options:{ responsive:true, maintainAspectRatio:false,
-          onClick: (evt, els) => { if (els.length) toggleMetodoFiltro(top8[els[0].datasetIndex]); },
+          onClick: (evt, els) => { if (els.length) setPeriodoMetodoFiltro(VFP_MONTHS_FULL[els[0].index], top8[els[0].datasetIndex]); },
           onHover: pointerCursor,
-          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:10,font:{size:10.5}}, onClick:(e,item)=>toggleMetodoFiltro(top8[item.datasetIndex]) }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:10,font:{size:10.5}} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla por este mes y método' } } },
           scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
         }
       });
     } else {
       const mixDatasets = top8.map((method,i) => ({
         label: method,
-        data: VFP_MONTHS.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
+        data: VFP_MONTHS_FULL.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
         backgroundColor: palette[i%palette.length], stack:'s', borderRadius:2
       }));
       charts.mix = new Chart(document.getElementById('chartMediosMix'), {
         type:'bar',
         data:{ labels, datasets: mixDatasets },
         options:{ responsive:true, maintainAspectRatio:false,
-          onClick: (evt, els) => { if (els.length) toggleMetodoFiltro(top8[els[0].datasetIndex]); },
+          onClick: (evt, els) => { if (els.length) setPeriodoMetodoFiltro(VFP_MONTHS_FULL[els[0].index], top8[els[0].datasetIndex]); },
           onHover: pointerCursor,
-          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:10,font:{size:10.5}}, onClick:(e,item)=>toggleMetodoFiltro(top8[item.datasetIndex]) }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:10,font:{size:10.5}} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla por este mes y método' } } },
           scales:{ x:{ grid:{display:false}, ticks:{color:tickColor}, stacked:true }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, stacked:true, max:100 } }
         }
       });
@@ -1706,23 +1813,21 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
 
     // ---- Ticket promedio general ----
     if (charts.ticket) charts.ticket.destroy();
-    const ticketProm = VFP_MONTHS.map(m => VFP[m].total_cant ? VFP[m].total_importe/VFP[m].total_cant : 0);
+    const ticketProm = VFP_MONTHS_FULL.map(m => VFP[m].total_cant ? VFP[m].total_importe/VFP[m].total_cant : 0);
     const ticketIsLine = ticketKind === 'line';
     const ticketCommon = ticketIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
     charts.ticket = new Chart(document.getElementById('chartTicket'), {
       type: ticketIsLine ? 'line' : 'bar',
       data:{ labels, datasets:[{ label:'Ticket promedio', data: ticketProm, borderColor:'#8F221A', backgroundColor:'#8F221A', ...ticketCommon }] },
       options:{ responsive:true, maintainAspectRatio:false,
-        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-        onHover: pointerCursor,
-        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}` } } },
         scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
       }
     });
 
     // ---- Concentración de medios de pago (HHI) ----
     if (charts.hhi) charts.hhi.destroy();
-    const hhiData = VFP_MONTHS.map(m => {
+    const hhiData = VFP_MONTHS_FULL.map(m => {
       const tot = VFP[m].total_importe;
       if (!tot) return 0;
       return VFP[m].metodos.reduce((s,x)=> s + Math.pow(Math.max(x.importe,0)/tot, 2), 0);
@@ -1733,18 +1838,16 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
       type: hhiIsLine ? 'line' : 'bar',
       data:{ labels, datasets:[{ label:'Índice HHI', data: hhiData, borderColor:'#8F221A', backgroundColor:'#8F221A', ...hhiCommon }] },
       options:{ responsive:true, maintainAspectRatio:false,
-        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-        onHover: pointerCursor,
-        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(3)}`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(3)}` } } },
         scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v.toFixed(2)}, min:0, max:0.3 } }
       }
     });
 
     // ---- Variación de ventas mes a mes ----
     if (charts.mom) charts.mom.destroy();
-    const momData = VFP_MONTHS.map((m,i) => {
+    const momData = VFP_MONTHS_FULL.map((m,i) => {
       if (i===0) return null;
-      const prev = VFP[VFP_MONTHS[i-1]].total_importe;
+      const prev = VFP[VFP_MONTHS_FULL[i-1]].total_importe;
       return prev ? (VFP[m].total_importe/prev - 1)*100 : null;
     });
     const momIsLine = momKind === 'line';
@@ -1754,9 +1857,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
         type:'line',
         data:{ labels, datasets:[{ label:'Variación mensual', data: momData, borderColor:'#8F221A', backgroundColor:'#8F221A', pointBackgroundColor:momColors, pointRadius:5, pointHoverRadius:7, borderWidth:2, tension:0.3, spanGaps:true }] },
         options:{ responsive:true, maintainAspectRatio:false,
-          onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-          onHover: pointerCursor,
-          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%` } } },
           scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
         }
       });
@@ -1765,9 +1866,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
         type:'bar',
         data:{ labels, datasets:[{ label:'Variación mensual', data: momData, backgroundColor: momColors, borderRadius:3, maxBarThickness:30 }] },
         options:{ responsive:true, maintainAspectRatio:false,
-          onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-          onHover: pointerCursor,
-          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%` } } },
           scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
         }
       });
@@ -1775,16 +1874,14 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
 
     // ---- Operaciones por día promedio ----
     if (charts.opsDia) charts.opsDia.destroy();
-    const opsDiaData = VFP_MONTHS.map(m => DAYS_IN_MONTH[m] ? VFP[m].total_cant/DAYS_IN_MONTH[m] : 0);
+    const opsDiaData = VFP_MONTHS_FULL.map(m => DAYS_IN_MONTH[m] ? VFP[m].total_cant/DAYS_IN_MONTH[m] : 0);
     const opsDiaIsLine = opsDiaKind === 'line';
     const opsDiaCommon = opsDiaIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
     charts.opsDia = new Chart(document.getElementById('chartOpsDia'), {
       type: opsDiaIsLine ? 'line' : 'bar',
       data:{ labels, datasets:[{ label:'Operaciones / día', data: opsDiaData, borderColor:'#8F221A', backgroundColor:'#8F221A', ...opsDiaCommon }] },
       options:{ responsive:true, maintainAspectRatio:false,
-        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
-        onHover: pointerCursor,
-        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(1)} operaciones/día`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(1)} operaciones/día` } } },
         scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v.toFixed(0)} } }
       }
     });
@@ -1793,11 +1890,21 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
     renderMediosTable();
   }
 
+  function setPeriodoMetodoFiltro(mes, metodo){
+    if (filtroPeriodo === mes && filtroMetodo === metodo){
+      filtroPeriodo = null; filtroMetodo = null;
+    } else {
+      filtroPeriodo = mes; filtroMetodo = metodo;
+    }
+    renderMediosChips();
+    renderMediosTable();
+  }
+
   function renderMediosTable(){
     const table = document.getElementById('mediosTable');
     table.querySelector('thead').innerHTML = '<tr><th>Período</th><th>Método</th><th>Importe</th><th>Cantidad</th><th>Promedio</th><th>% del mes</th></tr>';
     let rows = [];
-    VFP_MONTHS.forEach(m => {
+    currentVfpMonths().forEach(m => {
       if (filtroPeriodo && m !== filtroPeriodo) return;
       VFP[m].metodos.slice().sort((a,b)=>b.importe-a.importe).forEach(x=>{
         if (filtroMetodo && x.metodo !== filtroMetodo) return;
@@ -1806,6 +1913,17 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
     });
     table.querySelector('tbody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">Sin resultados para este filtro</td></tr>';
   }
+
+  document.getElementById('medDesde').addEventListener('change', (e)=>{
+    medDesdeIdx = +e.target.value;
+    if (medDesdeIdx > medHastaIdx) medHastaIdx = medDesdeIdx;
+    populateMedSelects(); renderMedRangeChip(); renderMedios();
+  });
+  document.getElementById('medHasta').addEventListener('change', (e)=>{
+    medHastaIdx = +e.target.value;
+    if (medHastaIdx < medDesdeIdx) medDesdeIdx = medHastaIdx;
+    populateMedSelects(); renderMedRangeChip(); renderMedios();
+  });
 
   document.getElementById('mediosKindToggle').querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1871,6 +1989,54 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
   });
 
   // ================= MENU Y COSTOS =================
+  function buildUtilEstimada(){
+    const months = currentMenuVfpMonths();
+    const labels = months.map(fmtPeriodo);
+    const ventasM = months.map(m=>VFP[m].total_importe);
+    const margin = filtroRubro
+      ? (MENU.rubro_stats.find(r=>r.rubro===filtroRubro)||{margen_pct:MENU.overall_margin}).margen_pct
+      : MENU.overall_margin;
+    const costoM = ventasM.map(v=>v*(1-margin));
+    const utilM = ventasM.map(v=>v*margin);
+
+    const titleEl = document.getElementById('utilEstTitle');
+    const subEl = document.getElementById('utilEstSub');
+    if (titleEl) titleEl.textContent = filtroRubro ? `Evolución de ventas, costo y utilidad — ${filtroRubro}` : 'Evolución de ventas, costo y utilidad — Todos los rubros';
+    if (subEl) subEl.textContent = `Ventas reales de medios de pago × margen ${filtroRubro ? 'del rubro' : 'promedio del menú'} (${fmtPct(margin)})`;
+
+    if (charts.utilEstimada) charts.utilEstimada.destroy();
+    const utilEstIsLine = utilEstKind === 'line';
+    const utilEstCommon = utilEstIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:26 };
+    charts.utilEstimada = new Chart(document.getElementById('chartUtilEstimada'), {
+      type: utilEstIsLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Ventas', data: ventasM, borderColor:'#D9A79C', backgroundColor:'#D9A79C', ...utilEstCommon },
+        { label:'Costo estimado', data: costoM, borderColor:'#C1443C', backgroundColor:'#C1443C', ...utilEstCommon },
+        { label:'Utilidad estimada', data: utilM, borderColor:'#8F221A', backgroundColor:'#8F221A', ...utilEstCommon }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+
+    const tableTitleEl = document.getElementById('utilEstTableTitle');
+    if (tableTitleEl) tableTitleEl.textContent = filtroRubro ? `Detalle mensual — ${filtroRubro}` : 'Detalle mensual — Todos los rubros';
+    const utilEstTableEl = document.getElementById('utilEstTable');
+    if (utilEstTableEl){
+      utilEstTableEl.querySelector('thead').innerHTML = '<tr><th>Período</th><th>Ventas</th><th>Costo estimado</th><th>Utilidad estimada</th><th>% margen</th></tr>';
+      utilEstTableEl.querySelector('tbody').innerHTML = months.map((m,i)=>`
+        <tr>
+          <td>${fmtPeriodo(m)}</td>
+          <td class="tabular">${fmtMoneyFull(ventasM[i])}</td>
+          <td class="tabular">${fmtMoneyFull(costoM[i])}</td>
+          <td class="tabular">${fmtMoneyFull(utilM[i])}</td>
+          <td class="tabular">${fmtPct(margin)}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
   function renderMenu(){
     const rubroStats = MENU.rubro_stats;
     document.getElementById('kpiMenu').innerHTML = [
@@ -1907,23 +2073,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
       });
     }
 
-    if (charts.utilEstimada) charts.utilEstimada.destroy();
-    const labels = VFP_MONTHS.map(fmtPeriodo);
-    const ventasM = VFP_MONTHS.map(m=>VFP[m].total_importe);
-    const utilEstM = ventasM.map(v=>v*MENU.overall_margin);
-    const utilEstIsLine = utilEstKind === 'line';
-    const utilEstCommon = utilEstIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:26 };
-    charts.utilEstimada = new Chart(document.getElementById('chartUtilEstimada'), {
-      type: utilEstIsLine ? 'line' : 'bar',
-      data:{ labels, datasets:[
-        { label:'Ventas', data: ventasM, borderColor:'#D9A79C', backgroundColor:'#D9A79C', ...utilEstCommon },
-        { label:'Utilidad bruta estimada', data: utilEstM, borderColor:'#8F221A', backgroundColor:'#8F221A', ...utilEstCommon }
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
-        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
-      }
-    });
+    buildUtilEstimada();
 
     function fillMarginTable(id, items){
       const table = document.getElementById(id);
@@ -1967,8 +2117,18 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
     btn.addEventListener('click', ()=>{
       utilEstKind = btn.dataset.kind;
       document.getElementById('utilEstKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
-      renderMenu();
+      buildUtilEstimada();
     });
+  });
+  document.getElementById('menuDesde').addEventListener('change', (e)=>{
+    menuDesdeIdx = +e.target.value;
+    if (menuDesdeIdx > menuHastaIdx) menuHastaIdx = menuDesdeIdx;
+    populateMenuSelects(); renderMenuRangeChip(); buildUtilEstimada();
+  });
+  document.getElementById('menuHasta').addEventListener('change', (e)=>{
+    menuHastaIdx = +e.target.value;
+    if (menuHastaIdx < menuDesdeIdx) menuDesdeIdx = menuHastaIdx;
+    populateMenuSelects(); renderMenuRangeChip(); buildUtilEstimada();
   });
 
   document.getElementById('exportMenuBtn').addEventListener('click', ()=>{
@@ -1991,8 +2151,8 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
       ['resultados','medios','menu'].forEach(v=>{
         document.getElementById('view-'+v).style.display = (v===btn.dataset.view) ? '' : 'none';
       });
-      if (btn.dataset.view === 'medios' && !mediosRendered){ renderMedios(); mediosRendered = true; }
-      if (btn.dataset.view === 'menu' && !menuRendered){ renderMenu(); menuRendered = true; }
+      if (btn.dataset.view === 'medios' && !mediosRendered){ populateMedSelects(); renderMedios(); mediosRendered = true; }
+      if (btn.dataset.view === 'menu' && !menuRendered){ populateMenuSelects(); renderMenu(); menuRendered = true; }
     });
   });
 
