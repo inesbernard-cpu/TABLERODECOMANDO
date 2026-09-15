@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pto. de Palos — El Surtidor SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#2B1210; --ink-dim:#8A6B67; --ink-faint:#B59A97;
+    --paper:#FAF4F3; --card:#FFFFFF; --border:rgba(43,18,16,0.10);
+    --accent:#8F221A; --accent-soft:#F3DEDB; --accent-deep:#5E140F;
+    --up:#1E8A5F; --dn:#C1443C; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+  ::selection{ background:var(--accent-soft); color:var(--accent-deep); }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:18px 28px; }
+  .topbar-inner{ max-width:1280px; margin:0 auto; display:flex; align-items:flex-start; gap:16px; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:10px; }
+  .logo{ width:52px; height:52px; border-radius:12px; flex-shrink:0; overflow:hidden; box-shadow:0 2px 8px rgba(43,18,16,0.18); }
+  .logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.02em; color:var(--ink-dim); }
+  .brand span{ color:var(--accent); }
+  h1.page-title{ font-size:23px; font-weight:700; margin:2px 0 6px; }
+  .page-sub{ font-size:13.5px; color:var(--ink-dim); margin:0 0 14px; max-width:72ch; }
+
+  .seg{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button{ border:0; background:transparent; padding:8px 15px; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+  .seg-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .seg-label{ font-size:11.5px; font-weight:600; color:var(--ink-dim); margin-right:2px; }
+  .tabbar{ background:var(--card); border-bottom:1px solid var(--border); padding:10px 28px; }
+  .tabbar .seg{ background:var(--paper); }
+
+  .layout{ max-width:1280px; margin:0 auto; padding:22px 28px 56px; }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; line-height:1; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:6px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .panel-title{ font-size:13.5px; font-weight:600; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .chart-box{ position:relative; flex:1; min-height:280px; }
+  .span-12{ grid-column:span 12; } .span-7{ grid-column:span 7; } .span-6{ grid-column:span 6; } .span-5{ grid-column:span 5; }
+
+  .toggle-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .toggle-group button{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toggle-group button.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+
+  .filter-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:5px 8px 5px 12px; border-radius:100px; font-size:11.5px; font-weight:600;
+  }
+  .filter-chip button{
+    background:none; border:0; color:var(--accent-deep); cursor:pointer; font-size:13px; line-height:1;
+    padding:2px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+  .filter-chip button:hover{ background:rgba(0,0,0,0.08); }
+  .search-input{
+    border:1px solid var(--border); border-radius:8px; padding:7px 12px; font:inherit; font-size:12.5px;
+    color:var(--ink); background:var(--paper); width:220px; margin-bottom:10px;
+  }
+  .search-input:focus{ outline:none; border-color:var(--accent); }
+
+  .table-wrap{ overflow:auto; max-height:440px; position:relative; border:1px solid var(--border); border-radius:8px; }
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(43,18,16,0.05); white-space:nowrap; }
+  table.data th:first-child, table.data td:first-child{ position:sticky; left:0; z-index:1; background:var(--card); }
+  table.data th:first-child{ z-index:3; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  table.data tbody tr:hover td:first-child{ background:var(--paper); }
+  .export-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .export-btn:hover{ background:var(--accent); color:#fff; }
+
+  .foot-note{ margin-top:22px; font-size:11.5px; color:var(--ink-faint); line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+
+  @media (max-width: 780px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .span-7,.span-6,.span-5{ grid-column:span 12; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/7QCEUGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAGgcAigAYkZCTUQwYTAwMGFiMTAxMDAwMGFmMDIwMDAwYTYwMzAwMDA1ZTA0MDAwMGE5MDQwMDAwMWEwNjAwMDBmMDA3MDAwMDcwMDgwMDAwMGQwOTAwMDA0OTA5MDAwMDFlMGIwMDAwAP/bAIQABQYGCwgLCwsLCw0LCwsNDg4NDQ4ODw0ODg4NDxAQEBEREBAQEA8TEhMPEBETFBQTERMWFhYTFhUVFhkWGRYWEgEFBQUKBwoICQkICwgKCAsKCgkJCgoMCQoJCgkMDQsKCwsKCw0MCwsICwsMDAwNDQwMDQoLCg0MDQ0MExQTExOc/8IAEQgAlgCWAwEiAAIRAQMRAf/EAHwAAQEAAwEBAQEAAAAAAAAAAAAGAwQFAgcIARAAAQMBBAcFBQcFAAAAAAAAAQACEQMEEiExBRMiMDJBUUBhgZGhEGBxgtEVIDNCUuHwFJKxwfERAAIBAgQFBAIDAQAAAAAAAAERACExQVFhcTCBkdHwEKGxwUBgIFDh8f/aAAwDAQACAAMAAAABjBzK0AAAAAAABZxlmRgAAAAAAAAFnGWZGAAAH1b3h+b4v0diz83844/uXjzm+IDX6QACzjLMjAAAPuPyL6psc2v0ovJn5vS5GfpecvxFkx6XfAAWcZZkYAAD6fXfM7Xc4VVn5+zl0dGbzfJcPQ1RqdsABZxlmRgAB6Ox9UlNvZ5FHtc3t5tKX86E7i2+dx6aZ1+oHnKAs4yzIwAAHRpYnvZNbo9ra5+bQnenKa2Hf7vCPGcP56AWcZZkYAAADu7E094Q8ZgAAFnGWZGAAAAAAAAAWcZZkkrXrzJK0SStEkrRJK0SStEkrRJK0SStElWh/9oACAEBAAEFAvdSjSL31Wat109g0TYwGotBVOztrK006dClvtG1g+kqj2xRt1JrbZpCjVp72y2c13/ZVNULG95q6HFR9k0bTRsFnptcZO80IzC1vhtNlxqsn4ekreGN3ujLaKBdWbebaaZRqNCNGnratI03b2xWfX1P6Zlod9l0FVsFKoqdZllq17XZaqtTqRO7AlaMqNo06Gl2MaNL0CmWpj1pFzFRe+o7SFF1J28bWQ0cyqDoxwMvpAWUKnTp0VbrSK9Te0X3m0LRrW2qo6mjUdPYLJadSrRa2vHuFdV1XVdV1XVdV1XVdV1XVdV1XVdV1XVdX//aAAgBAwABPwHs9orik28ceg6lfaZngwjKefkhpHEC5iYGfM7jSDmGGEkHPATHxQpsBxqeTTn0U0mu/O4giIgY7i103a0mJnEd8BEHmFZbO175Jy2rsRj+24tOsqPdcB2MBHfiT/OSdrW4m+OhMplEOAqbTSOIyQZ5nIxKoGWtgz3nH1MffrNIxYbuOPT4wr73uuvgxyOAnwWpc7Bz8OYH7pjA0BoyG4NBpdejHsEqVKlSpUqVKlf/2gAIAQIAAT8B7Oxt4rUd61PfuKIOak/p9VtEchuKZ2fZUeQPSdwyAMeaF3uRdGCdn99p64qAMQrwHJEzuL5iOwQoUKFChQoUKF//2gAIAQEABj8C91Gtx2iAnNPIkLLsGtdxHh7h7MQjVeJviGjkGfvmnuaxoIGGAz37QM2iCPh7CC4DxUF2LG4xjwp7ATJGGyc98GDxPQLZL2HqHIP1zixr8J/MG+PVOeX8RmAEXSSDeb8uSJ1YwE4yckTEd29qO7wFA4nINGQEexvl5FGm2HOdge4fXfEO4Xc+hTXOIaHmRP6WZebjKwqN8wsSB4q+KoAM3mzhiI6otOY3wbyzd8E4vEtbsN5ZZ+uHgvw/U/VC83hEDE5LUAQ0889orbBd8plDVNLRzne1nHib/B6oNLXYc8M+azI+UpkHjBLfDNX6ZaTIvEEXsMv4FDazxhOP/U2+++4jew8Xx5HwKBp1YkXofnHguNvhj9EGtpPN1jm3oAO0emK4ao+Vv1CJNUYxhmeIE8JPRXhlECd8Wc4MZZdPjOIQvTPcWO9HYhbLGx1c2nPkCr04+XYTMlp5YZ+IK2WXf7f9NH+fdb//2gAIAQEBAT8h/VEruRGgJqeQh7qrFGjfnMRrE2Nhc7fgAgHith7n49KwArMAwxeINiF1N1K6+Ks1B7njk8CWOB+hv6VrcEVAJjeBIttYKACQQERiFOTxoCxfUcagQ65Bc9tYRoiIunzf+S0zi5YqcCIFUtWENgFQ0epJ+IEFNECQKjVQXKcOMgMTUAeJgBAASSAsHgNuKLM9CA/uHPbSBoLPqQBqYO1EHIL0LlgluQH3EVgBxQbP4DmeNQ3WcSKV0Il28iVL4zaspcz5ZzGUrUBSZTwskTERYDVml4JdFW+R5ivGLhWpp72hpqkLIDHoRi9Ba51NIQWF42xIgiUw64ELnLsgsVhzofeIygoxnMVJ4hCQqZROUSDdKjOpyhJqgzKpXFyzLxvvocvStAhj2ucODgZ0HFDZHRW9ISFwJnw2PEgQIFekpIND74vLLUpGjXkWNIIJYqgiRfIQQaRaJFvdCYU5hVAsJAEcM4Rfdo6mVdUIUpAaItZoZCIViEP9PGtMtXcVTUQQAMGoIRgiwNKoWKV37LIyvC4wbaEH2hR0DxC+CA/BCScEdakttCoVlzT8z9DPpH0j6R9I+kfSPpH0j6R9I+kfSPpH0j6R9I+kfSPpP//aAAwDAQECAQMBAAAQ/wD/AP8A/wD/AP8A/r//AP8A/wD/AP8A/wDr/wD/APxyT/8A/r//AP8AiWT/AP8A6/8A/wDdSN//AP6//wD/APob/wD/AOv/AP8A7uJf/wD+v/8A/wD3f/8A/wDr/wD/AP8A/wD/AP8A/rxxxxxxxxxh/9oACAEDAQE/EPx0IuVjmYCCsOA+U/hAFkTICCwnpZrgBBZpKGChg10rSJKwA2UmwFV9sIG4cH2DWDCi0y/m0zBKLyA2UeqM5guGxJQVFQlgnEGrXY4FoNTGiEqMzQRTFU2KaMo7CukOggMCNxHqQBRBIuEjXII9B/MftbVTm0Y0UXOiNTKXTpraYIkkPZtSWHFDlwGzg4lU0/KAD//aAAgBAgEBPxD8cqBzOU8lM9nAEYBi110hOKXZhbPgiCge8BEsLgC6jFGW+My2Xv5ukjU9JcJOP9EAAf/aAAgBAQEBPxD9TETiYboAK4eUaAKMUDAJorKdiQTQOmWYm0JWnHC9dKGs0NcGuCLH03oRB1Eq0g7+VfOVLxchAoOyCaM4+35cEBV0UH0akH2zQdcDlu/uSc3ajFjCEWwCfRS5xj6K118qwDMIvVQrDXUxUXj4KmeRhqQqYJI5MgRQSUCS5BsWUMmNSlQ6MtgFhSY0ApxaKVgHJj1IdIWOwdyI/wDhzAXLZ4X09HZmlPeemRMUNRoxDY2AeKw+ggOKgG8VkIx8ZZYALqeQdCwLiVrMGRTWJlbYs6MOoIzoexg5ikPG+EtLo3OneOc3IsKSSfBEBuo2MuYNXF4FfNGhIiRHTGGo0ARiUYPqzlxAoLLDE7a6TKGIlW2gTHwideEYdALtCVk1Ue6uFmxxKeNvfFKz3mDyo9FbzNghhqjlU4KsviqQEwxOTLHKBGlF0sjGGbsg0d6bKjAvIjq0Thwe967KGWBIHWDJc1IBKZMeNm6zA6CfgVNveUKGAD+4+CDyoxFkEdA4ACBsB+CAhh25MMEL1X9D15ie08xPaeYntPMT2nmJ7TzE9p5ie08xPaeYntPMT2nmJ7TzE9p5ie08xPaeYntPMT2nmJ7TzE9p5ie0/9k=" alt="Pto. de Palos"></div>
+    <div>
+      <a class="back-link" href="inicio.html">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Volver a Inicio
+      </a>
+      <div class="brand">EL SURTIDOR <span>SA</span></div>
+      <h1 class="page-title">Pto. de Palos</h1>
+      <p class="page-sub">Ventas, costos y utilidades de la actividad Pto. de Palos, mes a mes.</p>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div style="max-width:1280px;margin:0 auto;">
+    <div class="seg" role="group" aria-label="Sección">
+      <button data-view="resultados" aria-pressed="true">Resultados</button>
+      <button data-view="medios" aria-pressed="false">Medios de Pago</button>
+      <button data-view="menu" aria-pressed="false">Menú y costos</button>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div id="view-resultados">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="grid">
+
+    <div class="panel span-7" style="min-height:340px;">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Evolución mensual — Ventas, costo y utilidad bruta</div>
+          <div class="panel-sub">Enero – septiembre 2026 (setiembre parcial)</div>
+        </div>
+        <div class="toggle-group" id="evolKindToggle">
+          <button data-kind="bar" class="active">Barras</button>
+          <button data-kind="line">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartEvol"></canvas></div>
+    </div>
+
+    <div class="panel span-5" style="min-height:340px;">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Margen bruto</div>
+          <div class="panel-sub">% sobre ventas, por mes</div>
+        </div>
+        <div class="toggle-group" id="margenKindToggle">
+          <button data-kind="bar">Barras</button>
+          <button data-kind="line" class="active">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartMargen"></canvas></div>
+    </div>
+
+    <div class="panel span-12">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Detalle mensual</div>
+          <div class="panel-sub">Ventas, costo y utilidad bruta por mes</div>
+        </div>
+        <button class="export-btn" id="exportBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          Exportar a Excel
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="data" id="detalleTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot-note">
+    Fuente: reporte "Rentabilidad por local" (Puerto de Palos, local 0000), año calendario 2026. Setiembre incluye datos parciales al 15/09/2026. Esta pestaña muestra únicamente Ventas, Costo y Utilidad Bruta — no incluye erogaciones ni utilidad neta. Es una fuente independiente de la pestaña "Resultados" del panel general de El Surtidor y puede no coincidir con ella.
+  </div>
+  </div>
+
+  <div id="view-medios" style="display:none;">
+    <div class="kpi-row" id="kpiMedios"></div>
+    <div class="grid">
+      <div class="panel span-7" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Evolución de ventas totales (medios de pago)</div>
+            <div class="panel-sub">Enero – agosto 2026 · suma de todos los medios de pago</div>
+          </div>
+          <div class="toggle-group" id="mediosKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartMediosEvol"></canvas></div>
+      </div>
+      <div class="panel span-5" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Efectivo vs. digital</div>
+            <div class="panel-sub">% del total, por mes</div>
+          </div>
+          <div class="toggle-group" id="efvsdigKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartEfectivoDigital"></canvas></div>
+      </div>
+      <div class="panel span-12" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Mix de medios de pago</div>
+            <div class="panel-sub">Top 8 medios · % del total, por mes</div>
+          </div>
+          <div class="toggle-group" id="mixKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartMediosMix"></canvas></div>
+      </div>
+
+      <div class="panel span-6" style="min-height:320px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Ticket promedio general</div>
+            <div class="panel-sub">Importe total ÷ cantidad de operaciones, por mes</div>
+          </div>
+          <div class="toggle-group" id="ticketKindToggle">
+            <button data-kind="bar">Barras</button>
+            <button data-kind="line" class="active">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartTicket"></canvas></div>
+      </div>
+
+      <div class="panel span-6" style="min-height:320px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Concentración de medios de pago</div>
+            <div class="panel-sub">Índice Herfindahl-Hirschman (HHI) · 0 = muy diversificado, 1 = un solo medio</div>
+          </div>
+          <div class="toggle-group" id="hhiKindToggle">
+            <button data-kind="bar">Barras</button>
+            <button data-kind="line" class="active">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartHHI"></canvas></div>
+      </div>
+
+      <div class="panel span-6" style="min-height:320px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Variación de ventas mes a mes</div>
+            <div class="panel-sub">% de cambio contra el mes anterior</div>
+          </div>
+          <div class="toggle-group" id="momKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartMoM"></canvas></div>
+      </div>
+
+      <div class="panel span-6" style="min-height:320px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Operaciones por día (promedio)</div>
+            <div class="panel-sub">Cantidad de operaciones ÷ días del mes calendario</div>
+          </div>
+          <div class="toggle-group" id="opsDiaKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartOpsDia"></canvas></div>
+      </div>
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Detalle por medio de pago y mes</div>
+            <div class="panel-sub">Importe, cantidad de operaciones y ticket promedio · clic en los gráficos de arriba para filtrar</div>
+          </div>
+          <button class="export-btn" id="exportMediosBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div id="mediosChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
+        <div class="table-wrap">
+          <table class="data" id="mediosTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="foot-note">
+      Fuente: "Estadísticas de medios de pago" (VFP), 8 planillas mensuales (enero a agosto 2026), Pto. de Palos. Cada mes valida exacto contra el total general de la planilla de origen.
+    </div>
+  </div>
+
+  <div id="view-menu" style="display:none;">
+    <div class="kpi-row" id="kpiMenu"></div>
+    <div class="grid">
+      <div class="panel span-6" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Margen promedio por rubro del menú</div>
+            <div class="panel-sub">% sobre precio de venta, sin IVA</div>
+          </div>
+          <div class="toggle-group" id="margenRubroKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartMargenRubro"></canvas></div>
+      </div>
+      <div class="panel span-6" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Utilidad bruta estimada (medios de pago × margen del menú)</div>
+            <div class="panel-sub">Ventas totales por mes × margen promedio ponderado (71,1%)</div>
+          </div>
+          <div class="toggle-group" id="utilEstKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartUtilEstimada"></canvas></div>
+      </div>
+      <div class="panel span-6">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Menor margen — alerta de precios</div>
+            <div class="panel-sub">15 productos con el margen más bajo del menú</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="lowMarginTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel span-6">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Mayor margen</div>
+            <div class="panel-sub">15 productos con el margen más alto del menú</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="highMarginTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Menú completo</div>
+            <div class="panel-sub" id="menuFullSub">Precio, costo y margen por producto · clic en "Margen por rubro" para filtrar</div>
+          </div>
+          <button class="export-btn" id="exportMenuBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div id="menuChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;"></div>
+        <input type="text" class="search-input" id="menuSearch" placeholder="Buscar producto...">
+        <div class="table-wrap">
+          <table class="data" id="menuTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="foot-note">
+      Fuente: "Costo y precio de venta de productos" (ART_Y_COSTOS), El Surtidor S.A. — 322 productos con precio de venta cargado, de los cuales 310 tienen costo de receta informado (12 productos, por ejemplo del rubro Cumpleaños, no tienen costo cargado y quedan afuera del cálculo de margen). Importes sin I.V.A. <strong>La utilidad estimada es una proyección</strong> (ventas reales de medios de pago × margen promedio del menú) y es independiente de la utilidad de la pestaña "Resultados", que sale de la contabilidad — pueden no coincidir.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA = {"periods":["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"monthly":[{"periodo":"2026-01","ventas":193404953.44,"costo":49547849.65,"util_bruta":143857103.79,"pct_bruta":0.7438},{"periodo":"2026-02","ventas":185099361.05,"costo":81863153.38,"util_bruta":103236207.67,"pct_bruta":0.5577},{"periodo":"2026-03","ventas":187043680.12,"costo":62482248.28,"util_bruta":124561431.84,"pct_bruta":0.6659},{"periodo":"2026-04","ventas":182122719.65,"costo":50188233.02,"util_bruta":131934486.63,"pct_bruta":0.7244},{"periodo":"2026-05","ventas":205523673.02,"costo":57569579.6,"util_bruta":147954093.42,"pct_bruta":0.7199},{"periodo":"2026-06","ventas":197186886.07,"costo":56446223.13,"util_bruta":140740662.94,"pct_bruta":0.7137},{"periodo":"2026-07","ventas":229834572.87,"costo":65713841.04,"util_bruta":164120731.83,"pct_bruta":0.7141},{"periodo":"2026-08","ventas":222742933.31,"costo":63074541.88,"util_bruta":159668391.43,"pct_bruta":0.7168},{"periodo":"2026-09","ventas":101912959.65,"costo":29193788.44,"util_bruta":72719171.21,"pct_bruta":0.7135}]};
+const VFP = {
+  "2026-01": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 75984665.07,
+        "cantidad": 2962.0,
+        "promedio": 25653.16,
+        "pct": 32.5
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 62526465.0,
+        "cantidad": 2055.0,
+        "promedio": 30426.5,
+        "pct": 26.7
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 22971235.0,
+        "cantidad": 692.0,
+        "promedio": 33195.43,
+        "pct": 9.82
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 19911665.0,
+        "cantidad": 523.0,
+        "promedio": 38072.02,
+        "pct": 8.51
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 14448300.0,
+        "cantidad": 446.0,
+        "promedio": 32395.29,
+        "pct": 6.18
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 8101600.0,
+        "cantidad": 311.0,
+        "promedio": 26050.16,
+        "pct": 3.46
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 8028025.0,
+        "cantidad": 242.0,
+        "promedio": 33173.66,
+        "pct": 3.43
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 5285770.0,
+        "cantidad": 121.0,
+        "promedio": 43684.05,
+        "pct": 2.26
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4530825.0,
+        "cantidad": 112.0,
+        "promedio": 40453.79,
+        "pct": 1.94
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 3450547.74,
+        "cantidad": 34.0,
+        "promedio": 101486.7,
+        "pct": 1.47
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 2208450.0,
+        "cantidad": 69.0,
+        "promedio": 32006.52,
+        "pct": 0.94
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 1914573.73,
+        "cantidad": 85.0,
+        "promedio": 22524.4,
+        "pct": 0.82
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1541500.0,
+        "cantidad": 41.0,
+        "promedio": 37597.56,
+        "pct": 0.66
+      },
+      {
+        "metodo": "ONDA SIEMPRE",
+        "importe": 1489915.0,
+        "cantidad": 62.0,
+        "promedio": 24030.89,
+        "pct": 0.64
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 896985.0,
+        "cantidad": 33.0,
+        "promedio": 27181.36,
+        "pct": 0.38
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 626900.0,
+        "cantidad": 19.0,
+        "promedio": 32994.74,
+        "pct": 0.27
+      },
+      {
+        "metodo": ".",
+        "importe": 44200.0,
+        "cantidad": 1.0,
+        "promedio": 44200.0,
+        "pct": 0.02
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -351000.0,
+        "cantidad": 19.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 233610621.54,
+    "total_cant": 7808.0
+  },
+  "2026-02": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 70953195.0,
+        "cantidad": 2738.0,
+        "promedio": 25914.24,
+        "pct": 31.6
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 62643475.0,
+        "cantidad": 1999.0,
+        "promedio": 31337.41,
+        "pct": 27.9
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 21533825.01,
+        "cantidad": 657.0,
+        "promedio": 32775.99,
+        "pct": 9.6
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 20393965.0,
+        "cantidad": 504.0,
+        "promedio": 40464.22,
+        "pct": 9.09
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 13478580.0,
+        "cantidad": 410.0,
+        "promedio": 32874.59,
+        "pct": 6.01
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 7767475.0,
+        "cantidad": 224.0,
+        "promedio": 34676.23,
+        "pct": 3.46
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 7399400.0,
+        "cantidad": 303.0,
+        "promedio": 24420.46,
+        "pct": 3.3
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4511525.0,
+        "cantidad": 111.0,
+        "promedio": 40644.37,
+        "pct": 2.01
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 3482825.0,
+        "cantidad": 110.0,
+        "promedio": 31662.05,
+        "pct": 1.55
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 3152293.96,
+        "cantidad": 25.0,
+        "promedio": 126091.76,
+        "pct": 1.41
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 2163825.0,
+        "cantidad": 60.0,
+        "promedio": 36063.75,
+        "pct": 0.96
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2075670.51,
+        "cantidad": 101.0,
+        "promedio": 20551.19,
+        "pct": 0.93
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1905200.0,
+        "cantidad": 50.0,
+        "promedio": 38104.0,
+        "pct": 0.85
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 1142200.0,
+        "cantidad": 37.0,
+        "promedio": 30870.27,
+        "pct": 0.51
+      },
+      {
+        "metodo": "ONDA SIEMPRE",
+        "importe": 1006275.0,
+        "cantidad": 36.0,
+        "promedio": 27952.08,
+        "pct": 0.45
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 603875.0,
+        "cantidad": 12.0,
+        "promedio": 50322.92,
+        "pct": 0.27
+      },
+      {
+        "metodo": ".",
+        "importe": 47400.0,
+        "cantidad": 1.0,
+        "promedio": 47400.0,
+        "pct": 0.02
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -236300.0,
+        "cantidad": 26.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 224024704.48,
+    "total_cant": 7378.0
+  },
+  "2026-03": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 72926215.0,
+        "cantidad": 3031.0,
+        "promedio": 24060.12,
+        "pct": 32.2
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 60935045.0,
+        "cantidad": 2106.0,
+        "promedio": 28934.02,
+        "pct": 26.9
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 21599240.0,
+        "cantidad": 703.0,
+        "promedio": 30724.38,
+        "pct": 9.52
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 18573265.0,
+        "cantidad": 501.0,
+        "promedio": 37072.39,
+        "pct": 8.19
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 12628835.0,
+        "cantidad": 427.0,
+        "promedio": 29575.73,
+        "pct": 5.57
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 10201270.0,
+        "cantidad": 379.0,
+        "promedio": 26916.28,
+        "pct": 4.5
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 9730500.0,
+        "cantidad": 236.0,
+        "promedio": 41230.93,
+        "pct": 4.29
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 4743500.0,
+        "cantidad": 152.0,
+        "promedio": 31207.24,
+        "pct": 2.09
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4181450.0,
+        "cantidad": 116.0,
+        "promedio": 36046.98,
+        "pct": 1.84
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 2699578.41,
+        "cantidad": 14.0,
+        "promedio": 192827.03,
+        "pct": 1.19
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 2500715.0,
+        "cantidad": 66.0,
+        "promedio": 37889.62,
+        "pct": 1.1
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2088117.0,
+        "cantidad": 101.0,
+        "promedio": 20674.43,
+        "pct": 0.92
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1911255.0,
+        "cantidad": 61.0,
+        "promedio": 31332.05,
+        "pct": 0.84
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 1046475.0,
+        "cantidad": 40.0,
+        "promedio": 26161.88,
+        "pct": 0.46
+      },
+      {
+        "metodo": ".",
+        "importe": 453450.01,
+        "cantidad": 5.0,
+        "promedio": 90690.0,
+        "pct": 0.2
+      },
+      {
+        "metodo": "ONDA SIEMPRE",
+        "importe": 303000.0,
+        "cantidad": 18.0,
+        "promedio": 16833.33,
+        "pct": 0.13
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 268395.0,
+        "cantidad": 8.0,
+        "promedio": 33549.38,
+        "pct": 0.12
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -380300.0,
+        "cantidad": 9.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 226410005.42,
+    "total_cant": 7964.0
+  },
+  "2026-04": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 68666335.0,
+        "cantidad": 2814.0,
+        "promedio": 24401.68,
+        "pct": 31.1
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 58173610.99,
+        "cantidad": 2031.0,
+        "promedio": 28642.84,
+        "pct": 26.4
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 21533535.0,
+        "cantidad": 660.0,
+        "promedio": 32626.57,
+        "pct": 9.76
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 15971780.0,
+        "cantidad": 460.0,
+        "promedio": 34721.26,
+        "pct": 7.24
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 14343000.0,
+        "cantidad": 438.0,
+        "promedio": 32746.58,
+        "pct": 6.5
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 12199370.0,
+        "cantidad": 224.0,
+        "promedio": 54461.47,
+        "pct": 5.53
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 9984245.0,
+        "cantidad": 393.0,
+        "promedio": 25405.2,
+        "pct": 4.52
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 4484681.83,
+        "cantidad": 62.0,
+        "promedio": 72333.58,
+        "pct": 2.03
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4352375.0,
+        "cantidad": 109.0,
+        "promedio": 39930.05,
+        "pct": 1.97
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 3428965.0,
+        "cantidad": 112.0,
+        "promedio": 30615.76,
+        "pct": 1.55
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2029079.0,
+        "cantidad": 87.0,
+        "promedio": 23322.75,
+        "pct": 0.92
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1576625.0,
+        "cantidad": 41.0,
+        "promedio": 38454.27,
+        "pct": 0.71
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1570815.0,
+        "cantidad": 47.0,
+        "promedio": 33421.6,
+        "pct": 0.71
+      },
+      {
+        "metodo": ".",
+        "importe": 856855.0,
+        "cantidad": 12.0,
+        "promedio": 71404.58,
+        "pct": 0.39
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 666650.0,
+        "cantidad": 17.0,
+        "promedio": 39214.71,
+        "pct": 0.3
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 665230.0,
+        "cantidad": 26.0,
+        "promedio": 25585.77,
+        "pct": 0.3
+      },
+      {
+        "metodo": "ONDA SIEMPRE",
+        "importe": 168400.0,
+        "cantidad": 9.0,
+        "promedio": 18711.11,
+        "pct": 0.08
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -387710.0,
+        "cantidad": 9.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 220283841.82,
+    "total_cant": 7542.0
+  },
+  "2026-05": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 74265526.35,
+        "cantidad": 3010.0,
+        "promedio": 24672.93,
+        "pct": 29.9
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 66932148.34,
+        "cantidad": 2422.0,
+        "promedio": 27635.07,
+        "pct": 26.9
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 24273431.0,
+        "cantidad": 770.0,
+        "promedio": 31523.94,
+        "pct": 9.76
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 18939910.01,
+        "cantidad": 490.0,
+        "promedio": 38652.88,
+        "pct": 7.61
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 14994671.66,
+        "cantidad": 426.0,
+        "promedio": 35198.76,
+        "pct": 6.03
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 12322435.0,
+        "cantidad": 471.0,
+        "promedio": 26162.28,
+        "pct": 4.95
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 11841697.74,
+        "cantidad": 141.0,
+        "promedio": 83983.67,
+        "pct": 4.76
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 10861590.0,
+        "cantidad": 265.0,
+        "promedio": 40987.13,
+        "pct": 4.37
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 3855050.0,
+        "cantidad": 97.0,
+        "promedio": 39742.78,
+        "pct": 1.55
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 3712755.0,
+        "cantidad": 126.0,
+        "promedio": 29466.31,
+        "pct": 1.49
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2579989.0,
+        "cantidad": 114.0,
+        "promedio": 22631.48,
+        "pct": 1.04
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1209600.0,
+        "cantidad": 37.0,
+        "promedio": 32691.89,
+        "pct": 0.49
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1161275.0,
+        "cantidad": 47.0,
+        "promedio": 24707.98,
+        "pct": 0.47
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 910350.0,
+        "cantidad": 22.0,
+        "promedio": 41379.55,
+        "pct": 0.37
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 828766.67,
+        "cantidad": 27.0,
+        "promedio": 30695.06,
+        "pct": 0.33
+      },
+      {
+        "metodo": "ONDA SIEMPRE",
+        "importe": 91400.0,
+        "cantidad": 1.0,
+        "promedio": 91400.0,
+        "pct": 0.04
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -56025.0,
+        "cantidad": 2.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 248724570.77,
+    "total_cant": 8466.0
+  },
+  "2026-06": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 67888985.17,
+        "cantidad": 2827.0,
+        "promedio": 24014.5,
+        "pct": 28.4
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 65954930.5,
+        "cantidad": 2314.0,
+        "promedio": 28502.56,
+        "pct": 27.6
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 20951230.0,
+        "cantidad": 659.0,
+        "promedio": 31792.46,
+        "pct": 8.76
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 20190490.0,
+        "cantidad": 521.0,
+        "promedio": 38753.34,
+        "pct": 8.44
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 14886140.0,
+        "cantidad": 592.0,
+        "promedio": 25145.51,
+        "pct": 6.23
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 13401670.0,
+        "cantidad": 405.0,
+        "promedio": 33090.54,
+        "pct": 5.6
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 11859900.23,
+        "cantidad": 130.0,
+        "promedio": 91230.0,
+        "pct": 4.96
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 9639930.0,
+        "cantidad": 277.0,
+        "promedio": 34801.19,
+        "pct": 4.03
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 4430585.0,
+        "cantidad": 123.0,
+        "promedio": 36021.02,
+        "pct": 1.85
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 2890500.0,
+        "cantidad": 91.0,
+        "promedio": 31763.74,
+        "pct": 1.21
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2629079.0,
+        "cantidad": 114.0,
+        "promedio": 23062.1,
+        "pct": 1.1
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1603105.0,
+        "cantidad": 47.0,
+        "promedio": 34108.62,
+        "pct": 0.67
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1324036.67,
+        "cantidad": 47.0,
+        "promedio": 28170.99,
+        "pct": 0.55
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 962450.0,
+        "cantidad": 33.0,
+        "promedio": 29165.15,
+        "pct": 0.4
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 507300.0,
+        "cantidad": 19.0,
+        "promedio": 26700.0,
+        "pct": 0.21
+      },
+      {
+        "metodo": ".",
+        "importe": 8900.0,
+        "cantidad": 1.0,
+        "promedio": 8900.0,
+        "pct": 0.0
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -399500.0,
+        "cantidad": 13.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 238729731.57,
+    "total_cant": 8200.0
+  },
+  "2026-07": {
+    "metodos": [
+      {
+        "metodo": "QR POSNET",
+        "importe": 80729436.0,
+        "cantidad": 2562.0,
+        "promedio": 31510.32,
+        "pct": 29.0
+      },
+      {
+        "metodo": "EFECTIVO",
+        "importe": 77637424.5,
+        "cantidad": 2844.0,
+        "promedio": 27298.67,
+        "pct": 27.9
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 32025865.0,
+        "cantidad": 877.0,
+        "promedio": 36517.52,
+        "pct": 11.5
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 18919667.5,
+        "cantidad": 489.0,
+        "promedio": 38690.53,
+        "pct": 6.79
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 15771282.0,
+        "cantidad": 459.0,
+        "promedio": 34360.09,
+        "pct": 5.66
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 15757290.0,
+        "cantidad": 606.0,
+        "promedio": 26002.13,
+        "pct": 5.65
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 12897529.28,
+        "cantidad": 152.0,
+        "promedio": 84852.17,
+        "pct": 4.63
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 8554880.0,
+        "cantidad": 258.0,
+        "promedio": 33158.45,
+        "pct": 3.07
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 4179313.0,
+        "cantidad": 102.0,
+        "promedio": 40973.66,
+        "pct": 1.5
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 3881650.0,
+        "cantidad": 105.0,
+        "promedio": 36968.1,
+        "pct": 1.39
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 3005303.0,
+        "cantidad": 121.0,
+        "promedio": 24837.21,
+        "pct": 1.08
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 1727853.0,
+        "cantidad": 55.0,
+        "promedio": 31415.51,
+        "pct": 0.62
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1353200.0,
+        "cantidad": 44.0,
+        "promedio": 30754.55,
+        "pct": 0.49
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 1192100.0,
+        "cantidad": 30.0,
+        "promedio": 39736.67,
+        "pct": 0.43
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 1027100.0,
+        "cantidad": 22.0,
+        "promedio": 46686.36,
+        "pct": 0.37
+      },
+      {
+        "metodo": ".",
+        "importe": 3600.0,
+        "cantidad": 1.0,
+        "promedio": 3600.0,
+        "pct": 0.0
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -510310.0,
+        "cantidad": 28.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 278153183.28,
+    "total_cant": 8727.0
+  },
+  "2026-08": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 79278740.67,
+        "cantidad": 2830.0,
+        "promedio": 28013.69,
+        "pct": 29.4
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 75432274.17,
+        "cantidad": 2485.0,
+        "promedio": 30355.04,
+        "pct": 28.0
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 26424832.0,
+        "cantidad": 739.0,
+        "promedio": 35757.55,
+        "pct": 9.8
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 21508069.5,
+        "cantidad": 508.0,
+        "promedio": 42338.72,
+        "pct": 7.98
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 15665080.0,
+        "cantidad": 532.0,
+        "promedio": 29445.64,
+        "pct": 5.81
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 14418104.17,
+        "cantidad": 428.0,
+        "promedio": 33687.16,
+        "pct": 5.35
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 13070928.22,
+        "cantidad": 139.0,
+        "promedio": 94035.45,
+        "pct": 4.85
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 6691711.5,
+        "cantidad": 192.0,
+        "promedio": 34852.66,
+        "pct": 2.48
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4631764.0,
+        "cantidad": 118.0,
+        "promedio": 39252.24,
+        "pct": 1.72
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 4246738.5,
+        "cantidad": 130.0,
+        "promedio": 32667.22,
+        "pct": 1.58
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 3055060.0,
+        "cantidad": 128.0,
+        "promedio": 23867.66,
+        "pct": 1.13
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 2608075.0,
+        "cantidad": 65.0,
+        "promedio": 40124.23,
+        "pct": 0.97
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 1042200.0,
+        "cantidad": 24.0,
+        "promedio": 43425.0,
+        "pct": 0.39
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 976596.5,
+        "cantidad": 36.0,
+        "promedio": 27127.68,
+        "pct": 0.36
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 562450.0,
+        "cantidad": 20.0,
+        "promedio": 28122.5,
+        "pct": 0.21
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -126100.0,
+        "cantidad": 10.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 269486524.23,
+    "total_cant": 8374.0
+  }
+};
+const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":440900.0,"costo_prom":0.0,"margen_pct":1.0},{"rubro":"POSTRES","items":78,"precio_prom":11778.82,"costo_prom":3363.99,"margen_pct":0.7144},{"rubro":"GRILLADOS","items":65,"precio_prom":8770.36,"costo_prom":2252.93,"margen_pct":0.7431},{"rubro":"CAFETERIA","items":60,"precio_prom":8651.19,"costo_prom":2822.35,"margen_pct":0.6738},{"rubro":"HORNO","items":34,"precio_prom":12888.67,"costo_prom":3641.12,"margen_pct":0.7175},{"rubro":"PASTAS","items":14,"precio_prom":14421.49,"costo_prom":2584.14,"margen_pct":0.8208},{"rubro":"BEBIDAS","items":28,"precio_prom":6717.83,"costo_prom":1857.94,"margen_pct":0.7234},{"rubro":"ENSALADAS","items":8,"precio_prom":12644.63,"costo_prom":3700.52,"margen_pct":0.7073},{"rubro":"GUARNICIONES","items":12,"precio_prom":7858.12,"costo_prom":2421.64,"margen_pct":0.6918},{"rubro":"SHELL","items":18,"precio_prom":4911.41,"costo_prom":1883.88,"margen_pct":0.6164}],"overall_margin":0.7113,"total_items":322,"valid_items":310,"lowest_margin":[{"desc":"Proteina Adicional","rubro":"GRILLADOS","precio":1818.18,"costo":2145.84,"margen":-0.1802},{"desc":"Jamon Crudo Adicional","rubro":"GRILLADOS","precio":2727.27,"costo":2899.66,"margen":-0.0632},{"desc":"Salamin Adicional","rubro":"GRILLADOS","precio":2066.12,"costo":1605.24,"margen":0.2231},{"desc":"Whisky Green Label","rubro":"BEBIDAS","precio":17851.24,"costo":13264.46,"margen":0.2569},{"desc":"Panceta Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":803.78,"margen":0.3053},{"desc":"Shell Ensalada de Frutas","rubro":"SHELL","precio":3925.62,"costo":2675.58,"margen":0.3184},{"desc":"Anchoa Adicional","rubro":"GRILLADOS","precio":5289.26,"costo":3358.68,"margen":0.365},{"desc":"Cafe 1kg","rubro":"CAFETERIA","precio":64462.81,"costo":39979.2,"margen":0.3798},{"desc":"Shell Frutilla con Crema","rubro":"SHELL","precio":4855.37,"costo":2754.46,"margen":0.4327},{"desc":"Queso Crema Adicional","rubro":"GRILLADOS","precio":743.8,"costo":420.36,"margen":0.4348},{"desc":"Cheesecake Ferrero Rocher","rubro":"POSTRES","precio":29421.49,"costo":16542.89,"margen":0.4377},{"desc":"Rucula Adicional","rubro":"GRILLADOS","precio":1735.54,"costo":971.47,"margen":0.4402},{"desc":"Chopp Heineken","rubro":"BEBIDAS","precio":4462.81,"costo":2490.75,"margen":0.4419},{"desc":"Roquefort Adicional","rubro":"GRILLADOS","precio":2727.27,"costo":1413.17,"margen":0.4818},{"desc":"Dulce de Leche Postres Adicional","rubro":"POSTRES","precio":1322.31,"costo":654.2,"margen":0.5053}],"highest_margin":[{"desc":"Te / Mate Cocido","rubro":"CAFETERIA","precio":2809.92,"costo":38.35,"margen":0.9864},{"desc":"Mandioca Frita","rubro":"GUARNICIONES","precio":5619.83,"costo":192.45,"margen":0.9658},{"desc":"Arroz Adicional","rubro":"GRILLADOS","precio":1900.83,"costo":87.8,"margen":0.9538},{"desc":"Lemon Pie Porcion","rubro":"POSTRES","precio":5537.19,"costo":293.63,"margen":0.947},{"desc":"Limonada Menta y Jengibre","rubro":"BEBIDAS","precio":4710.74,"costo":260.39,"margen":0.9447},{"desc":"Cebolla Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":66.43,"margen":0.9426},{"desc":"Latte Matcha","rubro":"CAFETERIA","precio":4876.03,"costo":282,"margen":0.9422},{"desc":"Tallarines","rubro":"PASTAS","precio":14462.81,"costo":846.3,"margen":0.9415},{"desc":"Omelette","rubro":"CAFETERIA","precio":6611.57,"costo":481.3,"margen":0.9272},{"desc":"Zanahoria Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":87.33,"margen":0.9245},{"desc":"Milanesa de Pollo","rubro":"GRILLADOS","precio":16363.64,"costo":1379.51,"margen":0.9157},{"desc":"Arroz Blanco Solo","rubro":"GUARNICIONES","precio":2066.12,"costo":175.6,"margen":0.915},{"desc":"Lemon Pie","rubro":"POSTRES","precio":19917.36,"costo":1761.79,"margen":0.9115},{"desc":"Tomate Adicional","rubro":"GRILLADOS","precio":1487.6,"costo":132.09,"margen":0.9112},{"desc":"Marinera de Pollo","rubro":"GRILLADOS","precio":16363.64,"costo":1510.76,"margen":0.9077}],"all_items":[{"desc":"Expresso","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":2975.21,"costo":461.77,"margen":0.8448},{"desc":"Expresso Doble","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3553.72,"costo":781.6,"margen":0.7801},{"desc":"Americano","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3388.43,"costo":719.63,"margen":0.7876},{"desc":"Cortado","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3388.43,"costo":536.97,"margen":0.8415},{"desc":"Cortado Doble","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3884.3,"costo":932,"margen":0.7601},{"desc":"Cafe Irlandes","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4958.68,"costo":1851.46,"margen":0.6266},{"desc":"Cafe con Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4545.45,"costo":461.77,"margen":0.8984},{"desc":"Cafe con Leche Gde","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1232.8,"margen":0.7594},{"desc":"Cafe con Crema","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4958.68,"costo":1157.53,"margen":0.7666},{"desc":"Cafe Puerto de Palos","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":6280.99,"costo":1262.4,"margen":0.799},{"desc":"Capuchino","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1123.22,"margen":0.7573},{"desc":"Submarino","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4049.59,"costo":1165.6,"margen":0.7122},{"desc":"Chocolate","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3636.36,"costo":475.44,"margen":0.8693},{"desc":"Lagrima","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3884.3,"costo":762.57,"margen":0.8037},{"desc":"Lagrima Gde","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5206.61,"costo":1150.46,"margen":0.779},{"desc":"Combo Desayuno Chipa","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8512.4,"costo":2355.74,"margen":0.7233},{"desc":"Combo Desayuno Facturas","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8512.4,"costo":1928.88,"margen":0.7734},{"desc":"Combo Masa Madre","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8016.53,"costo":1541.22,"margen":0.8077},{"desc":"Te / Mate Cocido","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":2809.92,"costo":38.35,"margen":0.9864},{"desc":"Latte Matcha","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4876.03,"costo":282,"margen":0.9422},{"desc":"Cafe 1kg","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":64462.81,"costo":39979.2,"margen":0.3798},{"desc":"Cafe en Vaso Shell","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3801.65,"costo":700.59,"margen":0.8157},{"desc":"Promo Cafe + Vaso Shell","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":6446.28,"costo":3062.69,"margen":0.5249},{"desc":"Latte Avellana","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1108.17,"margen":0.7606},{"desc":"Latte Dulce de Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1103.47,"margen":0.7616},{"desc":"Latte Caramel","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1013.9,"margen":0.7809},{"desc":"Frappe Caramelo","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1633.73,"margen":0.6812},{"desc":"Frappe Dulce de Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1746.33,"margen":0.6592},{"desc":"Frappe Chocolate y Avellanas","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1509.16,"margen":0.7055},{"desc":"Panqueque Fit","rubro":"CAFETERIA","subrubro":"SALADO","precio":6859.5,"costo":2135.25,"margen":0.6887},{"desc":"Huevos Revueltos","rubro":"CAFETERIA","subrubro":"SALADO","precio":7355.37,"costo":1948.93,"margen":0.735},{"desc":"Omelette","rubro":"CAFETERIA","subrubro":"SALADO","precio":6611.57,"costo":481.3,"margen":0.9272},{"desc":"Tostadas Masa Madre","rubro":"CAFETERIA","subrubro":"SALADO","precio":2644.63,"costo":590.32,"margen":0.7768},{"desc":"Milanesa de Carne","rubro":"GRILLADOS","subrubro":"CARNES","precio":18099.17,"costo":2292.29,"margen":0.8733},{"desc":"Adicion Napolitana","rubro":"GRILLADOS","subrubro":"CARNES","precio":3140.5,"costo":1547.2,"margen":0.5073},{"desc":"Chipa","rubro":"CAFETERIA","subrubro":"SALADO","precio":37190.08,"costo":13920.29,"margen":0.6257},{"desc":"Tostadas","rubro":"CAFETERIA","subrubro":"SALADO","precio":2975.21,"costo":931.09,"margen":0.6871},{"desc":"Mbeju Clasico","rubro":"CAFETERIA","subrubro":"SALADO","precio":4958.68,"costo":723.85,"margen":0.854},{"desc":"Mbeju Jamon y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":7438.02,"costo":2077.43,"margen":0.7207},{"desc":"Mbeju Capresse","rubro":"CAFETERIA","subrubro":"SALADO","precio":7438.02,"costo":1912.83,"margen":0.7428},{"desc":"Mbeju Pollo y Queso Azul","rubro":"CAFETERIA","subrubro":"SALADO","precio":9256.2,"costo":2958.54,"margen":0.6804},{"desc":"Factura Rellena Jamon y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":3553.72,"costo":737,"margen":0.7926},{"desc":"Factura Rellena Jamon Crudo y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":3636.36,"costo":1556.38,"margen":0.572},{"desc":"Factura Artesanal Rellena","rubro":"CAFETERIA","subrubro":"SALADO","precio":4380.17,"costo":2057.02,"margen":0.5304},{"desc":"Box de Desayuno","rubro":"CAFETERIA","subrubro":"SALADO","precio":38016.53,"costo":17664.86,"margen":0.5353},{"desc":"Triple Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9090.91,"costo":2265.06,"margen":0.7508},{"desc":"Triple Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":11239.67,"costo":4769.34,"margen":0.5757},{"desc":"Triple Verduras","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":12561.98,"costo":2867.67,"margen":0.7717},{"desc":"Triple Verduras y Pollo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":14049.59,"costo":3717.31,"margen":0.7354},{"desc":"Triple Cajita Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9834.71,"costo":2827.23,"margen":0.7125},{"desc":"Triple Mediterraneo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":14214.88,"costo":3051.51,"margen":0.7853},{"desc":"Arabe Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":7603.31,"costo":2188.83,"margen":0.7121},{"desc":"Arabe Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9256.2,"costo":4547.95,"margen":0.5087},{"desc":"Arabe Capresse","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":7024.79,"costo":1600.66,"margen":0.7721},{"desc":"Bife Campestre","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":16363.64,"costo":4769.59,"margen":0.7085},{"desc":"Bife Puerto de Palos","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14214.88,"costo":4919.27,"margen":0.6539},{"desc":"Bondiola Ranch","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14214.88,"costo":2545.07,"margen":0.821},{"desc":"Tex Mex","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":12148.76,"costo":1930.47,"margen":0.8411},{"desc":"Club Sandwich","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":16363.64,"costo":4123.57,"margen":0.748},{"desc":"Triple Cajita Integral","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9834.71,"costo":2077.68,"margen":0.7887},{"desc":"Triple Cajita Verduras","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":12892.56,"costo":3280.61,"margen":0.7455},{"desc":"Triple Cajita Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":11487.6,"costo":4898.51,"margen":0.5736},{"desc":"Lomito","rubro":"GRILLADOS","subrubro":"CARNES","precio":21404.96,"costo":7144.34,"margen":0.6662},{"desc":"Bife de Chorizo","rubro":"GRILLADOS","subrubro":"CARNES","precio":21404.96,"costo":5394.41,"margen":0.748},{"desc":"Bondiola de Cerdo","rubro":"GRILLADOS","subrubro":"CARNES","precio":18181.82,"costo":2178.26,"margen":0.8802},{"desc":"Pechuga de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16033.06,"costo":1682.79,"margen":0.895},{"desc":"Wok de Carne","rubro":"GRILLADOS","subrubro":"CARNES","precio":18347.11,"costo":5972.95,"margen":0.6744},{"desc":"Wok de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":15123.97,"costo":2572.49,"margen":0.8299},{"desc":"Milanesa de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16363.64,"costo":1379.51,"margen":0.9157},{"desc":"Marinera de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16363.64,"costo":1510.76,"margen":0.9077},{"desc":"Pure de Papas Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":709.92,"margen":0.7546},{"desc":"Pure de Calabaza Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":1189.68,"margen":0.5887},{"desc":"Arroz Blanco Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2066.12,"costo":175.6,"margen":0.915},{"desc":"Arroz Quesu Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":1230.34,"margen":0.5747},{"desc":"Arroz Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1900.83,"costo":87.8,"margen":0.9538},{"desc":"Arroz Quesu Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2479.34,"costo":1142.54,"margen":0.5392},{"desc":"Ensalada Cesar","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12727.27,"costo":3301.24,"margen":0.7406},{"desc":"Ensalada Ranchera","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11239.67,"costo":3333.22,"margen":0.7034},{"desc":"Ensalada Mediterranea","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":15785.12,"costo":4654.37,"margen":0.7051},{"desc":"Ensalada Bacon","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":13057.85,"costo":4951.48,"margen":0.6208},{"desc":"Ensalada Azul","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12561.98,"costo":4097.31,"margen":0.6738},{"desc":"Ensalada Puerto de Palos","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11487.6,"costo":3407.91,"margen":0.7033},{"desc":"Ensalada Tuna","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12975.21,"costo":3771.63,"margen":0.7093},{"desc":"Hamburguesa con Queso","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":6859.5,"costo":1582.74,"margen":0.7693},{"desc":"Hamburguesa Especial","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":7024.79,"costo":1864.71,"margen":0.7346},{"desc":"Hamburguesa Especial con Huevo","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":7768.6,"costo":2377.42,"margen":0.694},{"desc":"Hamburguesa Explosive","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":8016.53,"costo":2373.41,"margen":0.7039},{"desc":"Hamburguesa Puerto de Palos","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":10330.58,"costo":3423.06,"margen":0.6686},{"desc":"Cajita Feliz de Hamburguesa","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":13884.3,"costo":3845.3,"margen":0.723},{"desc":"Cajita Feliz de Nuggets","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":13884.3,"costo":5016.78,"margen":0.6387},{"desc":"Lomito con Queso","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":11983.47,"costo":3925.1,"margen":0.6725},{"desc":"Lomito Especial","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":13719.01,"costo":4517.87,"margen":0.6707},{"desc":"Lomito Especial con Huevo","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":14214.88,"costo":4745.4,"margen":0.6662},{"desc":"Lomito Explosive","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":15371.9,"costo":5192.43,"margen":0.6622},{"desc":"Panini de Lomito","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":18842.98,"costo":6226.03,"margen":0.6696},{"desc":"Alito de Lomito","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":21322.31,"costo":4172.41,"margen":0.8043},{"desc":"Pollo con Queso","rubro":"GRILLADOS","subrubro":"POLLOS","precio":9090.91,"costo":1505.84,"margen":0.8344},{"desc":"Pollo Especial","rubro":"GRILLADOS","subrubro":"POLLOS","precio":9669.42,"costo":2079.58,"margen":0.7849},{"desc":"Pollo Especial con Huevo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":10826.45,"costo":2280.69,"margen":0.7893},{"desc":"Panini Pollo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":16115.7,"costo":5123.27,"margen":0.6821},{"desc":"Alito de Pollo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":18347.11,"costo":4339.51,"margen":0.7635},{"desc":"Nuggets","rubro":"GRILLADOS","subrubro":"POLLOS","precio":7438.02,"costo":1684.22,"margen":0.7736},{"desc":"Wrap de Ave","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":1819.01,"margen":0.8439},{"desc":"Crepes Pollo y espinaca","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1613.8,"margen":0.8884},{"desc":"Crepes de Jamon y Queso","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1896.48,"margen":0.8689},{"desc":"Roll Lomo Graten","rubro":"PASTAS","subrubro":"PASTAS","precio":15950.41,"costo":4697.48,"margen":0.7055},{"desc":"Roll Pollo Graten","rubro":"PASTAS","subrubro":"PASTAS","precio":13719.01,"costo":2440.05,"margen":0.8221},{"desc":"Ñoquis","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1340.48,"margen":0.9073},{"desc":"Ravioles Ricotta y Verdura","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":2281.6,"margen":0.8532},{"desc":"Ravioles Muzzarella y Jamon","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":2477.88,"margen":0.8405},{"desc":"Sorrentinos 4 Quesos","rubro":"PASTAS","subrubro":"PASTAS","precio":16694.21,"costo":2576.02,"margen":0.8457},{"desc":"Tallarines","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":846.3,"margen":0.9415},{"desc":"Wrap de Lomito","rubro":"PASTAS","subrubro":"PASTAS","precio":16115.7,"costo":5463.06,"margen":0.661},{"desc":"Wrap Vegetariano","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":2170.61,"margen":0.8137},{"desc":"Wrap Cesar","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":2495.77,"margen":0.7858},{"desc":"Wrap de Cerdo","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":4059.41,"margen":0.7387},{"desc":"Empanada de Carne","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":891.47,"margen":0.6918},{"desc":"Empanada de Jamon y Queso","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1109.2,"margen":0.6165},{"desc":"Empanada de Pollo","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":649.4,"margen":0.7381},{"desc":"Empanada de Humita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":572.2,"margen":0.7692},{"desc":"Empanada de Espinaca y Queso","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":523.75,"margen":0.7888},{"desc":"Empanada de Capresse","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":644.03,"margen":0.7402},{"desc":"Empanada Arabe","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":924.05,"margen":0.6805},{"desc":"Empanada de Queso y Cebolla","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1039.53,"margen":0.6406},{"desc":"Empanada de Carne Frita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":891.47,"margen":0.6918},{"desc":"Empanada de Jamon y Queso Frita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1109.2,"margen":0.6165},{"desc":"Tabla de Empanadas","rubro":"HORNO","subrubro":"EMPANADAS","precio":24000,"costo":0,"margen":null},{"desc":"Empanada de Atun","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":689.57,"margen":0.7219},{"desc":"Papas Clasicas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5619.83,"costo":1392.12,"margen":0.7523},{"desc":"Papas Gratinadas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":6859.5,"costo":2111.03,"margen":0.6922},{"desc":"Papas Cheddar y Bacon","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":6859.5,"costo":2133.55,"margen":0.689},{"desc":"Papas Rusticas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5950.41,"costo":2382.81,"margen":0.5996},{"desc":"Papas Noisette","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5950.41,"costo":2026.26,"margen":0.6595},{"desc":"Mandioca Frita","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5619.83,"costo":192.45,"margen":0.9658},{"desc":"Tabla Puerto de Palos","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":22809.92,"costo":7185.75,"margen":0.685},{"desc":"Tabla de Fiambres","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":23884.3,"costo":8330.11,"margen":0.6512},{"desc":"P Muzzarella","rubro":"HORNO","subrubro":"PIZZAS","precio":18512.4,"costo":5330.81,"margen":0.712},{"desc":"P Napolitana","rubro":"HORNO","subrubro":"PIZZAS","precio":18512.4,"costo":5132.26,"margen":0.7228},{"desc":"P Fugazzeta","rubro":"HORNO","subrubro":"PIZZAS","precio":19586.78,"costo":5649.65,"margen":0.7116},{"desc":"P Muzzarella y Jamon","rubro":"HORNO","subrubro":"PIZZAS","precio":22975.21,"costo":6952.42,"margen":0.6974},{"desc":"P Jamon Anana y Palmitos","rubro":"HORNO","subrubro":"PIZZAS","precio":25206.61,"costo":7995.98,"margen":0.6828},{"desc":"P Calabresa","rubro":"HORNO","subrubro":"PIZZAS","precio":22975.21,"costo":7247.7,"margen":0.6845},{"desc":"P Cosa Nostra","rubro":"HORNO","subrubro":"PIZZAS","precio":24628.1,"costo":7580.29,"margen":0.6922},{"desc":"P Rucula y Jamon Crudo","rubro":"HORNO","subrubro":"PIZZAS","precio":25785.12,"costo":5928.78,"margen":0.7701},{"desc":"P Jamon Morron y Huevo","rubro":"HORNO","subrubro":"PIZZAS","precio":25785.12,"costo":7795.38,"margen":0.6977},{"desc":"P Waldorf","rubro":"HORNO","subrubro":"PIZZAS","precio":22396.69,"costo":6757,"margen":0.6983},{"desc":"Pizzeta Muzzarella","rubro":"HORNO","subrubro":"PIZZETAS","precio":10247.93,"costo":3203.75,"margen":0.6874},{"desc":"Pizzeta Fugazzeta","rubro":"HORNO","subrubro":"PIZZETAS","precio":10826.45,"costo":3363.17,"margen":0.6894},{"desc":"Pizzeta Napolitana","rubro":"HORNO","subrubro":"PIZZETAS","precio":10247.93,"costo":3208.06,"margen":0.687},{"desc":"Pizzeta Muzzarella y Jamon","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":4014.55,"margen":0.6804},{"desc":"Pizzeta Calabresa","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":4162.19,"margen":0.6687},{"desc":"Pizzeta Cuatro Quesos","rubro":"HORNO","subrubro":"PIZZETAS","precio":11983.47,"costo":3673.67,"margen":0.6934},{"desc":"Pizzeta Cosa Nostra","rubro":"HORNO","subrubro":"PIZZETAS","precio":13719.01,"costo":4723.02,"margen":0.6557},{"desc":"Pizzeta Rucula y Jamon Crudo","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":3413.41,"margen":0.7599},{"desc":"Pizzeta Jamon Morron y Huevo","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":3625.23,"margen":0.745},{"desc":"Pizzeta Waldorf","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":3922.07,"margen":0.6878},{"desc":"Pizzeta Jamon Anana y Palmitos","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":4804.29,"margen":0.662},{"desc":"Salamin Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2066.12,"costo":1605.24,"margen":0.2231},{"desc":"Aceitunas Verdes Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":3057.85,"costo":838.21,"margen":0.7259},{"desc":"Grisines Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":661.16,"costo":148.76,"margen":0.775},{"desc":"Rucula Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1735.54,"costo":971.47,"margen":0.4402},{"desc":"Tomate Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1487.6,"costo":132.09,"margen":0.9112},{"desc":"Panceta Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":803.78,"margen":0.3053},{"desc":"Anchoa Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":5289.26,"costo":3358.68,"margen":0.365},{"desc":"Jamon Crudo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2727.27,"costo":2899.66,"margen":-0.0632},{"desc":"Jamon Cocido Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1652.89,"costo":648.64,"margen":0.6076},{"desc":"Pollo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1900.83,"costo":615.38,"margen":0.6763},{"desc":"Roquefort Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2727.27,"costo":1413.17,"margen":0.4818},{"desc":"Queso Crema Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":743.8,"costo":420.36,"margen":0.4348},{"desc":"Mermelada Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":900,"costo":0,"margen":null},{"desc":"Dulce de Leche Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":661.16,"costo":187.48,"margen":0.7164},{"desc":"Manteca Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":743.8,"costo":97.52,"margen":0.8689},{"desc":"Tomate Cherry Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2231.41,"costo":633.48,"margen":0.7161},{"desc":"Zanahoria Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":87.33,"margen":0.9245},{"desc":"Aceitunas Negras Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":3305.79,"costo":824.38,"margen":0.7506},{"desc":"Cebolla Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":66.43,"margen":0.9426},{"desc":"Pan Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":495.87,"costo":59.73,"margen":0.8795},{"desc":"Queso Barra Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1570.25,"costo":673.98,"margen":0.5708},{"desc":"Crema Chantilly Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":1157.02,"costo":422.18,"margen":0.6351},{"desc":"Dulce de Leche Postres Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":1322.31,"costo":654.2,"margen":0.5053},{"desc":"Queso Sardo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1322.31,"costo":541.54,"margen":0.5905},{"desc":"Atun Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2561.98,"costo":1115.7,"margen":0.5645},{"desc":"Huevo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":201.11,"margen":0.8262},{"desc":"Pan Panini Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1487.6,"costo":396.69,"margen":0.7333},{"desc":"Lechuga Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1239.67,"costo":136.36,"margen":0.89},{"desc":"Crema de Leche Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2066.12,"costo":921.89,"margen":0.5538},{"desc":"Proteina Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1818.18,"costo":2145.84,"margen":-0.1802},{"desc":"Tarta de Manzana","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19421.49,"costo":5962.95,"margen":0.693},{"desc":"Tarta de Ricota","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":23140.5,"costo":4662.29,"margen":0.7985},{"desc":"Tarta de Coco y Dulce de Leche","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19421.49,"costo":4679.42,"margen":0.7591},{"desc":"Tarta Toffe","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24710.74,"costo":6949.85,"margen":0.7188},{"desc":"Tarta de Frutas","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":31818.18,"costo":8863.34,"margen":0.7214},{"desc":"Tarta de Frutilla","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":30082.64,"costo":8077.6,"margen":0.7315},{"desc":"Tarta de Frutilla con Pastelera","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":26611.57,"costo":5585.61,"margen":0.7901},{"desc":"Pastafrola Membrillo","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":17107.44,"costo":2698.95,"margen":0.8422},{"desc":"Lemon Pie","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19917.36,"costo":1761.79,"margen":0.9115},{"desc":"Chocotorta","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":37024.79,"costo":13174.73,"margen":0.6442},{"desc":"Choco Oreo","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":41818.18,"costo":20232.71,"margen":0.5162},{"desc":"Cheesecake Frutos Rojos","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24049.59,"costo":8569.59,"margen":0.6437},{"desc":"Cheesecake Maracuya","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24049.59,"costo":9384.82,"margen":0.6098},{"desc":"Cheesecake Ferrero Rocher","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":29421.49,"costo":16542.89,"margen":0.4377},{"desc":"Torta Tiramisu","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":40909.09,"costo":11536.01,"margen":0.718},{"desc":"Torta Red Velvet Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":21818.18,"costo":5976.23,"margen":0.7261},{"desc":"Torta Selva Negra Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":31818.18,"costo":9255,"margen":0.7091},{"desc":"Torta Tres Leches Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":22727.27,"costo":9047.17,"margen":0.6019},{"desc":"Torta Chaja Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":20909.09,"costo":6608.82,"margen":0.6839},{"desc":"Torta Especial Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":20909.09,"costo":7235.47,"margen":0.654},{"desc":"Torta Especial Oreo Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":22727.27,"costo":10286.47,"margen":0.5474},{"desc":"Crepes Golosos","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":764.95,"margen":0.8507},{"desc":"Dulces Regionales","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8347.11,"costo":3932.6,"margen":0.5289},{"desc":"Flan 3 Leches","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1243.58,"margen":0.7881},{"desc":"Ensalada de Frutas","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":6280.99,"costo":2675.58,"margen":0.574},{"desc":"Red Velvet Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":1195.25,"margen":0.7667},{"desc":"Mousse de Chocolate Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5619.83,"costo":1393.47,"margen":0.752},{"desc":"Trio de Mousse","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8181.82,"costo":2482.92,"margen":0.6965},{"desc":"Torta de Naranja Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4710.74,"costo":597.27,"margen":0.8732},{"desc":"Torta de Limon Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4710.74,"costo":615.7,"margen":0.8693},{"desc":"Torta de Chocolate Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5537.19,"costo":1388.39,"margen":0.7493},{"desc":"Chocotorta Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1804.96,"margen":0.6924},{"desc":"Pastafrola Membrillo Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4545.45,"costo":635.46,"margen":0.8602},{"desc":"Pastafrola Batata Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4545.45,"costo":576.91,"margen":0.8731},{"desc":"Tarta de Manzana Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1311.86,"margen":0.7699},{"desc":"Brownie Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":664.31,"margen":0.8868},{"desc":"Tarta de Ricota Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":777.05,"margen":0.8484},{"desc":"Tarta de Ricota y Dulce de Leche Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":997.05,"margen":0.8301},{"desc":"Tarta de Coco y Dulce de Leche Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5619.83,"costo":1021.7,"margen":0.8182},{"desc":"Tarta de Frutilla Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":1281.56,"margen":0.7904},{"desc":"Tarta de Durazno Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":914.84,"margen":0.8504},{"desc":"Tarta de Frutas Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":2425.21,"margen":0.6034},{"desc":"Lemon Pie Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5537.19,"costo":293.63,"margen":0.947},{"desc":"Frutilla con Crema Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":7768.6,"costo":2754.46,"margen":0.6454},{"desc":"Cheesecake Frutos Rojos Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1422.99,"margen":0.7505},{"desc":"Cheesecake Maracuya Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1524.86,"margen":0.7326},{"desc":"Cheesecake Ferrero Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8429.75,"costo":2705.83,"margen":0.679},{"desc":"Cheesecake Sueño de Limon Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1242.56,"margen":0.7821},{"desc":"Tarta Toffe Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1333.6,"margen":0.7727},{"desc":"Mix Mini Postres","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":10247.93,"costo":2927.28,"margen":0.7144},{"desc":"Box Mini Postres","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":31404.96,"costo":8930.86,"margen":0.7156},{"desc":"Batata con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Membrillo con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Mamon con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Cereza con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":7851.24,"costo":1881.45,"margen":0.7604},{"desc":"Alfajor de Maicena Pdp","rubro":"POSTRES","subrubro":"CHOCOLATES","precio":2314.05,"costo":489.92,"margen":0.7883},{"desc":"Chopp Heineken","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":4462.81,"costo":2490.75,"margen":0.4419},{"desc":"Chopp Varios","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":5289.26,"costo":2049.25,"margen":0.6126},{"desc":"Mani - Palito Salado Porcion","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":743.8,"costo":254.59,"margen":0.6577},{"desc":"Jugo de Naranja","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5867.77,"costo":903.72,"margen":0.846},{"desc":"Licuado de Banana","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1582.64,"margen":0.7693},{"desc":"Licuado Durazno con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1064.02,"margen":0.8449},{"desc":"Licuado con Anana con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1959.71,"margen":0.7143},{"desc":"Licuado Frutilla con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1141.17,"margen":0.8336},{"desc":"Licuado Durazno con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":688.02,"margen":0.8905},{"desc":"Licuado Anana con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":1583.71,"margen":0.7479},{"desc":"Licuado Frutilla con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":765.17,"margen":0.8782},{"desc":"Licuado Tropical","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":525.93,"margen":0.899},{"desc":"Licuado Banadu","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":1092.05,"margen":0.7903},{"desc":"Licuado Detox","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":1041.34,"margen":0.8},{"desc":"Limonada Menta y Jengibre","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":4710.74,"costo":260.39,"margen":0.9447},{"desc":"Whisky Green Label","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":17851.24,"costo":13264.46,"margen":0.2569},{"desc":"Whisky Black Lebel","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":10413.22,"costo":3012.86,"margen":0.7107},{"desc":"Whisky Red Label","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":8429.75,"costo":2355.37,"margen":0.7206},{"desc":"Caipiriña","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":983.1,"margen":0.8475},{"desc":"Caipiroska","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1711.53,"margen":0.7345},{"desc":"Mojito","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":947.06,"margen":0.8531},{"desc":"Aperol Spritz","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7438.02,"costo":1040.68,"margen":0.8601},{"desc":"Gin Tonic","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7933.88,"costo":2345.26,"margen":0.7044},{"desc":"Campari","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":761.69,"margen":0.8818},{"desc":"Cuba Libre","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1303.7,"margen":0.7978},{"desc":"Daikiri","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":2385.1,"margen":0.63},{"desc":"Fernet","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1761.82,"margen":0.7267},{"desc":"Opcion 1 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":950000,"costo":0,"margen":null},{"desc":"Opcion 2 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":800000,"costo":0,"margen":null},{"desc":"Opcion 3 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":420000,"costo":0,"margen":null},{"desc":"Adicional Opcion 1","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":18000,"costo":0,"margen":null},{"desc":"Adicional Opcion 2","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":16500,"costo":0,"margen":null},{"desc":"TA Cheesecake Frutos Rojos","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1403.47,"margen":0.7539},{"desc":"TA Cheesecake Maracuya","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1539.73,"margen":0.73},{"desc":"TA Chocotorta","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1390.23,"margen":0.7562},{"desc":"TA Trio de Mousse","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":6280.99,"costo":1140.08,"margen":0.8185},{"desc":"TA Mini Oreo","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":7438.02,"costo":2077.86,"margen":0.7206},{"desc":"TA Red Velvet","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5123.97,"costo":934.32,"margen":0.8177},{"desc":"TA Selva Negra","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5867.77,"costo":1276.54,"margen":0.7824},{"desc":"TA Choco Oreo","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":7768.6,"costo":2481.62,"margen":0.6806},{"desc":"TA Tres Leches","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":3636.36,"costo":892.51,"margen":0.7546},{"desc":"TA Cheesecake Ferrero","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":8677.69,"costo":3107.76,"margen":0.6419},{"desc":"TA Tiramisu","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5537.19,"costo":1380.59,"margen":0.7507},{"desc":"Shell Jamon y Queso","rubro":"SHELL","subrubro":"SHELL","precio":7024.79,"costo":2841.9,"margen":0.5954},{"desc":"Shell Jamon Crudo y Queso","rubro":"SHELL","subrubro":"SHELL","precio":8205.43,"costo":2139.21,"margen":0.7393},{"desc":"Shell Integral","rubro":"SHELL","subrubro":"SHELL","precio":7024.79,"costo":2919.38,"margen":0.5844},{"desc":"Shell Verdura","rubro":"SHELL","subrubro":"SHELL","precio":9208.98,"costo":2516.15,"margen":0.7268},{"desc":"Shell Ensalada Cesar","rubro":"SHELL","subrubro":"SHELL","precio":7713.5,"costo":3264.05,"margen":0.5768},{"desc":"Shell Ensalada Ranchera","rubro":"SHELL","subrubro":"SHELL","precio":7492.83,"costo":3350.67,"margen":0.5528},{"desc":"Shell Cheesecake F.R","rubro":"SHELL","subrubro":"SHELL","precio":3564.05,"costo":1403.47,"margen":0.6062},{"desc":"Shell Ensalada de Frutas","rubro":"SHELL","subrubro":"SHELL","precio":3925.62,"costo":2675.58,"margen":0.3184},{"desc":"Shell Chocotorta","rubro":"SHELL","subrubro":"SHELL","precio":3564.05,"costo":1390.23,"margen":0.6099},{"desc":"Shell Mini Oreo","rubro":"SHELL","subrubro":"SHELL","precio":4648.76,"costo":2077.86,"margen":0.553},{"desc":"Shell Tiramisu","rubro":"SHELL","subrubro":"SHELL","precio":3925.62,"costo":1380.59,"margen":0.6483},{"desc":"Shell Trio de Mousse","rubro":"SHELL","subrubro":"SHELL","precio":3409.09,"costo":1140.08,"margen":0.6656},{"desc":"Shell Tarta de Coco y Dulce de Leche","rubro":"SHELL","subrubro":"SHELL","precio":3512.4,"costo":1021.7,"margen":0.7091},{"desc":"Shell Torta de Naranja","rubro":"SHELL","subrubro":"SHELL","precio":2944.21,"costo":597.27,"margen":0.7971},{"desc":"Shell Tarta de Manzana","rubro":"SHELL","subrubro":"SHELL","precio":3099.17,"costo":1311.86,"margen":0.5767},{"desc":"Shell Alfajor de Maicena","rubro":"SHELL","subrubro":"SHELL","precio":1446.28,"costo":489.92,"margen":0.6613},{"desc":"Shell Frutilla con Crema","rubro":"SHELL","subrubro":"SHELL","precio":4855.37,"costo":2754.46,"margen":0.4327},{"desc":"Shell Pastafrola","rubro":"SHELL","subrubro":"SHELL","precio":2840.5,"costo":635.46,"margen":0.7763},{"desc":"P Cuatro Quesos","rubro":"HORNO","subrubro":"PIZZAS","precio":20743.8,"costo":6270.65,"margen":0.6977},{"desc":"Negroni","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7933.88,"costo":2747.23,"margen":0.6537},{"desc":"Te de Matcha","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3305.79,"costo":0,"margen":null},{"desc":"Triple Cajita Verduras y Huevo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":13057.85,"costo":3481.72,"margen":0.7334},{"desc":"Sabores del Puerto","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":13057.85,"costo":2773.54,"margen":0.7876},{"desc":"Sandwich De Milanesa","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14876.03,"costo":1921.28,"margen":0.8708},{"desc":"Sandwich De Milanesa Supremo","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":17603.31,"costo":2616.62,"margen":0.8514},{"desc":"Torta Porcion Red Velvet","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1195.25,"margen":0.7667},{"desc":"Torta Porcion Chaja","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1321.76,"margen":0.742},{"desc":"Torta Porcion Especial","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1447.09,"margen":0.7176},{"desc":"Torta Porcion Selva Negra","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":7603.31,"costo":1851,"margen":0.7566},{"desc":"Torta Porcion Oreo","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5785.12,"costo":2057.29,"margen":0.6444},{"desc":"Combo Huevos revueltos","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":10909.09,"costo":1943.43,"margen":0.8219},{"desc":"Ensalada la Huerta","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11322.31,"costo":2087.02,"margen":0.8157},{"desc":"Triple Cajita Pollo Especial","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":13636.36,"costo":4049.73,"margen":0.703},{"desc":"Pastafrola Batata","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":17107.44,"costo":2423.44,"margen":0.8583},{"desc":"Torta Porcion Tres Leches","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1809.43,"margen":0.6469},{"desc":"Latte Vainilla","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5600,"costo":0,"margen":null}]};
+(function(){
+
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#8A6B67';
+  Chart.defaults.borderColor = 'rgba(43,18,16,0.06)';
+
+  function fmtMoney(n){
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0});
+  }
+  function fmtMoneyFull(n){ return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0}); }
+  function fmtPct(n){ return (n*100).toFixed(1)+'%'; }
+  const MESES = {'01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun','07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'};
+  function fmtPeriodo(p){ const [y,m] = p.split('-'); return MESES[m]+'·'+y.slice(2); }
+
+  const state = { evolKind: 'bar', margenKind: 'line' };
+
+  function currentData(){ return DATA; }
+
+  document.getElementById('evolKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.evolKind = btn.dataset.kind;
+      document.getElementById('evolKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  document.getElementById('margenKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.margenKind = btn.dataset.kind;
+      document.getElementById('margenKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+
+  let charts = {};
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+  const gridColor = 'rgba(43,18,16,0.06)';
+  const tickColor = '#9E8481';
+  function tooltipBase(){
+    return { backgroundColor:'#2B1210', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#F0DEDC',
+             padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+  function pointerCursor(evt, elements){ if(evt.native && evt.native.target) evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+
+  function togglePeriodoFiltro(p){
+    filtroPeriodo = (filtroPeriodo === p) ? null : p;
+    renderMediosChips();
+    renderMediosTable();
+  }
+  function toggleMetodoFiltro(m){
+    filtroMetodo = (filtroMetodo === m) ? null : m;
+    renderMediosChips();
+    renderMediosTable();
+  }
+  function renderMediosChips(){
+    const el = document.getElementById('mediosChipRow');
+    if (!el) return;
+    let html = '';
+    if (filtroPeriodo) html += `<div class="filter-chip">Período: ${fmtPeriodo(filtroPeriodo)}<button onclick="window.__clearPeriodoFiltro()">✕</button></div>`;
+    if (filtroMetodo) html += `<div class="filter-chip">Método: ${filtroMetodo}<button onclick="window.__clearMetodoFiltro()">✕</button></div>`;
+    el.innerHTML = html;
+  }
+  window.__clearPeriodoFiltro = () => { filtroPeriodo = null; renderMediosChips(); renderMediosTable(); };
+  window.__clearMetodoFiltro = () => { filtroMetodo = null; renderMediosChips(); renderMediosTable(); };
+
+  function toggleRubroFiltro(r){
+    filtroRubro = (filtroRubro === r) ? null : r;
+    renderMenuChips();
+    renderMenuTable();
+  }
+  function renderMenuChips(){
+    const el = document.getElementById('menuChipRow');
+    if (!el) return;
+    el.innerHTML = filtroRubro ? `<div class="filter-chip">Rubro: ${filtroRubro}<button onclick="window.__clearRubroFiltro()">✕</button></div>` : '';
+  }
+  window.__clearRubroFiltro = () => { filtroRubro = null; renderMenuChips(); renderMenuTable(); };
+
+  function renderKPIs(){
+    const d = currentData();
+    const totVentas = d.monthly.reduce((s,m)=>s+m.ventas,0);
+    const totCosto = d.monthly.reduce((s,m)=>s+m.costo,0);
+    const totUtilBruta = d.monthly.reduce((s,m)=>s+m.util_bruta,0);
+    const cards = [
+      { label:'Ventas', value: fmtMoneyFull(totVentas) },
+      { label:'Costo', value: fmtMoneyFull(totCosto) },
+      { label:'Utilidad bruta', value: fmtMoneyFull(totUtilBruta), pct: fmtPct(totVentas?totUtilBruta/totVentas:0)+' de ventas' },
+      { label:'Promedio mensual (ventas)', value: fmtMoneyFull(totVentas/d.monthly.length) },
+      { label:'Meses relevados', value: d.monthly.length+' (set. parcial)' },
+    ];
+    document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+      <div class="kpi-card">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value tabular">${c.value}</div>
+        ${c.pct ? `<div class="kpi-pct tabular">${c.pct}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function buildEvol(){
+    const d = currentData();
+    const labels = d.periods.map(fmtPeriodo);
+    const isLine = state.evolKind === 'line';
+    const commonOpts = isLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:26 };
+    charts.evol = new Chart(document.getElementById('chartEvol'), {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Ventas', data: d.monthly.map(m=>m.ventas), borderColor:'#8F221A', backgroundColor:'#8F221A', ...commonOpts },
+        { label:'Costo', data: d.monthly.map(m=>m.costo), borderColor:'#C1443C', backgroundColor:'#C1443C', ...commonOpts },
+        { label:'Utilidad bruta', data: d.monthly.map(m=>m.util_bruta), borderColor:'#1E8A5F', backgroundColor:'#1E8A5F', ...commonOpts }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+  }
+
+  function buildMargen(){
+    const d = currentData();
+    const labels = d.periods.map(fmtPeriodo);
+    const isLine = state.margenKind === 'line';
+    const commonOpts = isLine ? { pointRadius:3.5, pointHoverRadius:5.5, borderWidth:2.2, tension:0.3 } : { borderRadius:3, maxBarThickness:30 };
+    charts.margen = new Chart(document.getElementById('chartMargen'), {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Margen bruto', data: d.monthly.map(m=>m.pct_bruta*100), borderColor:'#8F221A', backgroundColor:'#8F221A', ...commonOpts }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
+      }
+    });
+  }
+
+  function renderTable(){
+    const d = currentData();
+    const table = document.getElementById('detalleTable');
+    table.querySelector('thead').innerHTML = '<tr><th>Período</th><th>Ventas</th><th>Costo</th><th>Utilidad bruta</th><th>% margen</th></tr>';
+    table.querySelector('tbody').innerHTML = d.monthly.map(m=>`
+      <tr>
+        <td>${fmtPeriodo(m.periodo)}</td>
+        <td class="tabular">${fmtMoneyFull(m.ventas)}</td>
+        <td class="tabular">${fmtMoneyFull(m.costo)}</td>
+        <td class="tabular">${fmtMoneyFull(m.util_bruta)}</td>
+        <td class="tabular">${fmtPct(m.pct_bruta)}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación. Probá recargar la página.'); return; }
+    const d = currentData();
+    const wb = XLSX.utils.book_new();
+    const rows = d.monthly.map(m=>({
+      'Período': fmtPeriodo(m.periodo), 'Ventas': Math.round(m.ventas), 'Costo': Math.round(m.costo),
+      'Utilidad bruta': Math.round(m.util_bruta), '% margen': +(m.pct_bruta*100).toFixed(2)
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(rows);
+    ws1['!cols'] = [{wch:10},{wch:16},{wch:16},{wch:16},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Rentabilidad por local');
+    XLSX.writeFile(wb, 'pto_de_palos_resultados.xlsx');
+  });
+
+  function render(){
+    renderKPIs();
+    destroyCharts();
+    buildEvol();
+    buildMargen();
+    renderTable();
+  }
+
+  // ================= MEDIOS DE PAGO =================
+  const VFP_MONTHS = Object.keys(VFP).sort();
+  let mediosKind = 'bar';
+  let efvsdigKind = 'bar';
+  let mixKind = 'bar';
+  let mediosRendered = false, menuRendered = false;
+  let filtroPeriodo = null;
+  let filtroMetodo = null;
+  let filtroRubro = null;
+  let menuSearchTerm = '';
+  let margenRubroKind = 'bar';
+  let ticketKind = 'line';
+  let hhiKind = 'line';
+  let momKind = 'bar';
+  let opsDiaKind = 'bar';
+  const DAYS_IN_MONTH = { '2026-01':31, '2026-02':28, '2026-03':31, '2026-04':30, '2026-05':31, '2026-06':30, '2026-07':31, '2026-08':31 };
+  let utilEstKind = 'bar';
+
+  function renderMedios(){
+    const totals = VFP_MONTHS.map(m => VFP[m].total_importe);
+    const totalCantSum = VFP_MONTHS.reduce((s,m)=>s+VFP[m].total_cant,0);
+    const grandTotal = totals.reduce((a,b)=>a+b,0);
+    const avgTicket = totalCantSum ? grandTotal/totalCantSum : 0;
+    document.getElementById('kpiMedios').innerHTML = [
+      { label:'Ventas totales (8 meses)', value: fmtMoneyFull(grandTotal) },
+      { label:'Promedio mensual', value: fmtMoneyFull(grandTotal/VFP_MONTHS.length) },
+      { label:'Operaciones totales', value: totalCantSum.toLocaleString('es-AR',{maximumFractionDigits:0}) },
+      { label:'Ticket promedio', value: fmtMoneyFull(avgTicket) },
+    ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value tabular">${c.value}</div></div>`).join('');
+
+    const labels = VFP_MONTHS.map(fmtPeriodo);
+    const isLine = mediosKind === 'line';
+    const commonOpts = isLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
+    if (charts.mediosEvol) charts.mediosEvol.destroy();
+    charts.mediosEvol = new Chart(document.getElementById('chartMediosEvol'), {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets:[{ label:'Ventas totales', data: totals, borderColor:'#8F221A', backgroundColor:'#8F221A', ...commonOpts }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar la tabla por este mes' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+
+    if (charts.efvsdig) charts.efvsdig.destroy();
+    const efPct = VFP_MONTHS.map(m => {
+      const ef = VFP[m].metodos.filter(x=>x.metodo.indexOf('EFECTIVO')>=0).reduce((a,x)=>a+x.importe,0);
+      return VFP[m].total_importe ? ef/VFP[m].total_importe*100 : 0;
+    });
+    const digPct = efPct.map(v=>100-v);
+    const efvsdigIsLine = efvsdigKind === 'line';
+    if (efvsdigIsLine){
+      charts.efvsdig = new Chart(document.getElementById('chartEfectivoDigital'), {
+        type:'line',
+        data:{ labels, datasets:[
+          { label:'Efectivo', data: efPct, borderColor:'#8F221A', backgroundColor:'#8F221A', pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false },
+          { label:'Digital / tarjetas', data: digPct, borderColor:'#D9A79C', backgroundColor:'#D9A79C', pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, max:100 } }
+        }
+      });
+    } else {
+      charts.efvsdig = new Chart(document.getElementById('chartEfectivoDigital'), {
+        type:'bar',
+        data:{ labels, datasets:[
+          { label:'Efectivo', data: efPct, backgroundColor:'#8F221A', stack:'s', borderRadius:3 },
+          { label:'Digital / tarjetas', data: digPct, backgroundColor:'#D9A79C', stack:'s', borderRadius:3 }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor}, stacked:true }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, stacked:true, max:100 } }
+        }
+      });
+    }
+
+    if (charts.mix) charts.mix.destroy();
+    const allMethods = {};
+    VFP_MONTHS.forEach(m => VFP[m].metodos.forEach(x=>{ allMethods[x.metodo] = (allMethods[x.metodo]||0) + x.importe; }));
+    const top8 = Object.entries(allMethods).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+    const palette = ['#8F221A','#C1443C','#B98600','#1E8A5F','#2B6CB0','#9C6ADE','#5C8A99','#A85D8C'];
+    const mixIsLine = mixKind === 'line';
+    if (mixIsLine){
+      const mixDatasetsLine = top8.map((method,i) => ({
+        label: method,
+        data: VFP_MONTHS.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
+        borderColor: palette[i%palette.length], backgroundColor: palette[i%palette.length], pointRadius:3, pointHoverRadius:5, borderWidth:2, tension:0.3, fill:false
+      }));
+      charts.mix = new Chart(document.getElementById('chartMediosMix'), {
+        type:'line',
+        data:{ labels, datasets: mixDatasetsLine },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) toggleMetodoFiltro(top8[els[0].datasetIndex]); },
+          onHover: pointerCursor,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'circle',padding:10,font:{size:10.5}}, onClick:(e,item)=>toggleMetodoFiltro(top8[item.datasetIndex]) }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
+        }
+      });
+    } else {
+      const mixDatasets = top8.map((method,i) => ({
+        label: method,
+        data: VFP_MONTHS.map(m => { const rec = VFP[m].metodos.find(x=>x.metodo===method); const tot = VFP[m].total_importe; return (rec && tot) ? rec.importe/tot*100 : 0; }),
+        backgroundColor: palette[i%palette.length], stack:'s', borderRadius:2
+      }));
+      charts.mix = new Chart(document.getElementById('chartMediosMix'), {
+        type:'bar',
+        data:{ labels, datasets: mixDatasets },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) toggleMetodoFiltro(top8[els[0].datasetIndex]); },
+          onHover: pointerCursor,
+          plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:10,font:{size:10.5}}, onClick:(e,item)=>toggleMetodoFiltro(top8[item.datasetIndex]) }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor}, stacked:true }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, stacked:true, max:100 } }
+        }
+      });
+    }
+
+    // ---- Ticket promedio general ----
+    if (charts.ticket) charts.ticket.destroy();
+    const ticketProm = VFP_MONTHS.map(m => VFP[m].total_cant ? VFP[m].total_importe/VFP[m].total_cant : 0);
+    const ticketIsLine = ticketKind === 'line';
+    const ticketCommon = ticketIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
+    charts.ticket = new Chart(document.getElementById('chartTicket'), {
+      type: ticketIsLine ? 'line' : 'bar',
+      data:{ labels, datasets:[{ label:'Ticket promedio', data: ticketProm, borderColor:'#8F221A', backgroundColor:'#8F221A', ...ticketCommon }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+
+    // ---- Concentración de medios de pago (HHI) ----
+    if (charts.hhi) charts.hhi.destroy();
+    const hhiData = VFP_MONTHS.map(m => {
+      const tot = VFP[m].total_importe;
+      if (!tot) return 0;
+      return VFP[m].metodos.reduce((s,x)=> s + Math.pow(Math.max(x.importe,0)/tot, 2), 0);
+    });
+    const hhiIsLine = hhiKind === 'line';
+    const hhiCommon = hhiIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
+    charts.hhi = new Chart(document.getElementById('chartHHI'), {
+      type: hhiIsLine ? 'line' : 'bar',
+      data:{ labels, datasets:[{ label:'Índice HHI', data: hhiData, borderColor:'#8F221A', backgroundColor:'#8F221A', ...hhiCommon }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(3)}`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v.toFixed(2)}, min:0, max:0.3 } }
+      }
+    });
+
+    // ---- Variación de ventas mes a mes ----
+    if (charts.mom) charts.mom.destroy();
+    const momData = VFP_MONTHS.map((m,i) => {
+      if (i===0) return null;
+      const prev = VFP[VFP_MONTHS[i-1]].total_importe;
+      return prev ? (VFP[m].total_importe/prev - 1)*100 : null;
+    });
+    const momIsLine = momKind === 'line';
+    const momColors = momData.map(v => v===null ? '#B59A97' : (v>=0 ? '#1E8A5F' : '#C1443C'));
+    if (momIsLine){
+      charts.mom = new Chart(document.getElementById('chartMoM'), {
+        type:'line',
+        data:{ labels, datasets:[{ label:'Variación mensual', data: momData, borderColor:'#8F221A', backgroundColor:'#8F221A', pointBackgroundColor:momColors, pointRadius:5, pointHoverRadius:7, borderWidth:2, tension:0.3, spanGaps:true }] },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+          onHover: pointerCursor,
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
+        }
+      });
+    } else {
+      charts.mom = new Chart(document.getElementById('chartMoM'), {
+        type:'bar',
+        data:{ labels, datasets:[{ label:'Variación mensual', data: momData, backgroundColor: momColors, borderRadius:3, maxBarThickness:30 }] },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+          onHover: pointerCursor,
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=> c.parsed.y===null?' sin dato':` ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'} } }
+        }
+      });
+    }
+
+    // ---- Operaciones por día promedio ----
+    if (charts.opsDia) charts.opsDia.destroy();
+    const opsDiaData = VFP_MONTHS.map(m => DAYS_IN_MONTH[m] ? VFP[m].total_cant/DAYS_IN_MONTH[m] : 0);
+    const opsDiaIsLine = opsDiaKind === 'line';
+    const opsDiaCommon = opsDiaIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:30 };
+    charts.opsDia = new Chart(document.getElementById('chartOpsDia'), {
+      type: opsDiaIsLine ? 'line' : 'bar',
+      data:{ labels, datasets:[{ label:'Operaciones / día', data: opsDiaData, borderColor:'#8F221A', backgroundColor:'#8F221A', ...opsDiaCommon }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) togglePeriodoFiltro(VFP_MONTHS[els[0].index]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(1)} operaciones/día`, afterLabel:()=>'Clic para filtrar la tabla' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v.toFixed(0)} } }
+      }
+    });
+
+    renderMediosChips();
+    renderMediosTable();
+  }
+
+  function renderMediosTable(){
+    const table = document.getElementById('mediosTable');
+    table.querySelector('thead').innerHTML = '<tr><th>Período</th><th>Método</th><th>Importe</th><th>Cantidad</th><th>Promedio</th><th>% del mes</th></tr>';
+    let rows = [];
+    VFP_MONTHS.forEach(m => {
+      if (filtroPeriodo && m !== filtroPeriodo) return;
+      VFP[m].metodos.slice().sort((a,b)=>b.importe-a.importe).forEach(x=>{
+        if (filtroMetodo && x.metodo !== filtroMetodo) return;
+        rows.push(`<tr><td>${fmtPeriodo(m)}</td><td>${x.metodo}</td><td class="tabular">${fmtMoneyFull(x.importe)}</td><td class="tabular">${x.cantidad.toLocaleString('es-AR')}</td><td class="tabular">${fmtMoneyFull(x.promedio)}</td><td class="tabular">${x.pct.toFixed(2)}%</td></tr>`);
+      });
+    });
+    table.querySelector('tbody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">Sin resultados para este filtro</td></tr>';
+  }
+
+  document.getElementById('mediosKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      mediosKind = btn.dataset.kind;
+      document.getElementById('mediosKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('efvsdigKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      efvsdigKind = btn.dataset.kind;
+      document.getElementById('efvsdigKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('mixKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      mixKind = btn.dataset.kind;
+      document.getElementById('mixKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('ticketKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      ticketKind = btn.dataset.kind;
+      document.getElementById('ticketKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('hhiKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      hhiKind = btn.dataset.kind;
+      document.getElementById('hhiKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('momKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      momKind = btn.dataset.kind;
+      document.getElementById('momKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+  document.getElementById('opsDiaKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      opsDiaKind = btn.dataset.kind;
+      document.getElementById('opsDiaKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMedios();
+    });
+  });
+
+  document.getElementById('exportMediosBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación.'); return; }
+    const wb = XLSX.utils.book_new();
+    let rows = [];
+    VFP_MONTHS.forEach(m => VFP[m].metodos.forEach(x=>{
+      rows.push({ 'Período': fmtPeriodo(m), 'Método': x.metodo, 'Importe': Math.round(x.importe), 'Cantidad': x.cantidad, 'Promedio': Math.round(x.promedio), '% del mes': +x.pct.toFixed(2) });
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(rows);
+    ws1['!cols'] = [{wch:10},{wch:24},{wch:16},{wch:12},{wch:14},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Medios de pago');
+    XLSX.writeFile(wb, 'pto_de_palos_medios_de_pago.xlsx');
+  });
+
+  // ================= MENU Y COSTOS =================
+  function renderMenu(){
+    const rubroStats = MENU.rubro_stats;
+    document.getElementById('kpiMenu').innerHTML = [
+      { label:'Productos en el menú', value: MENU.total_items },
+      { label:'Con costo de receta cargado', value: MENU.valid_items },
+      { label:'Margen promedio ponderado', value: fmtPct(MENU.overall_margin) },
+      { label:'Rubros', value: rubroStats.length },
+    ].map(c=>`<div class="kpi-card"><div class="kpi-label">${c.label}</div><div class="kpi-value tabular">${c.value}</div></div>`).join('');
+
+    if (charts.margenRubro) charts.margenRubro.destroy();
+    const rs = rubroStats.slice().sort((a,b)=>b.margen_pct-a.margen_pct);
+    const margenRubroIsLine = margenRubroKind === 'line';
+    if (margenRubroIsLine){
+      charts.margenRubro = new Chart(document.getElementById('chartMargenRubro'), {
+        type:'line',
+        data:{ labels: rs.map(r=>r.rubro), datasets:[{ data: rs.map(r=>r.margen_pct*100), borderColor:'#8A8698', backgroundColor:'#8F221A', pointBackgroundColor:'#8F221A', pointBorderColor:'#8F221A', pointRadius:6, pointHoverRadius:8, borderWidth:1.5, tension:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) toggleRubroFiltro(rs[els[0].index].rubro); },
+          onHover: pointerCursor,
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.y.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar el menú' } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor, font:{size:10.5}} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, max:100 } }
+        }
+      });
+    } else {
+      charts.margenRubro = new Chart(document.getElementById('chartMargenRubro'), {
+        type:'bar',
+        data:{ labels: rs.map(r=>r.rubro), datasets:[{ data: rs.map(r=>r.margen_pct*100), backgroundColor:'#8F221A', borderRadius:4, maxBarThickness:28 }] },
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          onClick: (evt, els) => { if (els.length) toggleRubroFiltro(rs[els[0].index].rubro); },
+          onHover: pointerCursor,
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.parsed.x.toFixed(1)}%`, afterLabel:()=>'Clic para filtrar el menú' } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, max:100 }, y:{ grid:{display:false}, ticks:{color:tickColor} } }
+        }
+      });
+    }
+
+    if (charts.utilEstimada) charts.utilEstimada.destroy();
+    const labels = VFP_MONTHS.map(fmtPeriodo);
+    const ventasM = VFP_MONTHS.map(m=>VFP[m].total_importe);
+    const utilEstM = ventasM.map(v=>v*MENU.overall_margin);
+    const utilEstIsLine = utilEstKind === 'line';
+    const utilEstCommon = utilEstIsLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:26 };
+    charts.utilEstimada = new Chart(document.getElementById('chartUtilEstimada'), {
+      type: utilEstIsLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Ventas', data: ventasM, borderColor:'#D9A79C', backgroundColor:'#D9A79C', ...utilEstCommon },
+        { label:'Utilidad bruta estimada', data: utilEstM, borderColor:'#8F221A', backgroundColor:'#8F221A', ...utilEstCommon }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:'rect',padding:14} }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+
+    function fillMarginTable(id, items){
+      const table = document.getElementById(id);
+      table.querySelector('thead').innerHTML = '<tr><th>Producto</th><th>Rubro</th><th>Precio</th><th>Costo</th><th>Margen</th></tr>';
+      table.querySelector('tbody').innerHTML = items.map(i=>`<tr><td>${i.desc}</td><td>${i.rubro}</td><td class="tabular">${fmtMoneyFull(i.precio)}</td><td class="tabular">${fmtMoneyFull(i.costo)}</td><td class="tabular">${fmtPct(i.margen)}</td></tr>`).join('');
+    }
+    fillMarginTable('lowMarginTable', MENU.lowest_margin);
+    fillMarginTable('highMarginTable', MENU.highest_margin);
+
+    renderMenuChips();
+    renderMenuTable();
+  }
+
+  function renderMenuTable(){
+    const menuTable = document.getElementById('menuTable');
+    menuTable.querySelector('thead').innerHTML = '<tr><th>Producto</th><th>Rubro</th><th>Sub-rubro</th><th>Precio</th><th>Costo</th><th>Margen</th></tr>';
+    const term = menuSearchTerm.trim().toLowerCase();
+    const filtered = MENU.all_items.filter(i => {
+      if (filtroRubro && i.rubro !== filtroRubro) return false;
+      if (term && i.desc.toLowerCase().indexOf(term) === -1) return false;
+      return true;
+    });
+    const sortedMenu = filtered.slice().sort((a,b)=> (a.rubro||'').localeCompare(b.rubro||'') || a.desc.localeCompare(b.desc));
+    document.getElementById('menuFullSub').textContent = `Precio, costo y margen por producto · ${sortedMenu.length} de ${MENU.all_items.length} productos`;
+    menuTable.querySelector('tbody').innerHTML = sortedMenu.length ? sortedMenu.map(i=>`<tr><td>${i.desc}</td><td>${i.rubro}</td><td>${i.subrubro}</td><td class="tabular">${fmtMoneyFull(i.precio)}</td><td class="tabular">${fmtMoneyFull(i.costo)}</td><td class="tabular">${i.margen===null?'s/d':fmtPct(i.margen)}</td></tr>`).join('') : '<tr><td colspan="6" style="text-align:center; color:var(--ink-faint);">Sin resultados para este filtro</td></tr>';
+  }
+
+  document.getElementById('menuSearch').addEventListener('input', (e)=>{
+    menuSearchTerm = e.target.value;
+    renderMenuTable();
+  });
+
+  document.getElementById('margenRubroKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      margenRubroKind = btn.dataset.kind;
+      document.getElementById('margenRubroKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMenu();
+    });
+  });
+  document.getElementById('utilEstKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      utilEstKind = btn.dataset.kind;
+      document.getElementById('utilEstKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderMenu();
+    });
+  });
+
+  document.getElementById('exportMenuBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación.'); return; }
+    const wb = XLSX.utils.book_new();
+    const rows = MENU.all_items.map(i=>({ 'Producto': i.desc, 'Rubro': i.rubro, 'Sub-rubro': i.subrubro, 'Precio': i.precio, 'Costo': i.costo, 'Margen %': i.margen===null?null:+(i.margen*100).toFixed(2) }));
+    const ws1 = XLSX.utils.json_to_sheet(rows);
+    ws1['!cols'] = [{wch:34},{wch:16},{wch:16},{wch:12},{wch:12},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Menu y costos');
+    const ws2 = XLSX.utils.json_to_sheet(MENU.rubro_stats.map(r=>({'Rubro':r.rubro,'Items':r.items,'Precio prom.':r.precio_prom,'Costo prom.':r.costo_prom,'Margen %':+(r.margen_pct*100).toFixed(2)})));
+    ws2['!cols'] = [{wch:18},{wch:8},{wch:14},{wch:14},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Por rubro');
+    XLSX.writeFile(wb, 'pto_de_palos_menu_costos.xlsx');
+  });
+
+  // ================= TABS =================
+  document.querySelectorAll('.tabbar .seg button[data-view]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tabbar .seg button[data-view]').forEach(b=> b.setAttribute('aria-pressed', b===btn?'true':'false'));
+      ['resultados','medios','menu'].forEach(v=>{
+        document.getElementById('view-'+v).style.display = (v===btn.dataset.view) ? '' : 'none';
+      });
+      if (btn.dataset.view === 'medios' && !mediosRendered){ renderMedios(); mediosRendered = true; }
+      if (btn.dataset.view === 'menu' && !menuRendered){ renderMenu(); menuRendered = true; }
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
