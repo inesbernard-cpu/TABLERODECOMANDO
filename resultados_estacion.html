@@ -1027,6 +1027,7 @@ document.querySelectorAll('.reset-x').forEach(btn => {
 });
 document.getElementById('resetAllBtn').addEventListener('click', () => {
   fDesde.value = MONTHS[0]; fHasta.value = MONTHS[MONTHS.length-1];
+  selectedRubro = null; selectedCC = null; selectedGrupo = null; selectedFamiliaG = null; selectedCCG = null; selectedCategory = null;
   render();
 });
 
@@ -1234,7 +1235,7 @@ function renderRubroErogPanel(months){
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErogRubros', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedCategory = top12[i].cat; renderRubroChip(); renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', cc); }
+    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderRubroChip(); renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', cc); }
   });
   renderErogTrend(months, 'chartErogTrendRubros', 'erogTrendDescRubros', selectedRubro?cc:null);
 }
@@ -1290,7 +1291,7 @@ function renderGrupos(months){
   const top15 = grupoList.slice(0,15);
   hBarChart('chartGrupoRanking', {
     labels: top15.map(r=>r.g), data: top15.map(r=>r.neto), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedGrupo = top15[i].g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow(); }
+    onBarClick: (i) => { const g = top15[i].g; selectedGrupo = (selectedGrupo === g) ? null : g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow(); }
   });
 
   if(!selectedGrupo || !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = top.g;
@@ -1342,7 +1343,7 @@ function renderGrupos(months){
       <td class="num">${fmtPct(part)}</td></tr>`;
   }).join('');
   tbody.querySelectorAll('tr[data-g]').forEach(tr => tr.addEventListener('click', () => {
-    selectedGrupo = tr.dataset.g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow();
+    selectedGrupo = (selectedGrupo === tr.dataset.g) ? null : tr.dataset.g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow();
   }));
   highlightGrupoRow();
 
@@ -1416,7 +1417,7 @@ function renderErogaciones(months){
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErog', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { selectedCategory = top12[i].cat; renderErogChip(); renderErogTrend(months); highlightErogRow(); }
+    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderErogChip(); renderErogTrend(months); highlightErogRow(); }
   });
 
   if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
@@ -1429,7 +1430,7 @@ function renderErogaciones(months){
       <td class="num">${fmtPct(grandTotal?r.total/grandTotal:0)}</td>
       <td class="num">${fmtMoneyFull(r.total/months.length)}</td></tr>`).join('');
   tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedCategory = tr.dataset.cat; renderErogChip(); renderErogTrend(months); highlightErogRow();
+    selectedCategory = (selectedCategory === tr.dataset.cat) ? null : tr.dataset.cat; renderErogChip(); renderErogTrend(months); highlightErogRow();
   }));
   highlightErogRow();
 
