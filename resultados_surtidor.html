@@ -786,6 +786,7 @@ function filterByMonth(m){ fDesde.value = m; fHasta.value = m; render(); }
 function toggleRubro(r){
   if(selectedRubro === r){ selectedRubro = null; selectedFamiliaG = null; }
   else { selectedRubro = r; selectedFamiliaG = RUBRO_TO_FAMILIA[r] || null; }
+  fActividad.value = selectedRubro || 'ALL';
   render();
 }
 function toggleCC(cc){ selectedCC = (selectedCC === cc) ? null : cc; render(); }
@@ -1175,6 +1176,11 @@ function render(){
   const rBranch = resultadosBranchKey(sel);
   const eBranch = erogBranchKey(sel);
   const actividad = fActividad.value;
+  // El select global de Actividad es la fuente de verdad: sincroniza selectedRubro/selectedFamiliaG
+  // (usados internamente por "Ventas por rubro" y "Grupos de producto") para que las tres pestañas
+  // muestren siempre la misma selección, se haya elegido desde el select o clickeando en un gráfico.
+  selectedRubro = (actividad === 'ALL') ? null : actividad;
+  selectedFamiliaG = selectedRubro ? (RUBRO_TO_FAMILIA[selectedRubro] || null) : null;
   const months = getRange();
   const noteMap = { ALL:'Mostrando el consolidado de las 3 sucursales.', CENTRO:'Sucursal Centro (AV. 25 de Mayo en erogaciones).', 'AV. KIRCHNER':'Sucursal Av. Kirchner.', 'VILLA DEL CARMEN':'Sucursal Villa del Carmen.' };
   let note = noteMap[sel];
@@ -1625,19 +1631,20 @@ function renderGrupoSucursalCompare(months){
 }
 
 // ================= EROGACIONES =================
-function computeTotalsByCat(eBranch, months){
-  const totalsByCat = ALL_CATS.map(c => ({ cat:c, total: esum(c, eBranch, months) })).filter(r => r.total !== 0);
+function computeTotalsByCat(eBranch, months, cc){
+  const totalsByCat = ALL_CATS.map(c => ({ cat:c, total: cc ? categoryTotalForCCBranch(c, cc, eBranch, months) : esum(c, eBranch, months) })).filter(r => r.total !== 0);
   totalsByCat.sort((a,b) => b.total - a.total);
   return totalsByCat;
 }
 
 function renderErogaciones(eBranch, months){
-  const totalsByCat = computeTotalsByCat(eBranch, months);
+  const cc = selectedRubro ? RUBRO_TO_CC[selectedRubro] : null;
+  const totalsByCat = computeTotalsByCat(eBranch, months, cc);
   const grandTotal = totalsByCat.reduce((a,r)=>a+r.total,0);
 
   const top = totalsByCat[0] || {cat:'-', total:0};
   document.getElementById('kpiErog').innerHTML = [
-    { lbl:'Erogaciones totales', val: fmtMoney(grandTotal), sub: months.length+' meses' },
+    { lbl:'Erogaciones totales', val: fmtMoney(grandTotal), sub: months.length+' meses'+(selectedRubro?' · '+selectedRubro:'') },
     { lbl:'Conceptos con gasto', val: totalsByCat.length, sub:'de '+ALL_CATS.length+' relevados' },
     { lbl:'Mayor concepto', val: fmtMoney(top.total), sub: top.cat },
     { lbl:'Promedio mensual', val: fmtMoney(grandTotal/months.length), sub:'por mes, todo concepto' },
@@ -1646,12 +1653,12 @@ function renderErogaciones(eBranch, months){
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErog', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderErogChip(); renderErogTrend(eBranch, months); highlightErogRow(); }
+    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderErogChip(); renderErogTrend(eBranch, months, null, null, cc); highlightErogRow(); }
   });
 
-  if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  if(selectedCategory && !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = null;
   renderErogChip();
-  renderErogTrend(eBranch, months);
+  renderErogTrend(eBranch, months, null, null, cc);
 
   const tbody = document.querySelector('#tblErogaciones tbody');
   tbody.innerHTML = totalsByCat.map(r => `<tr data-cat="${esc(r.cat)}" style="cursor:pointer;">
@@ -1659,7 +1666,7 @@ function renderErogaciones(eBranch, months){
       <td class="num">${fmtPct(grandTotal?r.total/grandTotal:0)}</td>
       <td class="num">${fmtMoneyFull(r.total/months.length)}</td></tr>`).join('');
   tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedCategory = (selectedCategory === tr.dataset.cat) ? null : tr.dataset.cat; renderErogChip(); renderErogTrend(eBranch, months); highlightErogRow();
+    selectedCategory = (selectedCategory === tr.dataset.cat) ? null : tr.dataset.cat; renderErogChip(); renderErogTrend(eBranch, months, null, null, cc); highlightErogRow();
   }));
   highlightErogRow();
 
@@ -1674,10 +1681,12 @@ function renderErogaciones(eBranch, months){
 function renderErogChip(){
   const el = document.getElementById('erogChipRow');
   if(!el) return;
-  el.innerHTML = sucursalChipHTML() + (selectedCategory
-    ? `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`
-    : '');
+  let html = sucursalChipHTML();
+  if(selectedRubro) html += `<div class="filter-chip">Actividad: ${esc(selectedRubro)}<button title="Quitar filtro de actividad" onclick="window.__clearRubroGlobal()">✕</button></div> `;
+  if(selectedCategory) html += `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`;
+  el.innerHTML = html;
 }
+window.__clearRubroGlobal = () => { fActividad.value = 'ALL'; render(); };
 window.__clearCategory = () => { selectedCategory = null; render(); };
 function highlightErogRow(){
   document.querySelectorAll('#tblErogaciones tbody tr').forEach(tr => {

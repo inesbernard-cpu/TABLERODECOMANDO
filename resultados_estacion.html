@@ -754,7 +754,7 @@ const GRUPO_CC_COLOR = { 'PLAYA': COLORS.amberDeep, 'SHOP': COLORS.diesel, 'TRAN
 let selectedRubro = null;
 let selectedCC = null;
 function filterByMonth(m){ fDesde.value = m; fHasta.value = m; render(); }
-function toggleRubro(r){ selectedRubro = (selectedRubro === r) ? null : r; render(); }
+function toggleRubro(r){ selectedRubro = (selectedRubro === r) ? null : r; fActividad.value = selectedRubro || 'ALL'; render(); }
 function toggleCC(cc){ selectedCC = (selectedCC === cc) ? null : cc; render(); }
 function rubroColorFor(r){ return (!selectedRubro || selectedRubro === r) ? RUBRO_COLOR[r] : '#d8d2bd'; }
 function ccColorFor(cc){ return (!selectedCC || selectedCC === cc) ? CC_COLOR[cc] : '#d8d2bd'; }
@@ -1084,6 +1084,11 @@ wirePillToggle('pillFamiliaBar','pillFamiliaLine', m => familiaTrendMode = m);
 function render(){
   const months = getRange();
   const actividad = fActividad.value;
+  // El select global de Actividad es la fuente de verdad: sincroniza selectedRubro/selectedFamiliaG
+  // (usados internamente por "Ventas por rubro" y "Grupos de producto") para que las tres pestañas
+  // muestren siempre la misma selección, se haya elegido desde el select o clickeando en un gráfico.
+  selectedRubro = (actividad === 'ALL') ? null : actividad;
+  selectedFamiliaG = selectedRubro;
   document.getElementById('rangeBadge').textContent = (monthLabel(months[0])+' → '+monthLabel(months[months.length-1])).toUpperCase();
   const noteEl = document.getElementById('filterNote');
   if(noteEl) noteEl.textContent = 'La Estación SA · ubicación única (sin sucursales).' + (actividad!=='ALL' ? ' Actividad: '+(actividad.charAt(0)+actividad.slice(1).toLowerCase())+'.' : '');
@@ -1246,7 +1251,7 @@ function renderRubroErogPanel(months){
   }
 
   const top = totalsByCat[0] || {cat:'-', total:0};
-  if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  if(selectedCategory && !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = null;
   renderRubroChip();
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErogRubros', {
@@ -1419,12 +1424,13 @@ function renderGrupoQty(months){
 
 // ================= EROGACIONES =================
 function renderErogaciones(months){
-  const totalsByCat = computeTotalsByCat(null, months);
+  const cc = selectedRubro ? RUBRO_TO_CC[selectedRubro] : null;
+  const totalsByCat = computeTotalsByCat(cc, months);
   const grandTotal = totalsByCat.reduce((a,r)=>a+r.total,0);
 
   const top = totalsByCat[0] || {cat:'-', total:0};
   document.getElementById('kpiErog').innerHTML = [
-    { lbl:'Erogaciones totales', val: fmtMoney(grandTotal), sub: months.length+' meses' },
+    { lbl:'Erogaciones totales', val: fmtMoney(grandTotal), sub: months.length+' meses'+(selectedRubro?' · '+selectedRubro:'') },
     { lbl:'Conceptos con gasto', val: totalsByCat.length, sub:'de '+ALL_CATS.length+' relevados' },
     { lbl:'Mayor concepto', val: fmtMoney(top.total), sub: top.cat },
     { lbl:'Promedio mensual', val: fmtMoney(grandTotal/months.length), sub:'por mes, todo concepto' },
@@ -1433,12 +1439,12 @@ function renderErogaciones(months){
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErog', {
     labels: top12.map(r=>r.cat), data: top12.map(r=>r.total), color: COLORS.amberDeep,
-    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderErogChip(); renderErogTrend(months); highlightErogRow(); }
+    onBarClick: (i) => { const c = top12[i].cat; selectedCategory = (selectedCategory === c) ? null : c; renderErogChip(); renderErogTrend(months, null, null, cc); highlightErogRow(); }
   });
 
-  if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  if(selectedCategory && !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = null;
   renderErogChip();
-  renderErogTrend(months);
+  renderErogTrend(months, null, null, cc);
 
   const tbody = document.querySelector('#tblErogaciones tbody');
   tbody.innerHTML = totalsByCat.map(r => `<tr data-cat="${esc(r.cat)}" style="cursor:pointer;">
@@ -1446,7 +1452,7 @@ function renderErogaciones(months){
       <td class="num">${fmtPct(grandTotal?r.total/grandTotal:0)}</td>
       <td class="num">${fmtMoneyFull(r.total/months.length)}</td></tr>`).join('');
   tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => {
-    selectedCategory = (selectedCategory === tr.dataset.cat) ? null : tr.dataset.cat; renderErogChip(); renderErogTrend(months); highlightErogRow();
+    selectedCategory = (selectedCategory === tr.dataset.cat) ? null : tr.dataset.cat; renderErogChip(); renderErogTrend(months, null, null, cc); highlightErogRow();
   }));
   highlightErogRow();
 
@@ -1461,10 +1467,12 @@ function renderErogaciones(months){
 function renderErogChip(){
   const el = document.getElementById('erogChipRow');
   if(!el) return;
-  el.innerHTML = selectedCategory
-    ? `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`
-    : '';
+  let html = '';
+  if(selectedRubro) html += `<div class="filter-chip">Actividad: ${esc(selectedRubro)}<button title="Quitar filtro de actividad" onclick="window.__clearRubroGlobal()">✕</button></div> `;
+  if(selectedCategory) html += `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`;
+  el.innerHTML = html;
 }
+window.__clearRubroGlobal = () => { fActividad.value = 'ALL'; render(); };
 window.__clearCategory = () => { selectedCategory = null; render(); };
 function highlightErogRow(){
   document.querySelectorAll('#tblErogaciones tbody tr').forEach(tr => {
@@ -1475,6 +1483,11 @@ function renderErogTrend(months, chartId, descId, cc){
   chartId = chartId || 'chartErogTrend';
   descId = descId || 'erogTrendDesc';
   const descEl = document.getElementById(descId);
+  if(!selectedCategory){
+    if(descEl) descEl.textContent = 'Elegí un concepto en el ranking de arriba para ver su evolución mensual';
+    lineChart(chartId, { labels: months.map(monthLabel), series: [{ name:'', color: COLORS.alert, area:true, data: months.map(()=>0) }], height: 360 });
+    return;
+  }
   if(descEl) descEl.textContent = 'Concepto: ' + selectedCategory + (cc ? ` · centro de costo ${cc}` : '');
   lineChart(chartId, {
     labels: months.map(monthLabel),
