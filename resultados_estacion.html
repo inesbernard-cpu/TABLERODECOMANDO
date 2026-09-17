@@ -1315,7 +1315,7 @@ function renderGrupos(months){
     onBarClick: (i) => { const g = top15[i].g; selectedGrupo = (selectedGrupo === g) ? null : g; renderGrupoChip(); renderGrupoTrend(months); renderGrupoQty(months); highlightGrupoRow(); }
   });
 
-  if(!selectedGrupo || !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = top.g;
+  if(selectedGrupo && !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = null;
   renderGrupoChip();
   renderGrupoTrend(months);
   renderGrupoQty(months);
@@ -1382,7 +1382,7 @@ function highlightGrupoRow(){
   });
 }
 function renderGrupoTrend(months){
-  document.getElementById('grupoTrendDesc').textContent = 'Ventas, costo y utilidad · Grupo: ' + selectedGrupo;
+  document.getElementById('grupoTrendDesc').textContent = selectedGrupo ? ('Ventas, costo y utilidad · Grupo: ' + selectedGrupo) : 'Elegí un grupo en el ranking o en la tabla de abajo';
   const rows = GROWS.filter(r => r.g === selectedGrupo);
   const byMonth = p => rows.filter(r=>r.p===p);
   const series = [

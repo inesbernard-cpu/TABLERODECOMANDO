@@ -1500,7 +1500,7 @@ function renderGrupos(sel, months){
     onBarClick: (i) => { const g = top15[i].g; selectedGrupo = (selectedGrupo === g) ? null : g; renderGrupoChip(); renderGrupoTrend(branch, months); renderGrupoSucursalCompare(months); renderGrupoQty(branch, months); highlightGrupoRow(); }
   });
 
-  if(!selectedGrupo || !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = top.g;
+  if(selectedGrupo && !grupoList.find(r=>r.g===selectedGrupo)) selectedGrupo = null;
   renderGrupoChip();
   renderGrupoTrend(branch, months);
   renderGrupoSucursalCompare(months);
@@ -1572,7 +1572,7 @@ function highlightGrupoRow(){
   });
 }
 function renderGrupoTrend(branch, months){
-  document.getElementById('grupoTrendDesc').textContent = 'Ventas, costo y utilidad · Grupo: ' + selectedGrupo;
+  document.getElementById('grupoTrendDesc').textContent = selectedGrupo ? ('Ventas, costo y utilidad · Grupo: ' + selectedGrupo) : 'Elegí un grupo en el ranking o en la tabla de abajo';
   const rows = GROWS.filter(r => r.g === selectedGrupo && (!branch || r.s === branch));
   const byMonth = p => rows.filter(r=>r.p===p);
   const series = [
@@ -1612,7 +1612,7 @@ function renderGrupoQty(branch, months){
   }
 }
 function renderGrupoSucursalCompare(months){
-  document.getElementById('grupoSucursalDesc').textContent = 'Ventas netas por sucursal · Grupo: ' + selectedGrupo;
+  document.getElementById('grupoSucursalDesc').textContent = selectedGrupo ? ('Ventas netas por sucursal · Grupo: ' + selectedGrupo) : 'Elegí un grupo en el ranking o en la tabla de abajo';
   const rows = GROWS.filter(r => r.g === selectedGrupo);
   const byMonthBranch = (p, b) => rows.filter(r => r.p === p && r.s === b).reduce((a,r)=>a+r.neto, 0);
   const series = BRANCHES.map(b => ({ name: BRANCH_LABEL[b], color: BRANCH_COLOR[b], data: months.map(p => byMonthBranch(p, b)) }));
