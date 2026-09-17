@@ -351,6 +351,13 @@
 <div class="filterbar">
   <div class="filterbar-inner">
     <div class="filter-group">
+      <label for="fActividad">Actividad</label>
+      <div class="filter-with-reset">
+        <select id="fActividad"></select>
+        <button class="reset-x" data-target="fActividad" title="Quitar filtro de actividad">✕</button>
+      </div>
+    </div>
+    <div class="filter-group">
       <label for="fDesde">Desde</label>
       <div class="filter-with-reset">
         <select id="fDesde"></select>
@@ -1002,8 +1009,11 @@ function miniHBarCardHTML(title, totalVal, labels, data, color){
 // ================================================================
 // ---------------- filter setup ----------------
 // ================================================================
+const fActividad = document.getElementById('fActividad');
 const fDesde = document.getElementById('fDesde');
 const fHasta = document.getElementById('fHasta');
+[['ALL','Todas las actividades'], ...RUBROS.map(r=>[r, r.charAt(0)+r.slice(1).toLowerCase()])]
+  .forEach(([v,l]) => { const o = document.createElement('option'); o.value=v; o.textContent=l; fActividad.appendChild(o); });
 MONTHS.forEach(p => {
   const o1=document.createElement('option'); o1.value=p; o1.textContent=monthLabel(p); fDesde.appendChild(o1);
   const o2=document.createElement('option'); o2.value=p; o2.textContent=monthLabel(p); fHasta.appendChild(o2);
@@ -1020,13 +1030,14 @@ function getRange(){
 document.querySelectorAll('.reset-x').forEach(btn => {
   btn.addEventListener('click', () => {
     const t = btn.dataset.target;
-    if(t === 'fDesde') fDesde.value = MONTHS[0];
+    if(t === 'fActividad') fActividad.value = 'ALL';
+    else if(t === 'fDesde') fDesde.value = MONTHS[0];
     else if(t === 'fHasta') fHasta.value = MONTHS[MONTHS.length-1];
     render();
   });
 });
 document.getElementById('resetAllBtn').addEventListener('click', () => {
-  fDesde.value = MONTHS[0]; fHasta.value = MONTHS[MONTHS.length-1];
+  fActividad.value = 'ALL'; fDesde.value = MONTHS[0]; fHasta.value = MONTHS[MONTHS.length-1];
   selectedRubro = null; selectedCC = null; selectedGrupo = null; selectedFamiliaG = null; selectedCCG = null; selectedCategory = null;
   render();
 });
@@ -1072,10 +1083,13 @@ wirePillToggle('pillFamiliaBar','pillFamiliaLine', m => familiaTrendMode = m);
 
 function render(){
   const months = getRange();
+  const actividad = fActividad.value;
   document.getElementById('rangeBadge').textContent = (monthLabel(months[0])+' → '+monthLabel(months[months.length-1])).toUpperCase();
+  const noteEl = document.getElementById('filterNote');
+  if(noteEl) noteEl.textContent = 'La Estación SA · ubicación única (sin sucursales).' + (actividad!=='ALL' ? ' Actividad: '+(actividad.charAt(0)+actividad.slice(1).toLowerCase())+'.' : '');
 
   const activeView = document.querySelector('.view.active').id;
-  if(activeView === 'view-resumen') renderResumen(months);
+  if(activeView === 'view-resumen') renderResumen(months, actividad);
   else if(activeView === 'view-rubros') renderRubros(months);
   else if(activeView === 'view-grupos') renderGrupos(months);
   else if(activeView === 'view-erogaciones') renderErogaciones(months);
@@ -1083,14 +1097,16 @@ function render(){
 }
 
 // ================= RESUMEN =================
-function renderResumen(months){
-  const ventas = sumField('TOTAL','ventas',months);
-  const costo = sumField('TOTAL','costo',months);
-  const utilBruta = sumField('TOTAL','util_bruta',months);
-  const erogDirecta = sumField('TOTAL','erog_directa',months);
-  const erogProrr = sumField('TOTAL','erog_prorr',months);
+function renderResumen(months, actividad){
+  const rubro = (actividad && actividad !== 'ALL') ? actividad : 'TOTAL';
+
+  const ventas = sumField(rubro,'ventas',months);
+  const costo = sumField(rubro,'costo',months);
+  const utilBruta = sumField(rubro,'util_bruta',months);
+  const erogDirecta = sumField(rubro,'erog_directa',months);
+  const erogProrr = sumField(rubro,'erog_prorr',months);
   const erogTotal = erogDirecta + erogProrr;
-  const utilNeta = sumField('TOTAL','util_neta',months);
+  const utilNeta = sumField(rubro,'util_neta',months);
 
   const kpis = [
     { lbl:'Ventas', val: fmtMoney(ventas), sub: months.length+' meses · '+fmtMoneyFull(ventas/months.length)+'/mes', neg:false },
@@ -1109,9 +1125,9 @@ function renderResumen(months){
   lineChart('chartTrend', {
     labels: months.map(monthLabel),
     series: [
-      { name:'Ventas', color: COLORS.petrol2, data: months.map(p=>rget(p,'TOTAL')?.ventas||0) },
-      { name:'Costo de ventas', color: COLORS.amberDeep, data: months.map(p=>rget(p,'TOTAL')?.costo||0) },
-      { name:'Utilidad neta', color: COLORS.diesel, data: months.map(p=>rget(p,'TOTAL')?.util_neta||0) },
+      { name:'Ventas', color: COLORS.petrol2, data: months.map(p=>rget(p,rubro)?.ventas||0) },
+      { name:'Costo de ventas', color: COLORS.amberDeep, data: months.map(p=>rget(p,rubro)?.costo||0) },
+      { name:'Utilidad neta', color: COLORS.diesel, data: months.map(p=>rget(p,rubro)?.util_neta||0) },
     ],
     height: 360,
     onPointClick: (s,i) => filterByMonth(months[i])
@@ -1120,8 +1136,8 @@ function renderResumen(months){
   lineChart('chartMargin', {
     labels: months.map(monthLabel),
     series: [
-      { name:'% margen bruto', color: COLORS.petrol2, area:true, data: months.map(p=>rget(p,'TOTAL')?.pct_bruta||0) },
-      { name:'% margen neto', color: COLORS.alert, area:true, data: months.map(p=>rget(p,'TOTAL')?.pct_neta||0) },
+      { name:'% margen bruto', color: COLORS.petrol2, area:true, data: months.map(p=>rget(p,rubro)?.pct_bruta||0) },
+      { name:'% margen neto', color: COLORS.alert, area:true, data: months.map(p=>rget(p,rubro)?.pct_neta||0) },
     ],
     height: 360, formatY: fmtPct, formatTip: fmtPct,
     onPointClick: (s,i) => filterByMonth(months[i])
@@ -1523,7 +1539,7 @@ function renderCentros(months){
 }
 
 // ---------------- wire up ----------------
-[fDesde, fHasta].forEach(el => el.addEventListener('change', render));
+[fActividad, fDesde, fHasta].forEach(el => el.addEventListener('change', render));
 let resizeTimer = null;
 window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 
