@@ -1688,6 +1688,11 @@ function renderErogTrend(eBranch, months, chartId, descId, cc){
   chartId = chartId || 'chartErogTrend';
   descId = descId || 'erogTrendDesc';
   const descEl = document.getElementById(descId);
+  if(!selectedCategory){
+    if(descEl) descEl.textContent = 'Elegí un concepto en el ranking de arriba para ver su evolución mensual';
+    lineChart(chartId, { labels: months.map(monthLabel), series: [{ name:'', color: COLORS.alert, area:true, data: months.map(()=>0) }], height: 360 });
+    return;
+  }
   const dataFn = cc ? (p => egetCC(p, selectedCategory, eBranch, cc)) : (p => eget(p, selectedCategory, eBranch));
   if(descEl) descEl.textContent = 'Concepto: ' + selectedCategory + (cc ? ` · centro de costo ${cc}` : '');
   lineChart(chartId, {
@@ -1722,7 +1727,7 @@ function renderRubroErogPanel(eBranch, months){
   }
 
   const top = totalsByCat[0] || {cat:'-', total:0};
-  if(!selectedCategory || !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = top.cat;
+  if(selectedCategory && !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = null;
   renderRubroChip();
   const top12 = totalsByCat.slice(0,12);
   hBarChart('chartTopErogRubros', {
