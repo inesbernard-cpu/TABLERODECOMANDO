@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Socios — Cuentas Particulares</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#20263A; --ink-dim:#6B7280; --ink-faint:#9CA3AF;
+    --paper:#F7F7FA; --card:#FFFFFF; --border:rgba(32,38,58,0.10);
+    --accent:#3B4B6B; --accent-soft:#E1E5EE; --accent-deep:#232D42;
+    --up:#1E8A5F; --dn:#C1443C; --warn:#B45309; --warn-soft:#FEF3E2; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:18px 28px; }
+  .topbar-inner{ max-width:1320px; margin:0 auto; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:10px; }
+  .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.02em; color:var(--ink-dim); }
+  h1.page-title{ font-size:23px; font-weight:700; margin:2px 0 6px; }
+  .page-sub{ font-size:13.5px; color:var(--ink-dim); margin:0 0 14px; max-width:76ch; }
+
+  .seg{ display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button, .seg select{ border:0; background:transparent; padding:8px 15px; font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button.active{ background:var(--ink); color:#fff; }
+  .seg-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .filter-label{ font-size:11.5px; font-weight:600; color:var(--ink-dim); }
+
+  .layout{ max-width:1320px; margin:0 auto; padding:22px 28px 56px; }
+
+  .demo-banner{
+    background:#FFF3CD; border:1px solid #F0C36D; color:#7A5A00; border-radius:var(--radius-m);
+    padding:12px 16px; font-size:12.5px; margin-bottom:20px; display:flex; align-items:flex-start; gap:10px; line-height:1.5;
+  }
+  .demo-banner svg{ flex-shrink:0; margin-top:1px; }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; line-height:1; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:6px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .panel-title{ font-size:13.5px; font-weight:600; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .chart-box{ position:relative; flex:1; min-height:300px; }
+  .span-12{ grid-column:span 12; } .span-6{ grid-column:span 6; } .span-4{ grid-column:span 4; }
+
+  .toggle-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .toggle-group button{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toggle-group button.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+
+  .table-wrap{ overflow:auto; max-height:480px; position:relative; border:1px solid var(--border); border-radius:8px; }
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(32,38,58,0.05); white-space:nowrap; }
+  table.data th:first-child, table.data td:first-child{ position:sticky; left:0; z-index:1; background:var(--card); font-weight:600; }
+  table.data th:first-child{ z-index:3; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  table.data tbody tr:hover td:first-child{ background:var(--paper); }
+  table.data tr.mismatch td{ background:var(--warn-soft); }
+  table.data tr.mismatch:hover td{ background:#FCE8C7; }
+  table.data tr.mismatch td:first-child{ background:var(--warn-soft); }
+  .badge-repetido{ display:inline-block; font-size:10px; font-weight:600; background:var(--accent-soft); color:var(--accent-deep); padding:2px 7px; border-radius:100px; margin-left:6px; }
+  .badge-warn{ display:inline-block; font-size:10px; font-weight:700; background:var(--warn); color:#fff; padding:2px 7px; border-radius:100px; margin-left:6px; }
+  .export-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .export-btn:hover{ background:var(--accent); color:#fff; }
+
+  .foot-note{ margin-top:22px; font-size:11.5px; color:var(--ink-faint); line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+  .foot-note strong{ color:var(--warn); }
+
+  @media (max-width: 780px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .span-6, .span-4{ grid-column:span 12; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="inicio.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Volver a Inicio
+    </a>
+    <div class="brand">EL SURTIDOR SA · LA ESTACIÓN SA</div>
+    <h1 class="page-title">Socios — Cuentas Particulares</h1>
+    <p class="page-sub">Dividendos puros adeudados a los socios + actualizaciones por IPIM - retiros y transferencias = saldos de la cuentas particulares.</p>
+    <div class="seg-row" style="margin-bottom:10px;">
+      <div class="seg" role="group" aria-label="Empresa">
+        <button data-company="surtidor" class="active">El Surtidor</button>
+        <button data-company="both">Comparar</button>
+        <button data-company="estacion">La Estación</button>
+      </div>
+    </div>
+    <div class="seg-row">
+      <span class="filter-label">Desde</span>
+      <select id="fDesde" class="seg" style="padding:6px 10px;"></select>
+      <span class="filter-label">Hasta</span>
+      <select id="fHasta" class="seg" style="padding:6px 10px;"></select>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="grid">
+
+    <div class="panel span-12" style="min-height:340px;">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title" id="evolTitle">Evolución del saldo por socio</div>
+          <div class="panel-sub">Dividendos puros adeudados a los socios + actualizaciones por IPIM - retiros y transferencias = saldos de la cuentas particulares</div>
+        </div>
+        <div class="toggle-group" id="evolKindToggle">
+          <button data-kind="bar">Barras</button>
+          <button data-kind="line" class="active">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartEvol"></canvas></div>
+    </div>
+
+    <div class="panel span-6" style="min-height:320px;">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Retiros de caja por mes</div>
+          <div class="panel-sub">Por socio, período seleccionado</div>
+        </div>
+        <div class="toggle-group" id="retirosKindToggle">
+          <button data-kind="bar" class="active">Barras</button>
+          <button data-kind="line">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartRetiros"></canvas></div>
+    </div>
+
+    <div class="panel span-6" style="min-height:320px;">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Transferencias bancarias por mes</div>
+          <div class="panel-sub">Por socio, período seleccionado</div>
+        </div>
+        <div class="toggle-group" id="transfKindToggle">
+          <button data-kind="bar" class="active">Barras</button>
+          <button data-kind="line">Líneas</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chartTransf"></canvas></div>
+    </div>
+
+    <div class="panel span-12">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Estado a la fecha — por socio</div>
+          <div class="panel-sub">Acumulado del período seleccionado</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data" id="estadoTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel span-12">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Detalle mensual — Retiros, Transferencias y Cuenta Particular</div>
+          <div class="panel-sub">Un renglón por movimiento, con su descripción original · se excluyen los meses donde Retiros + Transferencias no coincide con la planilla maestra · clic en un socio en los gráficos de arriba para filtrar</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div class="toggle-group" id="tipoMovToggle">
+            <button data-tipo="todos" class="active">Todos</button>
+            <button data-tipo="retiros">Retiros</button>
+            <button data-tipo="transferencias">Transferencias</button>
+          </div>
+          <select id="fSocio" class="seg" style="padding:6px 10px;">
+            <option value="">Todos los socios</option>
+          </select>
+          <button class="export-btn" id="exportBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+      </div>
+      <div id="socioChipRow" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
+      <div class="table-wrap">
+        <table class="data" id="detailTable"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot-note" id="footNote"></div>
+
+</div>
+
+<script>
+const DATA = {"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"surtidor":{"socios":["WALTER FRADKIN","MARCELO FERRARI","MARCELA SANABRIA"],"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"data":{"WALTER FRADKIN":{"dividendo_inicial":17593272.34,"monthly":[{"periodo":"2025-08","retiros":-800000.0,"transferencias":-3000000.0,"cta_part_maestro":-3800000,"act_ipim":2106141.562234587,"coef_ipim":3.1,"saldo":66246191.956898674,"saldo_ddjj":0,"detalle_retiros":[{"desc":"PARA ISABEL MOREL","monto":-800000}],"detalle_transferencias":[{"desc":"SOCIO WALTER FRADKIN","monto":-3000000}]},{"periodo":"2025-09","retiros":-8964400.0,"transferencias":-3000000.0,"cta_part_maestro":-11964400,"act_ipim":2451109.102405251,"coef_ipim":3.7,"saldo":56732901.059303924,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CR WALTER PARA SOL VIVAS","monto":-874400},{"desc":"PARA ISABEL MOREL DEL SR WALTE","monto":-1000000},{"desc":"PARA SOL VIVA DEL SR WALTER","monto":-4927000},{"desc":"PARA SOL VIVAS DEL SR WALTER","monto":-2000000},{"desc":"RETIRA SR WALTER PARA FAUSTO","monto":-163000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3000000}]},{"periodo":"2025-10","retiros":0,"transferencias":-3000000.0,"cta_part_maestro":-3000000,"act_ipim":624061.9116523432,"coef_ipim":1.1,"saldo":54356962.970956266,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3000000}]},{"periodo":"2025-11","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":869711.4075353002,"coef_ipim":1.6,"saldo":55226674.378491566,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-12","retiros":-2000000.0,"transferencias":-3000000.0,"cta_part_maestro":-5000000,"act_ipim":1325440.1850837977,"coef_ipim":2.4,"saldo":51552114.563575365,"saldo_ddjj":0,"detalle_retiros":[{"desc":"RETIRO WALTER SIN DETALLE","monto":-2000000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3000000}]},{"periodo":"2026-01","retiros":-1000000.0,"transferencias":-5000000.0,"cta_part_maestro":-6000000,"act_ipim":876385.9475807812,"coef_ipim":1.7,"saldo":46428500.51115615,"saldo_ddjj":0,"detalle_retiros":[{"desc":"RETIRO DE CAJA PLAYA SR WALTER","monto":-1000000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER","monto":-5000000}]},{"periodo":"2026-02","retiros":-39600.0,"transferencias":-5500000.0,"cta_part_maestro":-5539600,"act_ipim":464285.0051115615,"coef_ipim":1,"saldo":41353185.51626771,"saldo_ddjj":0,"detalle_retiros":[{"desc":"PARA IMPUESTO MUNICIPAL RURAL","monto":-39600}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3000000},{"desc":"TRANSFERENCIA SR WALTER FRADKIN","monto":-2500000}]},{"periodo":"2026-03","retiros":-500000.0,"transferencias":-8500000.0,"cta_part_maestro":-9000000,"act_ipim":1406008.307553102,"coef_ipim":3.4,"saldo":33759193.823820814,"saldo_ddjj":0,"detalle_retiros":[{"desc":"PARA ISABEL DE SR WALTER","monto":-200000},{"desc":"PARA SOL VIVAS","monto":-300000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-6500000},{"desc":"TRANSFERNCIA SOCI OWALTER FRADKIN","monto":-2000000}]},{"periodo":"2026-04","retiros":0,"transferencias":-9500000.0,"cta_part_maestro":-9500000,"act_ipim":1755478.0788386825,"coef_ipim":5.2,"saldo":26014671.9026595,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO FRADKIN","monto":-6000000},{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3500000}]},{"periodo":"2026-05","retiros":-1200000.0,"transferencias":-3000000.0,"cta_part_maestro":-4200000,"act_ipim":650366.7975664875,"coef_ipim":2.5,"saldo":22465038.700225987,"saldo_ddjj":0,"detalle_retiros":[{"desc":"PAGO ISABELLA POR SR WALTER","monto":-1200000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO WALTER FRADKIN","monto":-3000000}]},{"periodo":"2026-06","retiros":0,"transferencias":-10000000.0,"cta_part_maestro":-15610563.29,"act_ipim":247115.4257024859,"coef_ipim":1.1,"saldo":7101590.835928474,"saldo_ddjj":-5610563.28,"detalle_retiros":[],"detalle_transferencias":[{"desc":"SOCIO WALTER FRADKIN","monto":-5000000},{"desc":"TRANSF SR WALTER FRADKIN","monto":-5000000}]},{"periodo":"2026-07","retiros":-8000000.0,"transferencias":-10000000.0,"cta_part_maestro":-18000000,"act_ipim":56812.7266874278,"coef_ipim":0.8,"saldo":-10841596.437384099,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR WFRAKLIN","monto":-8000000}],"detalle_transferencias":[{"desc":"TRANSF SOCIO WALTER FRADKIN","monto":-5000000},{"desc":"TRANSFERNECIA SOCIO WALTER FRADKIN","monto":-5000000}]},{"periodo":"2026-08","retiros":-7800000.0,"transferencias":0,"cta_part_maestro":-7800000,"act_ipim":0,"coef_ipim":1.7,"saldo":-18641596.4373841,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR WALTER","monto":-7000000},{"desc":"PAGO PARA ISABEL MOREL","monto":-800000}],"detalle_transferencias":[]},{"periodo":"2026-09","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":0,"saldo":-18641596.4373841,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]}]},"MARCELO FERRARI":{"dividendo_inicial":8066065.26,"monthly":[{"periodo":"2025-08","retiros":-1600000.0,"transferencias":-2730000.0,"cta_part_maestro":-4330000,"act_ipim":622462.1424900786,"coef_ipim":3.1,"saldo":16371886.093782935,"saldo_ddjj":0,"detalle_retiros":[{"desc":"RETIRO SR MARCELO SIN DETALLE","monto":-310000},{"desc":"SR MARCELO SIN DATOS","monto":-540000},{"desc":"SR MARCELO SIN DETALLE","monto":-400000},{"desc":"SRMARCELO SIN DETALLE","monto":-350000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-2730000}]},{"periodo":"2025-09","retiros":-1175000.0,"transferencias":-2800000.0,"cta_part_maestro":-3975000,"act_ipim":605759.7854699686,"coef_ipim":3.7,"saldo":13002645.879252903,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO PARA FAUSTO","monto":-275000},{"desc":"SR MARCELO PARA SILLONES","monto":-400000},{"desc":"SR MARCELO SIN DETALLE","monto":-500000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-2500000},{"desc":"TRANSFERENCIA SR MARCELO FERRARI","monto":-300000}]},{"periodo":"2025-10","retiros":-662000.0,"transferencias":-3150000.0,"cta_part_maestro":-3812000,"act_ipim":143029.10467178194,"coef_ipim":1.1,"saldo":9333674.983924685,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO SIN DATOS","monto":-300000},{"desc":"SR MARCELO SIN DETALLE","monto":-362000}],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-3150000}]},{"periodo":"2025-11","retiros":-628030.0,"transferencias":-3000000.0,"cta_part_maestro":-3628030,"act_ipim":149338.79974279497,"coef_ipim":1.6,"saldo":5854983.783667481,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO  PARA RICKY","monto":-71230},{"desc":"SR MARCELO  PARA RIKI","monto":-136800},{"desc":"SR MARCELO SIN DETALLE","monto":-420000}],"detalle_transferencias":[{"desc":"TRANSFERNECIA SOCIO MARCELO FERRARI","monto":-3000000}]},{"periodo":"2025-12","retiros":-180000.0,"transferencias":-4900000.0,"cta_part_maestro":-5080000,"act_ipim":140519.61080801953,"coef_ipim":2.4,"saldo":915503.3944755001,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO PARA FAUSTO","monto":-580000},{"desc":"SR MARCELO SIN DETALLE","monto":-100000}],"detalle_transferencias":[{"desc":"TRANSF SR MARCELO FERRARI","monto":-500000},{"desc":"TRANSFERCIA SAOCIO MARCELO FERRARI","monto":-400000},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-4000000}]},{"periodo":"2026-01","retiros":0.0,"transferencias":-4900000.0,"cta_part_maestro":-4900000,"act_ipim":15563.557706083502,"coef_ipim":1.7,"saldo":-3968933.0478184163,"saldo_ddjj":0,"detalle_retiros":[{"desc":"REINTEGRO A FAUSTO FC 3 6469","monto":-4300},{"desc":"SR MARCELO SIN DETALLE","monto":-2250000}],"detalle_transferencias":[{"desc":"SOCIO MARCELO FERRARI","monto":-2300000},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-600000},{"desc":"TRANSFERENCIA SR MARCELO FERRARI","monto":-2000000}]},{"periodo":"2026-02","retiros":0,"transferencias":-3460000.0,"cta_part_maestro":-3460000,"act_ipim":0,"coef_ipim":1,"saldo":-7428933.047818417,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"NSFERNECIA SOCIO MARCELO FERRARI","monto":-1000000},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-460000},{"desc":"TRANSFERNECIA SOCIO MARCELO FERRARI","monto":-2000000}]},{"periodo":"2026-03","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":3.4,"saldo":-7428933.047818417,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO PARA BCO GALICIA","monto":-1000000},{"desc":"SR MARCELO SIN DETALLE","monto":-2000000}],"detalle_transferencias":[]},{"periodo":"2026-04","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":5.2,"saldo":-7428933.047818417,"saldo_ddjj":0,"detalle_retiros":[{"desc":"RETIRO SR MARCELO BCO GALICIA","monto":-3000000},{"desc":"SR MARCELO PARA BCO GALICIA","monto":-500000},{"desc":"SR MARCELO SIN DETALLE","monto":-200000}],"detalle_transferencias":[]},{"periodo":"2026-05","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":2.5,"saldo":-7428933.047818417,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO BCO GALICIA","monto":-25000000},{"desc":"SR MARCELO SIN DETALLE","monto":-3000000}],"detalle_transferencias":[]},{"periodo":"2026-06","retiros":4.656612873077393e-10,"transferencias":-300000.0,"cta_part_maestro":-3105281.64,"act_ipim":0,"coef_ipim":1.1,"saldo":-10534214.687818417,"saldo_ddjj":-2805281.64,"detalle_retiros":[{"desc":"SR MARCELO","monto":-400000},{"desc":"SR MARCELO PARA DEP BANCO","monto":-600000},{"desc":"SR MARCELO PARA DEPOSITO BCO","monto":-2000000},{"desc":"SR MARCELO PARA FAUSTO","monto":-620000}],"detalle_transferencias":[{"desc":"SOCIO MARCELO FERRARI","monto":-300000}]},{"periodo":"2026-07","retiros":0.0,"transferencias":-1500000.0,"cta_part_maestro":-1500000,"act_ipim":0,"coef_ipim":0.8,"saldo":-12034214.687818417,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR MARCELO","monto":-234000}],"detalle_transferencias":[{"desc":"SOCIO MARCELO FERRARI","monto":-1500000}]},{"periodo":"2026-08","retiros":0,"transferencias":-760000.0,"cta_part_maestro":-760000,"act_ipim":0,"coef_ipim":1.7,"saldo":-12794214.687818417,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"SOCIO MARCELO FERRARI","monto":-760000}]},{"periodo":"2026-09","retiros":0,"transferencias":-600000.0,"cta_part_maestro":-600000,"act_ipim":0,"coef_ipim":0,"saldo":-13394214.687818417,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"SOCIO MARCELO FERRARI","monto":-600000}]}]},"MARCELA SANABRIA":{"dividendo_inicial":0,"monthly":[{"periodo":"2025-08","retiros":0,"transferencias":-244448.66,"cta_part_maestro":-244448.66,"act_ipim":0,"coef_ipim":3.1,"saldo":-244448.66,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO DE AUTONOMO SRA MARCELA SANABRIA","monto":-244448.66}]},{"periodo":"2025-09","retiros":-28558.30999999866,"transferencias":-14248408.73,"cta_part_maestro":-14276967.04,"act_ipim":0,"coef_ipim":3.7,"saldo":-14521415.7,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"AUTONOMO SOCIA MARCELA  SANABRIA","monto":-248408.73},{"desc":"TRANSFERENCIA SOCIO MARCELA SANABRIA","monto":-2000000},{"desc":"TRANSFERENCIA SRA MARCELA SANABRIA","monto":-7000000},{"desc":"TRANSFERNCIA SOCIA MARCELA SANABRIA","monto":-5000000}]},{"periodo":"2025-10","retiros":0,"transferencias":-253128.5,"cta_part_maestro":-253128.5,"act_ipim":0,"coef_ipim":1.1,"saldo":-14774544.2,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SRA MARCELA SANABRIA","monto":-253128.5}]},{"periodo":"2025-11","retiros":0,"transferencias":-4257887.31,"cta_part_maestro":-4257887.31,"act_ipim":0,"coef_ipim":1.6,"saldo":-19032431.509999998,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SRA MARCELA","monto":-257887.31},{"desc":"TRANSFERENCIA SOCIO MARCELA SANARIA","monto":-4000000}]},{"periodo":"2025-12","retiros":-1606414.5099999998,"transferencias":-263251.38,"cta_part_maestro":-1869665.89,"act_ipim":0,"coef_ipim":2.4,"saldo":-20902097.4,"saldo_ddjj":0,"detalle_retiros":[{"desc":"DEVUELVE SRA MARCELA","monto":6000000},{"desc":"SRA MARCELA PARA F","monto":-16000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SRA MARCELA","monto":-263251.38}]},{"periodo":"2026-01","retiros":0.0,"transferencias":-269411.46,"cta_part_maestro":-269411.46,"act_ipim":0,"coef_ipim":1.7,"saldo":-21171508.86,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SRA MARCELA PARA CAJA AHORRO","monto":-5000000},{"desc":"SRA MARCELA PARA FRANCISCO","monto":-9200000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-269411.46}]},{"periodo":"2026-02","retiros":0.0,"transferencias":-276065.92,"cta_part_maestro":-276065.92,"act_ipim":0,"coef_ipim":1,"saldo":-21447574.78,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SRA MARCELA SIN DETALLE","monto":-7000000}],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO","monto":-276065.92}]},{"periodo":"2026-03","retiros":0.0,"transferencias":-283933.8,"cta_part_maestro":-283933.8,"act_ipim":0,"coef_ipim":3.4,"saldo":-21731508.580000002,"saldo_ddjj":0,"detalle_retiros":[{"desc":"PARA SEGURO DE CAMIONETA","monto":-140000},{"desc":"SRA MARCELA","monto":-5000000},{"desc":"SRA MARCELA SIN DETALLE","monto":-10019200}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-283933.8}]},{"periodo":"2026-04","retiros":0.0,"transferencias":-292111.1,"cta_part_maestro":-292111.1,"act_ipim":0,"coef_ipim":5.2,"saldo":-22023619.680000003,"saldo_ddjj":0,"detalle_retiros":[{"desc":"RETIRO SRA MARCELA","monto":-500000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-292111.1}]},{"periodo":"2026-05","retiros":0.0,"transferencias":-300582.32,"cta_part_maestro":-300582.32,"act_ipim":0,"coef_ipim":2.5,"saldo":-22324202.000000004,"saldo_ddjj":0,"detalle_retiros":[{"desc":"GASTOS SRA MARCELA","monto":-28600},{"desc":"SRA MARCELA SIN DETALLE","monto":-57200}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-300582.32}]},{"periodo":"2026-06","retiros":-61600.0,"transferencias":-310742.0,"cta_part_maestro":-3177623.64,"act_ipim":0,"coef_ipim":1.1,"saldo":-25501825.640000004,"saldo_ddjj":-2805281.64,"detalle_retiros":[{"desc":"SRA MARCELA PARA YOGURT","monto":-61600},{"desc":"SRA MARCELA YOGURT","monto":-28000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO MAYO 2026","monto":-310742}]},{"periodo":"2026-07","retiros":0.0,"transferencias":-318759.14,"cta_part_maestro":-318759.14,"act_ipim":0,"coef_ipim":0.8,"saldo":-25820584.780000005,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SRA MARCELA YOGURT","monto":-28000}],"detalle_transferencias":[{"desc":"AUTONOMO","monto":-318759.14}]},{"periodo":"2026-08","retiros":0,"transferencias":-325612.46,"cta_part_maestro":-325612.46,"act_ipim":0,"coef_ipim":1.7,"saldo":-26146197.240000006,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO MARCELA SANABRIA","monto":-325612.46}]},{"periodo":"2026-09","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":0,"saldo":-26146197.240000006,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]}]}}},"estacion":{"socios":["AMELIO FERRARI","DIEGO FERRARI","MARCELO FERRARI","MARCELA SANABRIA"],"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"data":{"AMELIO FERRARI":{"dividendo_inicial":6400000,"monthly":[{"periodo":"2025-08","retiros":-4815000.0,"transferencias":-46876.42,"cta_part_maestro":-4861876.42,"act_ipim":245580.46705,"coef_ipim":3.1,"saldo":3305654.59705,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR AMELIO","monto":-4800000},{"desc":"PARA COMPLETAR RETIRO","monto":-15000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO ALBERTO FERRARI","monto":-46876.42}]},{"periodo":"2025-09","retiros":-6000000.0,"transferencias":-47635.83,"cta_part_maestro":-6047635.83,"act_ipim":122309.22009085001,"coef_ipim":3.7,"saldo":-2619672.0128591503,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR ALBERTO","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO AMELIO FERRARI","monto":-47635.83}]},{"periodo":"2025-10","retiros":-6000000.0,"transferencias":-48540.9,"cta_part_maestro":-6048540.9,"act_ipim":0,"coef_ipim":1.1,"saldo":-8668212.912859151,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR ALBERTO","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO DE AUTONOMO SOCIO AMELIO FERRARI","monto":-48540.9}]},{"periodo":"2025-11","retiros":-6000000.0,"transferencias":-49453.47,"cta_part_maestro":-6049453.47,"act_ipim":0,"coef_ipim":1.6,"saldo":-14717666.382859152,"saldo_ddjj":0,"detalle_retiros":[{"desc":"SR AMELIO","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-49453.47}]},{"periodo":"2025-12","retiros":-6000000.0,"transferencias":-50482.1,"cta_part_maestro":-6050482.1,"act_ipim":0,"coef_ipim":2.4,"saldo":23231851.51714085,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO","monto":-50482.1}]},{"periodo":"2026-01","retiros":-9000000.0,"transferencias":-51663.39,"cta_part_maestro":-9051663.39,"act_ipim":394941.4757913944,"coef_ipim":1.7,"saldo":14575129.602932245,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-3000000},{"desc":"SR AMELIO","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO AMELIO FERRARI","monto":-51663.39}]},{"periodo":"2026-02","retiros":-6000000.0,"transferencias":-52939.47,"cta_part_maestro":-6052939.47,"act_ipim":145751.29602932243,"coef_ipim":1,"saldo":8667941.428961568,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO","monto":-52939.47}]},{"periodo":"2026-03","retiros":-6000000.0,"transferencias":-54448.25,"cta_part_maestro":-6054448.25,"act_ipim":294710.0085846933,"coef_ipim":3.4,"saldo":2908203.1875462607,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-54448.25}]},{"periodo":"2026-04","retiros":-6000000.0,"transferencias":-56016.36,"cta_part_maestro":-6056016.36,"act_ipim":151226.56575240556,"coef_ipim":5.2,"saldo":-2996586.606701334,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO  AUTONOMO SOCIO AMELIO","monto":-56016.36}]},{"periodo":"2026-05","retiros":-6000000.0,"transferencias":-57640.83,"cta_part_maestro":-6057640.83,"act_ipim":0,"coef_ipim":2.5,"saldo":-9054227.436701335,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-57640.83}]},{"periodo":"2026-06","retiros":-7638566.76,"transferencias":-59589.1,"cta_part_maestro":-7698155.859999999,"act_ipim":0,"coef_ipim":1.1,"saldo":-16752383.296701334,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO MAYO 2026","monto":-59589.1}]},{"periodo":"2026-07","retiros":-9000000.0,"transferencias":-61126.5,"cta_part_maestro":-9061126.5,"act_ipim":0,"coef_ipim":0.8,"saldo":-25813509.796701334,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-9000000}],"detalle_transferencias":[{"desc":"AUTONOMO","monto":-61126.5}]},{"periodo":"2026-08","retiros":-6000000.0,"transferencias":-62440.71,"cta_part_maestro":-6062440.71,"act_ipim":0,"coef_ipim":1.7,"saldo":-31875950.506701335,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-6000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO AMELIO FERRARI","monto":-62440.71}]},{"periodo":"2026-09","retiros":-8000000.0,"transferencias":-63620.84,"cta_part_maestro":-8063620.84,"act_ipim":0,"coef_ipim":0,"saldo":-39939571.34670134,"saldo_ddjj":0,"detalle_retiros":[{"desc":"CANJE DE CHEQUE","monto":-8000000}],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SR AMELIO SETIEMBRE","monto":-63620.84}]}]},"DIEGO FERRARI":{"dividendo_inicial":2811207.4,"monthly":[{"periodo":"2025-08","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":87147.4294,"coef_ipim":3.1,"saldo":2898354.8293999997,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-09","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":107239.1286878,"coef_ipim":3.7,"saldo":3005593.9580877996,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-10","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":33061.5335389658,"coef_ipim":1.1,"saldo":3038655.4916267656,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-11","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":48618.48786602825,"coef_ipim":1.6,"saldo":3087273.979492794,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-12","retiros":-1728343.55,"transferencias":0,"cta_part_maestro":-1728343.55,"act_ipim":0,"coef_ipim":2.4,"saldo":23358930.429492794,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-01","retiros":-3015000.0,"transferencias":0,"cta_part_maestro":-3015000,"act_ipim":397101.8173013775,"coef_ipim":1.7,"saldo":20741032.24679417,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-02","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":207410.3224679417,"coef_ipim":1,"saldo":20948442.569262113,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-03","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":712247.0473549119,"coef_ipim":3.4,"saldo":21660689.616617024,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-04","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":1126355.8600640853,"coef_ipim":5.2,"saldo":22787045.47668111,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-05","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":569676.1369170278,"coef_ipim":2.5,"saldo":23356721.613598138,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-06","retiros":-1619283.38,"transferencias":0,"cta_part_maestro":-1619283.38,"act_ipim":256923.93774957955,"coef_ipim":1.1,"saldo":21994362.17134772,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-07","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":175954.89737078175,"coef_ipim":0.8,"saldo":22170317.0687185,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-08","retiros":-9061126.5,"transferencias":0,"cta_part_maestro":-9061126.5,"act_ipim":376895.3901682145,"coef_ipim":1.7,"saldo":13486085.958886717,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-09","retiros":-9061126.5,"transferencias":0,"cta_part_maestro":-9061126.5,"act_ipim":0,"coef_ipim":0,"saldo":4424959.4588867165,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]}]},"MARCELO FERRARI":{"dividendo_inicial":0,"monthly":[{"periodo":"2025-08","retiros":-410000.0,"transferencias":-1810686.3,"cta_part_maestro":-2220686.3,"act_ipim":0,"coef_ipim":3.1,"saldo":-2220686.3,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO MARCELO FERRARI","monto":-244448.66},{"desc":"PAGO SERVICIO DOMESTICO SR MARCELO FERRA","monto":-66237.64},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-1500000}]},{"periodo":"2025-09","retiros":-18766.439999999944,"transferencias":-2094863.67,"cta_part_maestro":-2113630.11,"act_ipim":0,"coef_ipim":3.7,"saldo":-4334316.41,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO MARCELO FERRARI","monto":-248408.73},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-1280000},{"desc":"TRANSFERNCIA SOCIO MARCELO FERRARI","monto":-566454.94}]},{"periodo":"2025-10","retiros":-1001000.0,"transferencias":-1493128.5,"cta_part_maestro":-2494128.5,"act_ipim":0,"coef_ipim":1.1,"saldo":-6828444.91,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO SR MARCELO FERRARI","monto":-253128.5},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-1240000}]},{"periodo":"2025-11","retiros":-940000.0,"transferencias":-1087887.31,"cta_part_maestro":-2027887.31,"act_ipim":0,"coef_ipim":1.6,"saldo":-8856332.22,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO","monto":-257887.31},{"desc":"SOCIO MARCELO FERRARI","monto":-600000},{"desc":"TRANSFERNCIA SOCIO MARCELO FERRARI","monto":-230000}]},{"periodo":"2025-12","retiros":-839800.0,"transferencias":-513251.0,"cta_part_maestro":-1353051,"act_ipim":0,"coef_ipim":2.4,"saldo":11790616.78,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SR MARCELO FERRARI","monto":-263251},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-250000}]},{"periodo":"2026-01","retiros":0.0,"transferencias":-1269411.46,"cta_part_maestro":-1269411.46,"act_ipim":200440.48525999996,"coef_ipim":1.7,"saldo":10721645.805259999,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO MARCELO FERRARI","monto":-269411.46},{"desc":"TRANSFERNCIA SOCIO MARCELO FERRARI","monto":-1000000}]},{"periodo":"2026-02","retiros":0.0,"transferencias":-2176065.92,"cta_part_maestro":-2176065.92,"act_ipim":107216.45805259999,"coef_ipim":1,"saldo":8652796.343312599,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-276065.92},{"desc":"TRANSF SOCIO MARCELO FERRARI","monto":-300000},{"desc":"TRANSFERENCIA SOCIO","monto":-100000},{"desc":"TRANSFERENCIA SOCIO MARCELO FERARI","monto":-500000},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-1000000}]},{"periodo":"2026-03","retiros":0.0,"transferencias":-283933.8,"cta_part_maestro":-283933.8,"act_ipim":294195.07567262836,"coef_ipim":3.4,"saldo":8663057.618985226,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-283933.8}]},{"periodo":"2026-04","retiros":0.0,"transferencias":-712111.1,"cta_part_maestro":-712111.1,"act_ipim":450478.99618723174,"coef_ipim":5.2,"saldo":8401425.51517246,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PARA PAGO DE AUTONOMO","monto":-292111.1},{"desc":"SOCIO MARCELO FERRARI","monto":-420000}]},{"periodo":"2026-05","retiros":0.0,"transferencias":-920582.3200000001,"cta_part_maestro":-920582.3200000001,"act_ipim":210035.6378793115,"coef_ipim":2.5,"saldo":7690878.833051771,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-300582.32},{"desc":"TRANSF SR MARCELO FERRARI","monto":-420000},{"desc":"TRANSFERENCIA SR MARCELO","monto":-200000}]},{"periodo":"2026-06","retiros":0,"transferencias":-630742.0,"cta_part_maestro":-1450025.38,"act_ipim":84599.66716356948,"coef_ipim":1.1,"saldo":6325453.1202153405,"saldo_ddjj":-819283.3799999999,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO MAYO 2026","monto":-310742},{"desc":"SOCIO MARCELO FERRARI","monto":-320000}]},{"periodo":"2026-07","retiros":0,"transferencias":-638759.14,"cta_part_maestro":-638759.14,"act_ipim":50603.62496172273,"coef_ipim":0.8,"saldo":5737297.6051770635,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO","monto":-318759.14},{"desc":"TRANSDF SOCIO","monto":-320000}]},{"periodo":"2026-08","retiros":0,"transferencias":-825612.46,"cta_part_maestro":-825612.46,"act_ipim":97534.05928801007,"coef_ipim":1.7,"saldo":5009219.2044650735,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"PAGO AUTONOMO SOCIO MARCELO FERRARI","monto":-325612.46},{"desc":"TRANSFERENCIA SOCIO MARCELO FERRARI","monto":-500000}]},{"periodo":"2026-09","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":0,"saldo":5009219.2044650735,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]}]},"MARCELA SANABRIA":{"dividendo_inicial":0,"monthly":[{"periodo":"2025-08","retiros":-1500000.0,"transferencias":0,"cta_part_maestro":-1500000,"act_ipim":0,"coef_ipim":3.1,"saldo":-1500000,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-09","retiros":-79528.90000000037,"transferencias":-10000000.0,"cta_part_maestro":-10079528.9,"act_ipim":0,"coef_ipim":3.7,"saldo":-11579528.9,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"TRANSFERENCIA SRA MARCELA SANABRIA","monto":-5000000},{"desc":"TRANSFERENCIASRA MARCELA SANABRIA","monto":-5000000}]},{"periodo":"2025-10","retiros":-1600000.0,"transferencias":0,"cta_part_maestro":-1600000,"act_ipim":0,"coef_ipim":1.1,"saldo":-13179528.9,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2025-11","retiros":-470951.7799999998,"transferencias":-2000000.0,"cta_part_maestro":-2470951.78,"act_ipim":0,"coef_ipim":1.6,"saldo":-15650480.68,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[{"desc":"TRANSFERENCIA SOCIO MARCELA SANABRIA","monto":-2000000}]},{"periodo":"2025-12","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":2.4,"saldo":6349519.32,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-01","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":107941.82844000001,"coef_ipim":1.7,"saldo":6457461.148440001,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-02","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":64574.611484400004,"coef_ipim":1,"saldo":6522035.759924401,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-03","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":221749.21583742963,"coef_ipim":3.4,"saldo":6743784.97576183,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-04","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":350676.81873961515,"coef_ipim":5.2,"saldo":7094461.794501445,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-05","retiros":0.0,"transferencias":0,"cta_part_maestro":0,"act_ipim":177361.54486253613,"coef_ipim":2.5,"saldo":7271823.339363981,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-06","retiros":0,"transferencias":0,"cta_part_maestro":-819283.38,"act_ipim":79990.0567330038,"coef_ipim":1.1,"saldo":6532530.016096985,"saldo_ddjj":-819283.38,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-07","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":52260.240128775884,"coef_ipim":0.8,"saldo":6584790.256225761,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-08","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":111941.43435583793,"coef_ipim":1.7,"saldo":6696731.690581599,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]},{"periodo":"2026-09","retiros":0,"transferencias":0,"cta_part_maestro":0,"act_ipim":0,"coef_ipim":0,"saldo":6696731.690581599,"saldo_ddjj":0,"detalle_retiros":[],"detalle_transferencias":[]}]}}},"ventas_surtidor":{"2025-08":1551567543.0080957,"2025-09":1554136704.822381,"2025-10":1699007854.2857146,"2025-11":1559383877.2857141,"2025-12":1982395994.139524,"2026-01":1817538611.3785715,"2026-02":1637533280.8809524,"2026-03":1920903725.3238099,"2026-04":1833131305.4700003,"2026-05":1908428860.2328577,"2026-06":1895321118.2033443,"2026-07":2077981202.775524}};
+(function(){
+
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#6B7280';
+  Chart.defaults.borderColor = 'rgba(32,38,58,0.06)';
+
+  function fmtMoney(n){
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0});
+  }
+  function fmtMoneyFull(n){ return '$'+Math.round(n).toLocaleString('es-AR',{maximumFractionDigits:0}); }
+  const MESES = {'01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun','07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'};
+  function fmtPeriodo(p){ const [y,m] = p.split('-'); return MESES[m]+'·'+y.slice(2); }
+  function nombreCorto(s){ return s.split(' ').map((w,i)=> i===0? w.charAt(0)+w.slice(1).toLowerCase() : w.charAt(0)+w.slice(1).toLowerCase()).join(' '); }
+
+  const state = { company: 'surtidor', evolKind: 'line', retirosKind: 'bar', transfKind: 'bar' };
+  let selectedSocio = null; // filtra la tabla de detalle y el export; se puede setear desde el select o clickeando en los graficos
+  let tipoMov = 'todos'; // 'todos' | 'retiros' | 'transferencias' — que columnas mostrar en el detalle mensual
+
+  function populateSocioSelect(){
+    const sets = currentSet();
+    const sel = document.getElementById('fSocio');
+    const opts = ['<option value="">Todos los socios</option>'];
+    sets.forEach(({data}) => data.socios.forEach(s => opts.push(`<option value="${s}">${nombreCorto(s)}</option>`)));
+    sel.innerHTML = opts.join('');
+    sel.value = selectedSocio || '';
+  }
+  function setSelectedSocio(s){
+    selectedSocio = (selectedSocio === s) ? null : s;
+    document.getElementById('fSocio').value = selectedSocio || '';
+    renderSocioChip();
+    renderDetailTable();
+    document.getElementById('evolTitle').textContent = selectedSocio ? `Retiros, Transferencias, Otros conceptos y Saldo — ${nombreCorto(selectedSocio)}` : (state.company==='both' ? 'Evolución del saldo por socio (ambas empresas)' : 'Evolución del saldo por socio');
+    destroyChart('evol'); buildEvol();
+    if (charts.retiros) charts.retiros.destroy();
+    charts.retiros = buildMonthlySeries('retiros', 'chartRetiros', state.retirosKind);
+    if (charts.transf) charts.transf.destroy();
+    charts.transf = buildMonthlySeries('transferencias', 'chartTransf', state.transfKind);
+  }
+  function renderSocioChip(){
+    const el = document.getElementById('socioChipRow');
+    if (!el) return;
+    el.innerHTML = selectedSocio ? `<div class="filter-chip" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent-deep);padding:5px 8px 5px 12px;border-radius:100px;font-size:11.5px;font-weight:600;">Socio: ${nombreCorto(selectedSocio)}<button onclick="window.__clearSocio()" style="background:none;border:0;color:var(--accent-deep);cursor:pointer;font-size:13px;line-height:1;padding:2px;border-radius:50%;">✕</button></div>` : '';
+  }
+  window.__clearSocio = () => { const prev = selectedSocio; selectedSocio = null; document.getElementById('fSocio').value=''; renderSocioChip(); renderDetailTable();
+    document.getElementById('evolTitle').textContent = state.company==='both' ? 'Evolución del saldo por socio (ambas empresas)' : 'Evolución del saldo por socio';
+    destroyChart('evol'); buildEvol();
+    if (charts.retiros) charts.retiros.destroy();
+    charts.retiros = buildMonthlySeries('retiros', 'chartRetiros', state.retirosKind);
+    if (charts.transf) charts.transf.destroy();
+    charts.transf = buildMonthlySeries('transferencias', 'chartTransf', state.transfKind);
+  };
+  const palette = ['#3B4B6B','#C1443C','#1E8A5F','#B98600','#7C5CBF','#2B6CB0'];
+
+  let desdeIdx = 0, hastaIdx = DATA.periods.length - 1;
+  function populateSelects(){
+    const opts = DATA.periods.map((p,i)=>`<option value="${i}">${fmtPeriodo(p)}</option>`).join('');
+    document.getElementById('fDesde').innerHTML = opts;
+    document.getElementById('fHasta').innerHTML = opts;
+    document.getElementById('fDesde').value = desdeIdx;
+    document.getElementById('fHasta').value = hastaIdx;
+  }
+  function currentPeriods(){ return DATA.periods.slice(desdeIdx, hastaIdx+1); }
+
+  function sociosRepetidos(){
+    const a = new Set(DATA.surtidor.socios), b = new Set(DATA.estacion.socios);
+    return new Set([...a].filter(s => b.has(s)));
+  }
+
+  function currentSet(){
+    if (state.company === 'estacion') return [{label:'La Estación', key:'estacion', data:DATA.estacion}];
+    if (state.company === 'both') return [{label:'El Surtidor', key:'surtidor', data:DATA.surtidor}, {label:'La Estación', key:'estacion', data:DATA.estacion}];
+    return [{label:'El Surtidor', key:'surtidor', data:DATA.surtidor}];
+  }
+
+  function monthlyInRange(socioBlock){
+    const periods = new Set(currentPeriods());
+    return socioBlock.monthly.filter(m => periods.has(m.periodo));
+  }
+
+  function acumulado(socioBlock){
+    const rows = monthlyInRange(socioBlock);
+    const retiros = rows.reduce((s,m)=>s+m.retiros,0);
+    const transferencias = rows.reduce((s,m)=>s+m.transferencias,0);
+    const actIpim = rows.reduce((s,m)=>s+m.act_ipim,0);
+    const saldoInicial = rows.length ? (rows[0].saldo - rows[0].act_ipim - rows[0].cta_part_maestro) : socioBlock.dividendo_inicial;
+    const saldoFinal = rows.length ? rows[rows.length-1].saldo : socioBlock.dividendo_inicial;
+    return { retiros, transferencias, actIpim, saldoInicial, saldoFinal };
+  }
+
+  let charts = {};
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+  const gridColor = 'rgba(32,38,58,0.06)';
+  const tickColor = '#9AA1AE';
+  function tooltipBase(){
+    return { backgroundColor:'#232D42', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#E4E7EF',
+             padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+  function socioLabel(companyLabel, socio, multi){ return multi ? `${nombreCorto(socio)} (${companyLabel})` : nombreCorto(socio); }
+
+  function renderKPIs(){
+    const sets = currentSet();
+    let saldoFinal=0, retiros=0, transferencias=0, actIpim=0;
+    sets.forEach(({data}) => {
+      data.socios.forEach(s => {
+        const a = acumulado(data.data[s]);
+        saldoFinal += a.saldoFinal; retiros += a.retiros; transferencias += a.transferencias; actIpim += a.actIpim;
+      });
+    });
+    const periods = currentPeriods();
+    const ventasPeriodo = periods.reduce((s,p) => s + (DATA.ventas_surtidor[p]||0), 0);
+    const mesesConVentas = periods.filter(p => DATA.ventas_surtidor[p] !== undefined).length;
+    let pctVentasNote = null;
+    if (state.company === 'surtidor' && mesesConVentas > 0){
+      const pct = ventasPeriodo ? (Math.abs(retiros+transferencias)/ventasPeriodo*100) : 0;
+      pctVentasNote = `${pct.toFixed(1)}% de las ventas de El Surtidor en el período (Resultados, sin ajustes)` + (mesesConVentas < periods.length ? ` · ventas disponibles solo hasta jul·26` : '');
+    }
+    const cards = [
+      { label:'Saldo actual (todos los socios)', value: fmtMoneyFull(saldoFinal), neg: saldoFinal<0 },
+      { label:'Retiros del período', value: fmtMoneyFull(retiros) },
+      { label:'Transferencias del período', value: fmtMoneyFull(transferencias) },
+      { label:'Actualización IPIM del período', value: fmtMoneyFull(actIpim) },
+      { label:'Retiros + Transferencias', value: fmtMoneyFull(retiros+transferencias), pct: pctVentasNote },
+    ];
+    document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+      <div class="kpi-card">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value tabular" style="${c.neg?'color:var(--dn);':''}">${c.value}</div>
+        ${c.pct ? `<div class="kpi-pct">${c.pct}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function pointerCursor(evt, elements){ if(evt.native && evt.native.target) evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+
+  function buildEvol(){
+    const sets = currentSet();
+    const multi = sets.length > 1;
+    const periods = currentPeriods();
+    const labels = periods.map(fmtPeriodo);
+    const isLine = state.evolKind === 'line';
+    const commonOpts = isLine ? { pointRadius:3.5, pointHoverRadius:5.5, borderWidth:2.2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:24 };
+
+    if (selectedSocio){
+      const owner = sets.find(({data}) => data.socios.includes(selectedSocio));
+      const rows = monthlyInRange(owner.data.data[selectedSocio]);
+      const series = [
+        { name:'Retiros', field:'retiros', color:'#C1443C', abs:true },
+        { name:'Transferencias', field:'transferencias', color:'#B98600', abs:true },
+        { name:'Otros conceptos', field:'saldo_ddjj', color:'#7C5CBF', abs:true },
+        { name:'Saldo', field:'saldo', color:'#3B4B6B', abs:false },
+      ];
+      const datasets = series.map(sr => ({ label:sr.name, data: rows.map(m=> sr.abs ? Math.abs(m[sr.field]||0) : (m[sr.field]||0)), borderColor:sr.color, backgroundColor:sr.color, ...commonOpts }));
+      charts.evol = new Chart(document.getElementById('chartEvol'), {
+        type: isLine ? 'line' : 'bar',
+        data:{ labels, datasets },
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
+            tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}` } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+        }
+      });
+      return;
+    }
+
+    const datasets = []; const socioBySlot = []; let colorIdx = 0;
+    sets.forEach(({label, data}) => {
+      data.socios.forEach(s => {
+        const color = palette[colorIdx % palette.length]; colorIdx++;
+        const rows = monthlyInRange(data.data[s]);
+        datasets.push({ label: socioLabel(label, s, multi), data: rows.map(m=>m.saldo), borderColor: color, backgroundColor: color, ...commonOpts });
+        socioBySlot.push(s);
+      });
+    });
+    charts.evol = new Chart(document.getElementById('chartEvol'), {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) setSelectedSocio(socioBySlot[els[0].datasetIndex]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 }, onClick:(e,item)=>setSelectedSocio(socioBySlot[item.datasetIndex]) },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar el detalle por este socio' } } },
+        scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)} } }
+      }
+    });
+  }
+
+  function buildMonthlySeries(field, canvasId, kind){
+    const sets = currentSet();
+    const multi = sets.length > 1;
+    const periods = currentPeriods();
+    const labels = periods.map(fmtPeriodo);
+    const isLine = kind === 'line';
+    const commonOpts = isLine ? { pointRadius:3, pointHoverRadius:5, borderWidth:2, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:22, stack:'s' };
+    const datasets = []; const socioBySlot = []; let colorIdx = 0;
+    sets.forEach(({label, data}) => {
+      data.socios.forEach(s => {
+        const color = palette[colorIdx % palette.length]; colorIdx++;
+        if (selectedSocio && s !== selectedSocio) return;
+        const rows = monthlyInRange(data.data[s]);
+        datasets.push({ label: socioLabel(label, s, multi), data: rows.map(m=>Math.abs(m[field])), borderColor: color, backgroundColor: color, ...commonOpts });
+        socioBySlot.push(s);
+      });
+    });
+    return new Chart(document.getElementById(canvasId), {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        onClick: (evt, els) => { if (els.length) setSelectedSocio(socioBySlot[els[0].datasetIndex]); },
+        onHover: pointerCursor,
+        plugins:{ legend:{ position:'bottom', labels:{boxWidth:9,boxHeight:9,usePointStyle:true,pointStyle:isLine?'circle':'rect',padding:12,font:{size:10.5}}, onClick:(e,item)=>setSelectedSocio(socioBySlot[item.datasetIndex]) }, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para filtrar el detalle por este socio' } } },
+        scales:{ x:{ grid:{display:false}, ticks:{color:tickColor}, stacked:!isLine }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, stacked:!isLine } }
+      }
+    });
+  }
+
+  function renderEstadoTable(){
+    const sets = currentSet();
+    const multi = sets.length > 1;
+    const repetidos = sociosRepetidos();
+    const table = document.getElementById('estadoTable');
+    table.querySelector('thead').innerHTML = `<tr><th>Socio</th>${multi?'<th>Empresa</th>':''}<th>Saldo al inicio del rango</th><th>Retiros</th><th>Transferencias</th><th>Actualización IPIM</th><th>Saldo actual</th></tr>`;
+    let rows = [];
+    sets.forEach(({label, data}) => {
+      data.socios.forEach(s => {
+        const a = acumulado(data.data[s]);
+        const rep = repetidos.has(s) ? '<span class="badge-repetido">en ambas</span>' : '';
+        rows.push(`<tr>
+          <td>${nombreCorto(s)}${rep}</td>
+          ${multi?`<td>${label}</td>`:''}
+          <td class="tabular">${fmtMoneyFull(a.saldoInicial)}</td>
+          <td class="tabular">${fmtMoneyFull(a.retiros)}</td>
+          <td class="tabular">${fmtMoneyFull(a.transferencias)}</td>
+          <td class="tabular">${fmtMoneyFull(a.actIpim)}</td>
+          <td class="tabular" style="font-weight:600; ${a.saldoFinal<0?'color:var(--dn);':''}">${fmtMoneyFull(a.saldoFinal)}</td>
+        </tr>`);
+      });
+    });
+    table.querySelector('tbody').innerHTML = rows.join('');
+  }
+
+  function renderDetailTable(){
+    const sets = currentSet();
+    const multi = sets.length > 1;
+    const table = document.getElementById('detailTable');
+    table.querySelector('thead').innerHTML = `<tr><th>Socio</th>${multi?'<th>Empresa</th>':''}<th>Período</th><th>Tipo</th><th>Descripción</th><th>Monto</th></tr>`;
+    let rows = [];
+    sets.forEach(({label, data}) => {
+      data.socios.forEach(s => {
+        if (selectedSocio && s !== selectedSocio) return;
+        const monthly = monthlyInRange(data.data[s]);
+        monthly.forEach(m => {
+          const otros = m.saldo_ddjj || 0;
+          const combinado = m.retiros + m.transferencias + otros;
+          const diff = combinado - m.cta_part_maestro;
+          if (Math.abs(diff) > 1) return; // se excluyen los meses que no cierran contra la planilla maestra
+
+          const movs = [];
+          if (tipoMov === 'todos' || tipoMov === 'retiros'){
+            (m.detalle_retiros||[]).forEach(x => movs.push({ tipo:'Retiro', desc:x.desc, monto:x.monto }));
+          }
+          if (tipoMov === 'todos' || tipoMov === 'transferencias'){
+            (m.detalle_transferencias||[]).forEach(x => movs.push({ tipo:'Transferencia', desc:x.desc, monto:x.monto }));
+          }
+          if (tipoMov === 'todos' && otros){
+            movs.push({ tipo:'Otros conceptos', desc:'Saldo DDJJ Bs., Ac. y participación societaria 2025', monto: otros });
+          }
+
+          movs.forEach(mv => {
+            rows.push(`<tr>
+              <td>${nombreCorto(s)}</td>
+              ${multi?`<td>${label}</td>`:''}
+              <td>${fmtPeriodo(m.periodo)}</td>
+              <td>${mv.tipo}</td>
+              <td>${esc(mv.desc)}</td>
+              <td class="tabular">${fmtMoneyFull(mv.monto)}</td>
+            </tr>`);
+          });
+        });
+      });
+    });
+    table.querySelector('tbody').innerHTML = rows.join('');
+  }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  document.querySelectorAll('.seg button[data-company]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.company = btn.dataset.company;
+      document.querySelectorAll('.seg button[data-company]').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  document.getElementById('evolKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.evolKind = btn.dataset.kind;
+      document.getElementById('evolKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      destroyChart('evol'); buildEvol();
+    });
+  });
+  document.getElementById('retirosKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.retirosKind = btn.dataset.kind;
+      document.getElementById('retirosKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      if (charts.retiros) charts.retiros.destroy();
+      charts.retiros = buildMonthlySeries('retiros', 'chartRetiros', state.retirosKind);
+    });
+  });
+  document.getElementById('transfKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.transfKind = btn.dataset.kind;
+      document.getElementById('transfKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      if (charts.transf) charts.transf.destroy();
+      charts.transf = buildMonthlySeries('transferencias', 'chartTransf', state.transfKind);
+    });
+  });
+  function destroyChart(key){ if(charts[key]){ charts[key].destroy(); delete charts[key]; } }
+
+  document.getElementById('fDesde').addEventListener('change', (e)=>{
+    desdeIdx = +e.target.value;
+    if (desdeIdx > hastaIdx) hastaIdx = desdeIdx;
+    populateSelects(); render();
+  });
+  document.getElementById('tipoMovToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tipoMov = btn.dataset.tipo;
+      document.getElementById('tipoMovToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderDetailTable();
+    });
+  });
+  document.getElementById('fSocio').addEventListener('change', (e)=>{
+    selectedSocio = e.target.value || null;
+    renderSocioChip();
+    renderDetailTable();
+    document.getElementById('evolTitle').textContent = selectedSocio ? `Retiros, Transferencias, Otros conceptos y Saldo — ${nombreCorto(selectedSocio)}` : (state.company==='both' ? 'Evolución del saldo por socio (ambas empresas)' : 'Evolución del saldo por socio');
+    destroyChart('evol'); buildEvol();
+    if (charts.retiros) charts.retiros.destroy();
+    charts.retiros = buildMonthlySeries('retiros', 'chartRetiros', state.retirosKind);
+    if (charts.transf) charts.transf.destroy();
+    charts.transf = buildMonthlySeries('transferencias', 'chartTransf', state.transfKind);
+  });
+  document.getElementById('fHasta').addEventListener('change', (e)=>{
+    hastaIdx = +e.target.value;
+    if (hastaIdx < desdeIdx) desdeIdx = hastaIdx;
+    populateSelects(); render();
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación.'); return; }
+    const sets = currentSet();
+    const wb = XLSX.utils.book_new();
+    let rows = [];
+    let movRows = [];
+    sets.forEach(({label, data}) => {
+      data.socios.forEach(s => {
+        if (selectedSocio && s !== selectedSocio) return;
+        monthlyInRange(data.data[s]).forEach(m => {
+          rows.push({ Empresa: label, Socio: nombreCorto(s), Período: fmtPeriodo(m.periodo), Retiros: m.retiros, Transferencias: m.transferencias,
+            'Combinado': m.retiros+m.transferencias, 'Mov. planilla maestra': m.cta_part_maestro, 'Actualización IPIM': m.act_ipim, Saldo: m.saldo });
+          const otros = m.saldo_ddjj || 0;
+          const diff = (m.retiros+m.transferencias+otros) - m.cta_part_maestro;
+          if (Math.abs(diff) > 1) return;
+          if (tipoMov === 'todos' || tipoMov === 'retiros'){
+            (m.detalle_retiros||[]).forEach(x => movRows.push({ Empresa: label, Socio: nombreCorto(s), Período: fmtPeriodo(m.periodo), Tipo:'Retiro', Descripción:x.desc, Monto:x.monto }));
+          }
+          if (tipoMov === 'todos' || tipoMov === 'transferencias'){
+            (m.detalle_transferencias||[]).forEach(x => movRows.push({ Empresa: label, Socio: nombreCorto(s), Período: fmtPeriodo(m.periodo), Tipo:'Transferencia', Descripción:x.desc, Monto:x.monto }));
+          }
+          if (tipoMov === 'todos' && otros){
+            movRows.push({ Empresa: label, Socio: nombreCorto(s), Período: fmtPeriodo(m.periodo), Tipo:'Otros conceptos', Descripción:'Saldo DDJJ Bs., Ac. y participación societaria 2025', Monto: otros });
+          }
+        });
+      });
+    });
+    const wsMov = XLSX.utils.json_to_sheet(movRows);
+    wsMov['!cols'] = [{wch:14},{wch:20},{wch:10},{wch:16},{wch:40},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, wsMov, 'Detalle por movimiento');
+    const ws1 = XLSX.utils.json_to_sheet(rows);
+    ws1['!cols'] = [{wch:14},{wch:20},{wch:10},{wch:16},{wch:16},{wch:16},{wch:18},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen mensual');
+    XLSX.writeFile(wb, `socios_${state.company}.xlsx`);
+  });
+
+  function render(){
+    const multi = state.company === 'both';
+        document.getElementById('evolTitle').textContent = selectedSocio ? `Retiros, Transferencias, Otros conceptos y Saldo — ${nombreCorto(selectedSocio)}` : (multi ? 'Evolución del saldo por socio (ambas empresas)' : 'Evolución del saldo por socio');
+    const validSocios = new Set(currentSet().flatMap(({data})=>data.socios));
+    if (selectedSocio && !validSocios.has(selectedSocio)) selectedSocio = null;
+    populateSocioSelect();
+    renderSocioChip();
+    renderKPIs();
+    destroyCharts();
+    buildEvol();
+    charts.retiros = buildMonthlySeries('retiros', 'chartRetiros', state.retirosKind);
+    charts.transf = buildMonthlySeries('transferencias', 'chartTransf', state.transfKind);
+    renderEstadoTable();
+    renderDetailTable();
+    document.getElementById('footNote').innerHTML = 'Fuente: "Dividendos y Actualizaciones" (saldo oficial, con actualización mensual por IPIM), "Retiros de Caja para Socios" y "Transferencias Bancarias a Socios" — El Surtidor S.A. y La Estación S.A.';
+  }
+
+  populateSelects();
+  render();
+})();
+</script>
+</body>
+</html>
